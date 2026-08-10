@@ -1,0 +1,330 @@
+<!DOCTYPE html><html lang="zh-cn" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>游戏AI-GOAP（4）：GOAP + GAS 整合设计 | Csy7749-Blog</title><meta name="author" content="Csy7749"><meta name="copyright" content="Csy7749"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="GOAP 负责”做什么”，GAS（Gameplay Ability System）负责”怎么做”——前者是目标驱动的决策引擎，后者是能力驱动的执行框架。这篇文章探讨如何把两者整合成一个统一的 AI 架构：用 GAS 的属性和标签作为 GOAP 的世界状态，用 GAS 的能力作为 GOAP 的可执行 Action，让 AI 在”知道自己要什么”和”知道自己能做什么”之间建立闭环。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="游戏AI-GOAP（4）：GOAP + GAS 整合设计">
+<meta property="og:url" content="https://csy7749.github.io/2026/08/08/%E6%B8%B8%E6%88%8FAI-GOAP%EF%BC%884%EF%BC%89%EF%BC%9AGOAP+GAS%E6%95%B4%E5%90%88/index.html">
+<meta property="og:site_name" content="Csy7749-Blog">
+<meta property="og:description" content="GOAP 负责”做什么”，GAS（Gameplay Ability System）负责”怎么做”——前者是目标驱动的决策引擎，后者是能力驱动的执行框架。这篇文章探讨如何把两者整合成一个统一的 AI 架构：用 GAS 的属性和标签作为 GOAP 的世界状态，用 GAS 的能力作为 GOAP 的可执行 Action，让 AI 在”知道自己要什么”和”知道自己能做什么”之间建立闭环。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://csy7749.github.io/img/avatar.png">
+<meta property="article:published_time" content="2026-08-08T15:59:00.000Z">
+<meta property="article:modified_time" content="2026-08-10T05:26:08.251Z">
+<meta property="article:author" content="Csy7749">
+<meta property="article:tag" content="游戏AI">
+<meta property="article:tag" content="GOAP">
+<meta property="article:tag" content="GAS">
+<meta property="article:tag" content="架构">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://csy7749.github.io/img/avatar.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "游戏AI-GOAP（4）：GOAP + GAS 整合设计",
+  "url": "https://csy7749.github.io/2026/08/08/%E6%B8%B8%E6%88%8FAI-GOAP%EF%BC%884%EF%BC%89%EF%BC%9AGOAP+GAS%E6%95%B4%E5%90%88/",
+  "image": "https://csy7749.github.io/img/avatar.png",
+  "datePublished": "2026-08-08T15:59:00.000Z",
+  "dateModified": "2026-08-10T05:26:08.251Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Csy7749",
+      "url": "https://csy7749.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://csy7749.github.io/2026/08/08/%E6%B8%B8%E6%88%8FAI-GOAP%EF%BC%884%EF%BC%89%EF%BC%9AGOAP+GAS%E6%95%B4%E5%90%88/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        const data = { value }
+
+        if (ttl != null) {
+          data.expiry = Date.now() + ttl * 86400000
+        }
+
+        localStorage.setItem(key, JSON.stringify(data))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return
+
+        try {
+          const data = JSON.parse(itemStr)
+
+          if (data.expiry && Date.now() > data.expiry) {
+            localStorage.removeItem(key)
+            return
+          }
+
+          return data.value
+        } catch {
+          localStorage.removeItem(key)
+        }
+      }
+    }
+
+    const scriptCache = new Map()
+    const cssCache = new Map()
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => {
+        if (scriptCache.has(url)) {
+          return scriptCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const script = document.createElement('script')
+
+          script.src = url
+          script.async = true
+
+          for (const key in attr) {
+            script.setAttribute(key, attr[key])
+          }
+
+          script.onload = resolve
+          script.onerror = reject
+
+          document.head.appendChild(script)
+        })
+
+        scriptCache.set(url, promise)
+
+        return promise
+      },
+      getCSS: (url, id) => {
+        if (cssCache.has(url)) {
+          return cssCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const link = document.createElement('link')
+
+          link.rel = 'stylesheet'
+          link.href = url
+
+          if (id) {
+            link.id = id
+          }
+
+          link.onload = resolve
+          link.onerror = reject
+
+          document.head.appendChild(link)
+        })
+
+        cssCache.set(url, promise)
+
+        return promise
+      },
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+      const activateDarkMode = () => {
+        document.documentElement.dataset.theme = 'dark'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.dataset.theme = 'light'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '游戏AI-GOAP（4）：GOAP + GAS 整合设计',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">6</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">8</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">0</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Csy7749-Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">游戏AI-GOAP（4）：GOAP + GAS 整合设计</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">游戏AI-GOAP（4）：GOAP + GAS 整合设计</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-08-08T15:59:00.000Z" title="Created 2026-08-08 23:59:00">2026-08-08</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-08-10T05:26:08.251Z" title="Updated 2026-08-10 13:26:08">2026-08-10</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>GOAP 负责”做什么”，GAS（Gameplay Ability System）负责”怎么做”——前者是目标驱动的决策引擎，后者是能力驱动的执行框架。这篇文章探讨如何把两者整合成一个统一的 AI 架构：用 GAS 的属性和标签作为 GOAP 的世界状态，用 GAS 的能力作为 GOAP 的可执行 Action，让 AI 在”知道自己要什么”和”知道自己能做什么”之间建立闭环。</p>
+<span id="more"></span>
+<h2 id="为什么整合"><a href="#为什么整合" class="headerlink" title="为什么整合"></a>为什么整合</h2><p>单独的 GOAP 有一个明显的短板：<strong>它只知道”要做这件事”，不知道”怎么做这件事”</strong>。GOAP 规划出 EatFood 这个 Action 之后，执行层怎么处理冷却时间？怎么管理资源消耗？怎么触发动画和音效？怎么处理 buff&#x2F;debuff？这些全得自己写。</p>
+<p>GAS 天然处理这些问题——能力（Ability）自带冷却、消耗、标签（Tag）、效果（GameplayEffect）和表现（Cue）[^1]。把 GOAP 的 Action 映射到 GAS 的 Ability，执行层的工作量大幅减少。</p>
+<p>反过来，GAS 单独用也有局限：它只是一个”能力仓库”，没有规划能力。需要外部系统告诉它”现在该用哪个技能”。GOAP 的 Planner 正好填补这个空白。</p>
+<p>所以整合的逻辑很自然：<strong>GOAP 做决策，GAS 做执行</strong>。</p>
+<h2 id="共享的基础设施"><a href="#共享的基础设施" class="headerlink" title="共享的基础设施"></a>共享的基础设施</h2><p>两个系统有一些天然可以合并的模块[^2]：</p>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th>GOAP 中的角色</th>
+<th>GAS 中的角色</th>
+<th>合并后</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>状态</strong></td>
+<td>WorldKey（Hunger, Health）</td>
+<td>Attribute（属性值）</td>
+<td>统一的属性系统</td>
+</tr>
+<tr>
+<td><strong>标签</strong></td>
+<td>用 WorldKey 模拟（IsHungry, HasWeapon）</td>
+<td>GameplayTag（标记状态）</td>
+<td>统一的标签系统</td>
+</tr>
+<tr>
+<td><strong>行为单元</strong></td>
+<td>Action（EatFood, Attack）</td>
+<td>Ability（技能实例）</td>
+<td>Ability &#x3D; Action 的执行体</td>
+</tr>
+<tr>
+<td><strong>效果</strong></td>
+<td>Effect（Hunger -&#x3D; 30）</td>
+<td>GameplayEffect（属性修改）</td>
+<td>GameplayEffect &#x3D; Effect 的实现</td>
+</tr>
+</tbody></table>
+<p>合并后的 Agent 架构：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">AIController（入口）</span><br><span class="line">├── GOAPPlanner（决策层：选择目标、生成计划）</span><br><span class="line">│   ├── Goal 数据（什么是&quot;想要&quot;）</span><br><span class="line">│   └── 读取 Attributes + Tags（世界状态）</span><br><span class="line">├── GASAbilitySystem（执行层：运行能力）</span><br><span class="line">│   ├── Attributes（属性系统）</span><br><span class="line">│   ├── Tags（状态标签）</span><br><span class="line">│   ├── Abilities（能力执行体）</span><br><span class="line">│   └── GameplayEffects（属性修改）</span><br><span class="line">└── Debugger / Recorder（调试层）</span><br></pre></td></tr></table></figure>
+
+<p>决策层和执行层彼此只通过 Attributes 和 Tags 通信——GOAPPlanner 不直接调用 Ability，GASAbilitySystem 不直接读取 Goal。这是整篇文章的核心理念：<strong>用共享数据替代直接耦合</strong>。</p>
+<h2 id="属性驱动规划"><a href="#属性驱动规划" class="headerlink" title="属性驱动规划"></a>属性驱动规划</h2><p>这是整合后最精妙的部分。标准 GOAP 的流程是[^3]：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">传感器读取当前状态 → Planner 用状态匹配 Goal → 生成计划 → 执行</span><br></pre></td></tr></table></figure>
+
+<p>整合 GAS 后，流程变成：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">属性变化 → 触发 GameplayEffect → 添加/移除 Tag → GOAP 读取 Tag → 重新规划</span><br></pre></td></tr></table></figure>
+
+<p>一个具体例子：假设有个 NPC 角色，它的配置如下：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 属性定义</span></span><br><span class="line">Attributes:</span><br><span class="line">  Hunger    (<span class="number">0</span><span class="number">-100</span>)    <span class="comment">// 饱腹值，越高越饿</span></span><br><span class="line">  Thirst    (<span class="number">0</span><span class="number">-100</span>)    <span class="comment">// 口渴值</span></span><br><span class="line">  Health    (<span class="number">0</span><span class="number">-100</span>)    <span class="comment">// 生命值</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 阈值触发的标签规则</span></span><br><span class="line">Hunger &gt; <span class="number">70</span>  → 添加 Tag: <span class="string">&quot;Hungry&quot;</span></span><br><span class="line">Hunger &lt; <span class="number">20</span>  → 移除 Tag: <span class="string">&quot;Hungry&quot;</span></span><br><span class="line">Hunger &gt; <span class="number">90</span>  → 添加 Tag: <span class="string">&quot;Starving&quot;</span></span><br><span class="line">Health &lt; <span class="number">30</span>  → 添加 Tag: <span class="string">&quot;Wounded&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// GOAP 的 Goal</span></span><br><span class="line">Goal: FixHunger</span><br><span class="line">  条件: HasTag(<span class="string">&quot;Hungry&quot;</span>) = <span class="literal">false</span>    <span class="comment">// 不饿了就算完成</span></span><br><span class="line"></span><br><span class="line">Goal: Survive</span><br><span class="line">  条件: HasTag(<span class="string">&quot;Wounded&quot;</span>) = <span class="literal">false</span>   <span class="comment">// 脱离濒死状态</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// GOAP 的 Action（每个映射到一个 GAS Ability）</span></span><br><span class="line">Action: EatFood → Ability: Eat</span><br><span class="line">  条件: HasTag(<span class="string">&quot;Hungry&quot;</span>) = <span class="literal">true</span>, HasFood = <span class="literal">true</span></span><br><span class="line">  效果: Hunger -= <span class="number">30</span>, RemoveTag(<span class="string">&quot;Hungry&quot;</span>)</span><br><span class="line"></span><br><span class="line">Action: SearchFood → Ability: Gather</span><br><span class="line">  条件: HasFood = <span class="literal">false</span></span><br><span class="line">  效果: HasFood = <span class="literal">true</span></span><br><span class="line"></span><br><span class="line">Action: HealSelf → Ability: Heal</span><br><span class="line">  条件: HasTag(<span class="string">&quot;Wounded&quot;</span>) = <span class="literal">true</span>, HasMedkit = <span class="literal">true</span></span><br><span class="line">  效果: Health += <span class="number">40</span>, RemoveTag(<span class="string">&quot;Wounded&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>运作流程：</p>
+<ol>
+<li>时间流逝，Hunger 从 30 涨到 71</li>
+<li>GameplayEffect 检测到 Hunger &gt; 70，给 Agent 加上 Tag “Hungry”</li>
+<li>GOAP 下一帧做规划：读取 Tags，发现 HasTag(“Hungry”) &#x3D; true</li>
+<li>Planner 匹配到 Goal FixHunger，生成计划 [SearchFood, EatFood]</li>
+<li>计划传回 GAS：激活 Gather Ability，完成后激活 Eat Ability</li>
+<li>Eat Ability 执行 GameplayEffect：Hunger -&#x3D; 30</li>
+<li>Hunger 降到 41，不再 &gt; 70，移除 Tag “Hungry”</li>
+<li>GOAP 检测到 FixHunger 目标已达成，回到 Idle</li>
+</ol>
+<p>整个过程中，GOAP 和 GAS 没有直接互相调用——它们通过 <strong>Attributes→Tags→WorldState</strong> 这条数据链做到解耦。Attribute 变了，Tag 跟着变，GOAP 读到 Tag 变化就自动重规划。</p>
+<h2 id="GAS-能力替代-GOAP-的效果和传感器"><a href="#GAS-能力替代-GOAP-的效果和传感器" class="headerlink" title="GAS 能力替代 GOAP 的效果和传感器"></a>GAS 能力替代 GOAP 的效果和传感器</h2><p>前面的设计已经暗示了一点：GAS 的能力（Ability）不光能执行 Action，还能替代 GOAP 的两大组件[^2]。</p>
+<h3 id="替代-Effect"><a href="#替代-Effect" class="headerlink" title="替代 Effect"></a>替代 Effect</h3><p>GOAP 中的 Effect 本质上就是”修改世界状态的某个值”。GAS 的 GameplayEffect 天然擅长这个：</p>
+<table>
+<thead>
+<tr>
+<th>GOAP Effect</th>
+<th>GAS GameplayEffect</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Hunger -&#x3D; 30</td>
+<td>Instant Effect：减少 Hunger 属性</td>
+</tr>
+<tr>
+<td>Health +&#x3D; 40</td>
+<td>Instant Effect：增加 Health 属性</td>
+</tr>
+<tr>
+<td>持续燃烧伤害</td>
+<td>Duration Effect：每秒 Health -&#x3D; 5，持续 10s</td>
+</tr>
+<tr>
+<td>加速 buff</td>
+<td>Infinite Effect：MoveSpeed + 50%，直到被移除</td>
+</tr>
+</tbody></table>
+<p>GAS 的 Effect 比 GOAP 的 Effect 强得多——支持瞬时&#x2F;持续&#x2F;永久三种类型、支持叠加（Stacking）、支持条件触发、支持 Tag 联动。</p>
+<h3 id="替代-Sensor"><a href="#替代-Sensor" class="headerlink" title="替代 Sensor"></a>替代 Sensor</h3><p>这是一个更激进的想法：用 GAS 的能力替代 GOAP 的传感器。标准 Sensor 是”被动查询数据”，GAS Ability 可以是”主动检测条件并打 Tag”：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 传统 GOAP 传感器 —— 被 Planner 调用时返回</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">EnemyDetector</span> : <span class="title">LocalWorldSensorBase</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">override</span> SenseValue <span class="title">Sense</span>(<span class="params">IActionReceiver agent, ...</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> Physics.OverlapSphere(agent.Position, <span class="number">10f</span>).Any(x =&gt; x.IsEnemy);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// GAS 能力替代 —— 主动检测，打 Tag</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">EnemyDetectionAbility</span> : <span class="title">GameplayAbility</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 每 0.5s 检测一次周围敌人</span></span><br><span class="line">    <span class="comment">// 检测到 → 给自身添加 Tag &quot;EnemyNearby&quot;</span></span><br><span class="line">    <span class="comment">// 丢失目标 → 移除 Tag &quot;EnemyNearby&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>好处是传感器逻辑可以复用 GAS 的冷却、消耗、条件限制——比如”只有清醒状态下才能感知敌人”、”感知能力需要消耗注意力值”。坏处是增加了复杂度——简单的数值查询用传统 Sensor 更轻量。</p>
+<p>两个原则：</p>
+<ul>
+<li><strong>数值型状态</strong>（Hunger、Health）→ 用属性系统 + 阈值触发 Tag</li>
+<li><strong>感知型状态</strong>（EnemyNearby、ItemVisible）→ 用轻量 Sensor，除非需要冷却&#x2F;消耗</li>
+</ul>
+<h2 id="目标驱动的能力激活"><a href="#目标驱动的能力激活" class="headerlink" title="目标驱动的能力激活"></a>目标驱动的能力激活</h2><p>这是整合后的完整决策循环[^2]：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">┌─────────────────────────────────────────┐</span><br><span class="line">│  GOAPPlanner                             │</span><br><span class="line">│  ┌─────────┐  ┌──────────┐  ┌────────┐ │</span><br><span class="line">│  │ Goals   │→│ Planner  │→│ Plan   │ │</span><br><span class="line">│  └─────────┘  └──────────┘  └────────┘ │</span><br><span class="line">│       ↑                          │       │</span><br><span class="line">│  ┌────┴────┐              ┌──────┴────┐ │</span><br><span class="line">│  │  Tags   │              │  Abilities│ │</span><br><span class="line">│  └────┬────┘              └──────┬────┘ │</span><br><span class="line">│       │                          │       │</span><br><span class="line">├───────┼──────────────────────────┼───────┤</span><br><span class="line">│  GASAbilitySystem                 │       │</span><br><span class="line">│  ┌────┴────┐              ┌──────┴────┐ │</span><br><span class="line">│  │Attributes│──Threshold──│GameplayEff│ │</span><br><span class="line">│  └─────────┘              └───────────┘ │</span><br><span class="line">└─────────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+
+<p>流程：</p>
+<ol>
+<li>Attributes 变化越过阈值 → GameplayEffect 更新 Tags</li>
+<li>GOAPPlanner 读到 Tags 变化 → 重新评估 Goal 优先级</li>
+<li>选定 Goal → Planner 生成 Action 序列（每个 Action 对应一个 Ability）</li>
+<li>计划传给 GASAbilitySystem → 按顺序激活 Ability</li>
+<li>Ability 执行产生 GameplayEffect → 修改 Attributes → 回到步骤 1</li>
+</ol>
+<h2 id="踩坑提醒"><a href="#踩坑提醒" class="headerlink" title="踩坑提醒"></a>踩坑提醒</h2><p><strong>不要把 Tag 膨胀成”另一种状态机”</strong>。标签系统的初衷是标记布尔状态（饿了&#x2F;受伤了&#x2F;有敌人），但很容易演化成”用 Tag 的组合表达行为阶段”——比如 IsSearching + HasTarget + IsApproaching 组合来判断”正在追击”。这是行为树的逻辑，不该交给标签系统。</p>
+<p><strong>属性阈值不要设太密</strong>。Hunger 从 0 到 100 设了 5 个 Tag（Full, Satisfied, Neutral, Hungry, Starving），看起来精细，但每跨一个阈值就触发 GOAP 重规划——Agent 可能在两个阈值之间反复横跳（oscillation），导致行为抖动。加一个 hysteresis 窗口（比如降到 65 才移除”Hungry”而不是 70）能解决。</p>
+<p><strong>Ability 的执行状态要同步回 GOAP</strong>。不是所有的 Goal 都能被”属性变化”自动检测为完成。比如”杀死敌人”这个 Goal——GAS 执行完 Attack 之后，敌人死亡这件事需要通知 GOAP。不要在 Ability 里直接调 GOAP 的方法——通过 Tag（TargetDead）或事件系统通知。</p>
+<h2 id="回顾"><a href="#回顾" class="headerlink" title="回顾"></a>回顾</h2><p>GOAP + GAS 整合的核心是<strong>用数据（Attributes + Tags）做中间层</strong>，让决策和执行解耦：</p>
+<ul>
+<li>属性变化 → 标签变化 → Planner 重评估</li>
+<li>计划输出 → 能力激活 → 效果应用 → 属性变化（闭环）</li>
+</ul>
+<p>这套架构让 AI 的行为链条完全自动化——你只需要配置”什么属性触发什么标签”和”什么标签对应什么 Goal”，剩下的规划、执行、重评估全部由系统完成。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>[^1]: <a target="_blank" rel="noopener" href="https://github.com/tranek/gasdocumentation">tranek&#x2F;GASDocumentation</a> —— Unreal Engine GAS 的详细文档，GAS 核心概念（Ability、GameplayEffect、GameplayTag）的权威参考<br>[^2]: 本地笔记 GOAP+GAS.md —— GOAP 与 GAS 整合的架构设计、模块映射、属性驱动规划<br>[^3]: <a target="_blank" rel="noopener" href="https://github.com/BandoWare/GameplayTags">BandoWare&#x2F;GameplayTags</a> —— Unity 的 GameplayTag 实现参考</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://csy7749.github.io">Csy7749</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://csy7749.github.io/2026/08/08/%E6%B8%B8%E6%88%8FAI-GOAP%EF%BC%884%EF%BC%89%EF%BC%9AGOAP+GAS%E6%95%B4%E5%90%88/">https://csy7749.github.io/2026/08/08/%E6%B8%B8%E6%88%8FAI-GOAP%EF%BC%884%EF%BC%89%EF%BC%9AGOAP+GAS%E6%95%B4%E5%90%88/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%B8%B8%E6%88%8FAI/">游戏AI</a><a class="post-meta__tags" href="/tags/GOAP/">GOAP</a><a class="post-meta__tags" href="/tags/GAS/">GAS</a><a class="post-meta__tags" href="/tags/%E6%9E%B6%E6%9E%84/">架构</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/08/10/%E6%B8%B8%E6%88%8FAI-GOAP%EF%BC%885%EF%BC%89%EF%BC%9AGOAP+GAS%20%E8%9E%8D%E5%90%88%E6%9E%B6%E6%9E%84%E4%B8%8E%E8%AE%BE%E8%AE%A1%E6%96%B9%E5%90%91/" title="游戏AI-GOAP（5）：GOAP+GAS 融合架构与设计方向"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">游戏AI-GOAP（5）：GOAP+GAS 融合架构与设计方向</div></div><div class="info-2"><div class="info-item-1">GOAP+GAS 整合系列走到了最后一篇。第 4 篇讨论了”为什么整合”和”怎么共享基础设施”——用 Attribute 替代 WorldKey、用 GAS Ability 替代 GOAP 的 Effect 和 Sensor、用监听能力替代 Goal。这篇是面向落地的：把两套框架的组件摊开做对照，理清融合后的职责边界，然后给出一个可执行的设计方向和架构总览。  GOAP 组件回顾在讨论融合之前，先快速回顾 GOAP 的核心组件在 crashkonijn 框架中的形态[^1]。如果你读过第 1、2 篇，这一节可以当速查表用。 Goal（目标）Goal 代表 Agent 期望达成的结果，是 Planner 的出发点。    属性 说明    Conditions 基于 WorldKey 的一组标准，全部满足即视为目标达成。例如”保命”目标的条件可能是 IsHealthHigh + IsInSafeZone   BaseCost 目标的基础代价，用于多目标优先级排序   Goal 类无状态——它只向 Planner 提供”什么算达成”的标准，Planner 用它来决定最合适的 Acti...</div></div></div></a><a class="pagination-related" href="/2026/08/08/%E6%B8%B8%E6%88%8FAI-GOAP%EF%BC%883%EF%BC%89%EF%BC%9A%E5%8F%AF%E8%A7%86%E5%8C%96%E4%B8%8E%E5%A4%9A%E7%9B%AE%E6%A0%87/" title="游戏AI-GOAP（3）：可视化与多目标"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">游戏AI-GOAP（3）：可视化与多目标</div></div><div class="info-2"><div class="info-item-1">GOAP 的决策过程是一个黑盒——Agent 在 Idle 状态下跑 A* 搜索，吐出计划然后执行。当行为不符合预期时，你只能靠日志和直觉猜 Planner 是怎么想的。这篇文章讨论两件事：如何把 GOAP 的规划过程可视化出来辅助调试，以及如何处理”多个目标同时存在”这个 GOAP 的经典难题。  为什么要可视化GOAP 的行为链条是”从目标反向推理”的产物，不像行为树那样有明确的 if-else 分支让你逐行调试。当 NPC 做出了意料之外的行为（比如饿着肚子去巡逻而不是找食物），你很难一眼看出是传感器数据不对、Action 代价配错了、还是 Planner 根本没找到可行路径。 可视化要回答三个问题：  Agent 现在看到了什么？（自身状态 + 相关世界状态） Agent 想要什么？（当前激活的 Goal） 为什么是这个计划？（Planner 找到了哪些候选路径、选了哪一条）  可视化什么根据规划流程，可以分为四个视图[^1]： 1. 状态视图把 Agent 的当前状态和它感知到的世界状态摊开。 1234567891011Agent: Soldier_03  ── 自身状...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/08/10/%E6%B8%B8%E6%88%8FAI-GOAP%EF%BC%885%EF%BC%89%EF%BC%9AGOAP+GAS%20%E8%9E%8D%E5%90%88%E6%9E%B6%E6%9E%84%E4%B8%8E%E8%AE%BE%E8%AE%A1%E6%96%B9%E5%90%91/" title="游戏AI-GOAP（5）：GOAP+GAS 融合架构与设计方向"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-10</div><div class="info-item-2">游戏AI-GOAP（5）：GOAP+GAS 融合架构与设计方向</div></div><div class="info-2"><div class="info-item-1">GOAP+GAS 整合系列走到了最后一篇。第 4 篇讨论了”为什么整合”和”怎么共享基础设施”——用 Attribute 替代 WorldKey、用 GAS Ability 替代 GOAP 的 Effect 和 Sensor、用监听能力替代 Goal。这篇是面向落地的：把两套框架的组件摊开做对照，理清融合后的职责边界，然后给出一个可执行的设计方向和架构总览。  GOAP 组件回顾在讨论融合之前，先快速回顾 GOAP 的核心组件在 crashkonijn 框架中的形态[^1]。如果你读过第 1、2 篇，这一节可以当速查表用。 Goal（目标）Goal 代表 Agent 期望达成的结果，是 Planner 的出发点。    属性 说明    Conditions 基于 WorldKey 的一组标准，全部满足即视为目标达成。例如”保命”目标的条件可能是 IsHealthHigh + IsInSafeZone   BaseCost 目标的基础代价，用于多目标优先级排序   Goal 类无状态——它只向 Planner 提供”什么算达成”的标准，Planner 用它来决定最合适的 Acti...</div></div></div></a><a class="pagination-related" href="/2026/08/08/%E6%B8%B8%E6%88%8FAI-GOAP%EF%BC%883%EF%BC%89%EF%BC%9A%E5%8F%AF%E8%A7%86%E5%8C%96%E4%B8%8E%E5%A4%9A%E7%9B%AE%E6%A0%87/" title="游戏AI-GOAP（3）：可视化与多目标"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-08</div><div class="info-item-2">游戏AI-GOAP（3）：可视化与多目标</div></div><div class="info-2"><div class="info-item-1">GOAP 的决策过程是一个黑盒——Agent 在 Idle 状态下跑 A* 搜索，吐出计划然后执行。当行为不符合预期时，你只能靠日志和直觉猜 Planner 是怎么想的。这篇文章讨论两件事：如何把 GOAP 的规划过程可视化出来辅助调试，以及如何处理”多个目标同时存在”这个 GOAP 的经典难题。  为什么要可视化GOAP 的行为链条是”从目标反向推理”的产物，不像行为树那样有明确的 if-else 分支让你逐行调试。当 NPC 做出了意料之外的行为（比如饿着肚子去巡逻而不是找食物），你很难一眼看出是传感器数据不对、Action 代价配错了、还是 Planner 根本没找到可行路径。 可视化要回答三个问题：  Agent 现在看到了什么？（自身状态 + 相关世界状态） Agent 想要什么？（当前激活的 Goal） 为什么是这个计划？（Planner 找到了哪些候选路径、选了哪一条）  可视化什么根据规划流程，可以分为四个视图[^1]： 1. 状态视图把 Agent 的当前状态和它感知到的世界状态摊开。 1234567891011Agent: Soldier_03  ── 自身状...</div></div></div></a><a class="pagination-related" href="/2026/08/08/%E6%B8%B8%E6%88%8FAI-GOAP%EF%BC%882%EF%BC%89%EF%BC%9A%E6%A1%86%E6%9E%B6%E6%B7%B1%E5%85%A5/" title="游戏AI-GOAP（2）：框架深入"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-08</div><div class="info-item-2">游戏AI-GOAP（2）：框架深入</div></div><div class="info-2"><div class="info-item-1">crashkonijn&#x2F;GOAP 是目前 Unity 生态中最成熟的 GOAP 开源框架。这篇文章深入剖析它的架构设计——强类型的 Key 系统、Capability 配置模式、Local&#x2F;Global 双层传感器、GraphBuilder+Resolver 的两阶段规划，以及多线程架构——看看一个工程化的 GOAP 实现是怎么把第一篇里的理论落到代码里的。  为什么选 crashkonijn&#x2F;GOAPUnity 生态中有好几个 GOAP 实现：adammyhre&#x2F;Unity-GOAP 是教学向的最小实现，AkiKurisu&#x2F;AkiGOAP 侧重可视化编辑器，mountain-goap 追求极简通用。而 crashkonijn&#x2F;GOAP（以下简称 crashkonijn）是生产级的选择——多线程、强类型、Capability 模式配置，在性能和可维护性之间取得了很好的平衡[^1]。 它的设计哲学很明确：不是”给你一个 AI 模板拿去改”，而是”给你一套类型安全的 GOAP 基础设施，用它搭建你自己的 AI”。 整体架构c...</div></div></div></a><a class="pagination-related" href="/2026/08/08/%E6%B8%B8%E6%88%8FAI-GOAP%EF%BC%881%EF%BC%89%EF%BC%9A%E5%85%A5%E9%97%A8/" title="游戏AI-GOAP（1）：入门"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-08</div><div class="info-item-2">游戏AI-GOAP（1）：入门</div></div><div class="info-2"><div class="info-item-1">GOAP（Goal-Oriented Action Planning）是游戏 AI 中一种经典的决策架构——不靠手写状态机或行为树，而是让 NPC 自己组合动作来达成目标。这篇文章从 STRIPS 的起源聊起，梳理 GOAP 的核心组件、Planner 的 A* 搜索原理，以及 F.E.A.R. 里的实际应用和踩过的坑，作为这个系列的入门笔记。  GOAP 的来历GOAP（Goal-Oriented Action Planning，目标导向型行动计划）的根在 1971 年——斯坦福研究院的 STRIPS（STanford Research Institute Problem Solver）规划系统[^1]。STRIPS 的核心思想很简单：把世界描述为一组状态，把动作描述为”前提条件 + 效果”的对，然后用反向搜索找出从当前状态到目标状态的动作序列。 2005 年，Monolith Productions 在 F.E.A.R. 中首次把 STRIPS 的思路搬进游戏[^2]。结果令人震惊——敌方士兵会主动找掩体、盲射、破窗、投掷手雷逼玩家走位、队友之间互相通信配合。这些行为不是脚本...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Csy7749</div><div class="author-info-description">键来！</div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">6</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">8</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/csy7749"><i class="fab fa-github"></i><span>GitHub</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">日积月累</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E6%95%B4%E5%90%88"><span class="toc-number">1.</span> <span class="toc-text">为什么整合</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%B1%E4%BA%AB%E7%9A%84%E5%9F%BA%E7%A1%80%E8%AE%BE%E6%96%BD"><span class="toc-number">2.</span> <span class="toc-text">共享的基础设施</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B1%9E%E6%80%A7%E9%A9%B1%E5%8A%A8%E8%A7%84%E5%88%92"><span class="toc-number">3.</span> <span class="toc-text">属性驱动规划</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#GAS-%E8%83%BD%E5%8A%9B%E6%9B%BF%E4%BB%A3-GOAP-%E7%9A%84%E6%95%88%E6%9E%9C%E5%92%8C%E4%BC%A0%E6%84%9F%E5%99%A8"><span class="toc-number">4.</span> <span class="toc-text">GAS 能力替代 GOAP 的效果和传感器</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9B%BF%E4%BB%A3-Effect"><span class="toc-number">4.1.</span> <span class="toc-text">替代 Effect</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9B%BF%E4%BB%A3-Sensor"><span class="toc-number">4.2.</span> <span class="toc-text">替代 Sensor</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%9B%AE%E6%A0%87%E9%A9%B1%E5%8A%A8%E7%9A%84%E8%83%BD%E5%8A%9B%E6%BF%80%E6%B4%BB"><span class="toc-number">5.</span> <span class="toc-text">目标驱动的能力激活</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%B8%A9%E5%9D%91%E6%8F%90%E9%86%92"><span class="toc-number">6.</span> <span class="toc-text">踩坑提醒</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9E%E9%A1%BE"><span class="toc-number">7.</span> <span class="toc-text">回顾</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-number">8.</span> <span class="toc-text">参考</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/10/%E6%B8%B8%E6%88%8FAI-GOAP%EF%BC%885%EF%BC%89%EF%BC%9AGOAP+GAS%20%E8%9E%8D%E5%90%88%E6%9E%B6%E6%9E%84%E4%B8%8E%E8%AE%BE%E8%AE%A1%E6%96%B9%E5%90%91/" title="游戏AI-GOAP（5）：GOAP+GAS 融合架构与设计方向">游戏AI-GOAP（5）：GOAP+GAS 融合架构与设计方向</a><time datetime="2026-08-10T05:00:00.000Z" title="Created 2026-08-10 13:00:00">2026-08-10</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/08/%E6%B8%B8%E6%88%8FAI-GOAP%EF%BC%884%EF%BC%89%EF%BC%9AGOAP+GAS%E6%95%B4%E5%90%88/" title="游戏AI-GOAP（4）：GOAP + GAS 整合设计">游戏AI-GOAP（4）：GOAP + GAS 整合设计</a><time datetime="2026-08-08T15:59:00.000Z" title="Created 2026-08-08 23:59:00">2026-08-08</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/08/%E6%B8%B8%E6%88%8FAI-GOAP%EF%BC%883%EF%BC%89%EF%BC%9A%E5%8F%AF%E8%A7%86%E5%8C%96%E4%B8%8E%E5%A4%9A%E7%9B%AE%E6%A0%87/" title="游戏AI-GOAP（3）：可视化与多目标">游戏AI-GOAP（3）：可视化与多目标</a><time datetime="2026-08-08T15:30:00.000Z" title="Created 2026-08-08 23:30:00">2026-08-08</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/08/%E6%B8%B8%E6%88%8FAI-GOAP%EF%BC%882%EF%BC%89%EF%BC%9A%E6%A1%86%E6%9E%B6%E6%B7%B1%E5%85%A5/" title="游戏AI-GOAP（2）：框架深入">游戏AI-GOAP（2）：框架深入</a><time datetime="2026-08-08T15:00:00.000Z" title="Created 2026-08-08 23:00:00">2026-08-08</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/08/%E6%B8%B8%E6%88%8FAI-GOAP%EF%BC%881%EF%BC%89%EF%BC%9A%E5%85%A5%E9%97%A8/" title="游戏AI-GOAP（1）：入门">游戏AI-GOAP（1）：入门</a><time datetime="2026-08-08T14:30:00.000Z" title="Created 2026-08-08 22:30:00">2026-08-08</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2020 - 2026 By Csy7749</span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/koharu.model.json"},"display":{"position":"left","width":150,"height":300},"mobile":{"show":false},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/"});</script></body></html>
