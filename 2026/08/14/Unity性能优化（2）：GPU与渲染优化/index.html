@@ -1,0 +1,455 @@
+<!DOCTYPE html><html lang="zh-cn" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Unity性能优化（2）：GPU 与渲染优化 | Csy7749-Blog</title><meta name="author" content="Csy7749"><meta name="copyright" content="Csy7749"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="解决了 CPU，就该看 GPU 了。很多项目 CPU 主线程并不忙，帧率却上不去——瓶颈在渲染端：DrawCall 太多、Shader 太重、Overdraw 太凶。本文从渲染管线讲起，教你判断 GPU 瓶颈，再重点拆解四种合批方案（静态&#x2F;动态 Batching、SRP Batcher、GPU Instancing）的适用边界，最后覆盖 Shader、LOD、光照与后处理，配一个大世界">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Unity性能优化（2）：GPU 与渲染优化">
+<meta property="og:url" content="https://csy7749.github.io/2026/08/14/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%882%EF%BC%89%EF%BC%9AGPU%E4%B8%8E%E6%B8%B2%E6%9F%93%E4%BC%98%E5%8C%96/index.html">
+<meta property="og:site_name" content="Csy7749-Blog">
+<meta property="og:description" content="解决了 CPU，就该看 GPU 了。很多项目 CPU 主线程并不忙，帧率却上不去——瓶颈在渲染端：DrawCall 太多、Shader 太重、Overdraw 太凶。本文从渲染管线讲起，教你判断 GPU 瓶颈，再重点拆解四种合批方案（静态&#x2F;动态 Batching、SRP Batcher、GPU Instancing）的适用边界，最后覆盖 Shader、LOD、光照与后处理，配一个大世界">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://csy7749.github.io/img/avatar.png">
+<meta property="article:published_time" content="2026-08-13T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-08-13T08:34:09.117Z">
+<meta property="article:author" content="Csy7749">
+<meta property="article:tag" content="Unity">
+<meta property="article:tag" content="性能优化">
+<meta property="article:tag" content="DrawCall">
+<meta property="article:tag" content="GPU">
+<meta property="article:tag" content="渲染优化">
+<meta property="article:tag" content="SRP Batcher">
+<meta property="article:tag" content="Shader">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://csy7749.github.io/img/avatar.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Unity性能优化（2）：GPU 与渲染优化",
+  "url": "https://csy7749.github.io/2026/08/14/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%882%EF%BC%89%EF%BC%9AGPU%E4%B8%8E%E6%B8%B2%E6%9F%93%E4%BC%98%E5%8C%96/",
+  "image": "https://csy7749.github.io/img/avatar.png",
+  "datePublished": "2026-08-13T16:00:00.000Z",
+  "dateModified": "2026-08-13T08:34:09.117Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Csy7749",
+      "url": "https://csy7749.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://csy7749.github.io/2026/08/14/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%882%EF%BC%89%EF%BC%9AGPU%E4%B8%8E%E6%B8%B2%E6%9F%93%E4%BC%98%E5%8C%96/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        const data = { value }
+
+        if (ttl != null) {
+          data.expiry = Date.now() + ttl * 86400000
+        }
+
+        localStorage.setItem(key, JSON.stringify(data))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return
+
+        try {
+          const data = JSON.parse(itemStr)
+
+          if (data.expiry && Date.now() > data.expiry) {
+            localStorage.removeItem(key)
+            return
+          }
+
+          return data.value
+        } catch {
+          localStorage.removeItem(key)
+        }
+      }
+    }
+
+    const scriptCache = new Map()
+    const cssCache = new Map()
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => {
+        if (scriptCache.has(url)) {
+          return scriptCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const script = document.createElement('script')
+
+          script.src = url
+          script.async = true
+
+          for (const key in attr) {
+            script.setAttribute(key, attr[key])
+          }
+
+          script.onload = resolve
+          script.onerror = reject
+
+          document.head.appendChild(script)
+        })
+
+        scriptCache.set(url, promise)
+
+        return promise
+      },
+      getCSS: (url, id) => {
+        if (cssCache.has(url)) {
+          return cssCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const link = document.createElement('link')
+
+          link.rel = 'stylesheet'
+          link.href = url
+
+          if (id) {
+            link.id = id
+          }
+
+          link.onload = resolve
+          link.onerror = reject
+
+          document.head.appendChild(link)
+        })
+
+        cssCache.set(url, promise)
+
+        return promise
+      },
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+      const activateDarkMode = () => {
+        document.documentElement.dataset.theme = 'dark'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.dataset.theme = 'light'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Unity性能优化（2）：GPU 与渲染优化',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">16</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">42</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">6</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Csy7749-Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Unity性能优化（2）：GPU 与渲染优化</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Unity性能优化（2）：GPU 与渲染优化</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-08-13T16:00:00.000Z" title="Created 2026-08-14 00:00:00">2026-08-14</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-08-13T08:34:09.117Z" title="Updated 2026-08-13 16:34:09">2026-08-13</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Unity/">Unity</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Unity/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/">性能优化</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><blockquote>
+<p>解决了 CPU，就该看 GPU 了。很多项目 CPU 主线程并不忙，帧率却上不去——瓶颈在渲染端：DrawCall 太多、Shader 太重、Overdraw 太凶。本文从渲染管线讲起，教你判断 GPU 瓶颈，再重点拆解四种合批方案（静态&#x2F;动态 Batching、SRP Batcher、GPU Instancing）的适用边界，最后覆盖 Shader、LOD、光照与后处理，配一个大世界 DrawCall 从 3000 降到 200 的实战案例。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="一、渲染管线速览与-GPU-瓶颈判断"><a href="#一、渲染管线速览与-GPU-瓶颈判断" class="headerlink" title="一、渲染管线速览与 GPU 瓶颈判断"></a>一、渲染管线速览与 GPU 瓶颈判断</h2><h3 id="1-1-一条帧的渲染路径"><a href="#1-1-一条帧的渲染路径" class="headerlink" title="1.1 一条帧的渲染路径"></a>1.1 一条帧的渲染路径</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">CPU 侧                           GPU 侧</span><br><span class="line">──────                           ──────</span><br><span class="line">准备渲染状态（材质/纹理/参数）     顶点着色器（变换顶点）</span><br><span class="line">  ↓                                ↓</span><br><span class="line">提交 DrawCall                    光栅化（生成片元）</span><br><span class="line">  ↓                                ↓</span><br><span class="line">（等待 GPU 完成）                片元着色器（逐像素计算）</span><br><span class="line">                                    ↓</span><br><span class="line">                                 输出到帧缓冲 → 显示</span><br></pre></td></tr></table></figure>
+
+<p>关键理解：<strong>DrawCall 是 CPU 发给 GPU 的”渲染命令”</strong>。CPU 负责”打包下单”，GPU 负责”加工渲染”。任何一端慢了，帧率都上不去。</p>
+<h3 id="1-2-判断-GPU-瓶颈"><a href="#1-2-判断-GPU-瓶颈" class="headerlink" title="1.2 判断 GPU 瓶颈"></a>1.2 判断 GPU 瓶颈</h3><p>打开 Profiler 的 GPU Usage 模块（或 CPU Usage 对照）：</p>
+<ul>
+<li><strong>GPU Usage 很高、CPU 空闲</strong> → GPU bound，优化渲染（本文）</li>
+<li><strong><code>Gfx.WaitForPresent</code> 高</strong> → 两者都在等显示器刷新，有余量</li>
+<li><strong><code>Gfx.WaitForGfxCommandsFromMainThread</code> 高</strong> → CPU 提交命令太慢，拖累了 GPU</li>
+</ul>
+<p>口诀：<strong>GPU 段高 &#x3D; GPU 忙；WaitForPresent 高 &#x3D; 都在等。</strong></p>
+<h3 id="1-3-移动端-vs-PC-端的差异"><a href="#1-3-移动端-vs-PC-端的差异" class="headerlink" title="1.3 移动端 vs PC 端的差异"></a>1.3 移动端 vs PC 端的差异</h3><table>
+<thead>
+<tr>
+<th align="left">维度</th>
+<th align="left">PC</th>
+<th align="left">移动端</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">主要瓶颈</td>
+<td align="left">常是 CPU&#x2F;DrawCall</td>
+<td align="left">常是填充率（Fillrate）和带宽</td>
+</tr>
+<tr>
+<td align="left">敏感项</td>
+<td align="left">DrawCall 数量</td>
+<td align="left">Overdraw、Shader 复杂度、纹理带宽</td>
+</tr>
+<tr>
+<td align="left">精度</td>
+<td align="left">float 随便用</td>
+<td align="left">half 精度收益明显</td>
+</tr>
+</tbody></table>
+<p>所以移动端优化要额外关注：<strong>减少 Overdraw、简化 Shader、压缩纹理</strong>。</p>
+<h2 id="二、DrawCall-与-Batcher：合批的四种武器"><a href="#二、DrawCall-与-Batcher：合批的四种武器" class="headerlink" title="二、DrawCall 与 Batcher：合批的四种武器"></a>二、DrawCall 与 Batcher：合批的四种武器</h2><h3 id="2-1-DrawCall-为什么贵"><a href="#2-1-DrawCall-为什么贵" class="headerlink" title="2.1 DrawCall 为什么贵"></a>2.1 DrawCall 为什么贵</h3><p>每个 DrawCall 都要 CPU 做一套”状态准备”——设置材质、绑定纹理、上传 uniform 参数，再发给 GPU。<strong>DrawCall 多了，CPU 光做这些准备工作就忙不过来</strong>，GPU 反而在等。</p>
+<p>所以优化的核心目标：<strong>用更少的 DrawCall 画更多东西</strong>，即”合批”（Batching）。</p>
+<h3 id="2-2-静态-Batching：一次合并，长期复用"><a href="#2-2-静态-Batching：一次合并，长期复用" class="headerlink" title="2.2 静态 Batching：一次合并，长期复用"></a>2.2 静态 Batching：一次合并，长期复用</h3><p>把标记了 <code>Batching Static</code> 的<strong>静态物体</strong>（场景里不动的）合并成一个大的 mesh。</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 标记方式：Inspector 右上角勾选 Static，或代码</span></span><br><span class="line">gameObject.isStatic = <span class="literal">true</span>;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>优点</strong>：大量静态小物体（石头、路标、建筑装饰）合并后 DrawCall 骤降</li>
+<li><strong>条件</strong>：物体必须静态、材质相同</li>
+<li><strong>代价</strong>：合并后的 mesh 要<strong>额外占用一份内存</strong>（原始 mesh 保留 + 合并 mesh）</li>
+<li><strong>适用</strong>：场景固定不变、大量静态小物体的场景</li>
+</ul>
+<h3 id="2-3-动态-Batching：条件苛刻，别指望它"><a href="#2-3-动态-Batching：条件苛刻，别指望它" class="headerlink" title="2.3 动态 Batching：条件苛刻，别指望它"></a>2.3 动态 Batching：条件苛刻，别指望它</h3><p>运行时把满足条件的小 mesh 动态合并。听起来美好，但条件极严：</p>
+<ul>
+<li>顶点数 &lt; 300（部分平台）</li>
+<li>相同材质</li>
+<li>不能用多 Pass 的 Shader</li>
+<li>不能有骨骼、蒙皮等</li>
+</ul>
+<p><strong>结论</strong>：条件太苛刻，实际项目里大部分物体都不满足，<strong>别把它当主要优化手段</strong>。</p>
+<h3 id="2-4-SRP-Batcher（重点）：不减少-DrawCall，但让每个-DrawCall-变快"><a href="#2-4-SRP-Batcher（重点）：不减少-DrawCall，但让每个-DrawCall-变快" class="headerlink" title="2.4 SRP Batcher（重点）：不减少 DrawCall，但让每个 DrawCall 变快"></a>2.4 SRP Batcher（重点）：不减少 DrawCall，但让每个 DrawCall 变快</h3><p>这是 URP&#x2F;HDRP 的核心优化，原理和传统合批<strong>完全不同</strong>。</p>
+<p>传统渲染每个 DrawCall 都要 CPU 重新设置一遍材质属性；SRP Batcher 则把材质属性<strong>持久化在 GPU 端的一块大 CBUFFER 里</strong>，CPU 侧只需更新”per-object”的小数据（变换矩阵等），大幅降低每个 DrawCall 的 CPU 开销。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">传统：DrawCall → 设置材质A属性 → 设置纹理 → 绘制 → 设置材质B属性 → ...</span><br><span class="line">SRP：  DrawCall → 更新 object 数据 → 绘制（材质属性早就在 GPU 上了）</span><br></pre></td></tr></table></figure>
+
+<p><strong>注意</strong>：SRP Batcher <strong>不减少 DrawCall 数量</strong>，它减少的是<strong>每个 DrawCall 的准备成本</strong>。所以它和静态 Batching 可以叠加——静态 Batching 减少数量，SRP Batcher 降低单次成本。</p>
+<p><strong>启用条件</strong>：</p>
+<ol>
+<li>项目用 URP 或 HDRP</li>
+<li>Shader 兼容 SRP Batcher（材质属性声明在 <code>UnityPerMaterial</code> CBUFFER 里）</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">// 兼容 SRP Batcher 的写法：材质属性放进 UnityPerMaterial</span><br><span class="line">CBUFFER_START(UnityPerMaterial)</span><br><span class="line">    float4 _BaseColor;</span><br><span class="line">    float _Glossiness;</span><br><span class="line">CBUFFER_END</span><br></pre></td></tr></table></figure>
+
+<p>在 URP 的 Render Pipeline Asset 里勾选 <strong>SRP Batcher</strong> 即可启用。</p>
+<h3 id="2-5-GPU-Instancing：同一物体的千军万马"><a href="#2-5-GPU-Instancing：同一物体的千军万马" class="headerlink" title="2.5 GPU Instancing：同一物体的千军万马"></a>2.5 GPU Instancing：同一物体的千军万马</h3><p>用<strong>一次 DrawCall 绘制多个相同 mesh 的不同实例</strong>（位置&#x2F;缩放&#x2F;颜色不同）。</p>
+<ul>
+<li><strong>条件</strong>：相同 mesh + 相同材质</li>
+<li><strong>适用</strong>：大量相同物体——草地、树木、子弹、粒子</li>
+<li><strong>开启</strong>：材质勾选 <code>Enable GPU Instancing</code></li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">// Shader 里支持 instancing：用 UNITY_VERTEX_INPUT_INSTANCE_ID</span><br><span class="line">UNITY_VERTEX_INPUT_INSTANCE_ID</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-6-四种方案对比"><a href="#2-6-四种方案对比" class="headerlink" title="2.6 四种方案对比"></a>2.6 四种方案对比</h3><table>
+<thead>
+<tr>
+<th align="left">方案</th>
+<th align="left">减少 DrawCall？</th>
+<th align="left">降低单次成本？</th>
+<th align="left">适用场景</th>
+<th align="left">内存代价</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">静态 Batching</td>
+<td align="left">✅</td>
+<td align="left">❌</td>
+<td align="left">大量静态小物体</td>
+<td align="left">高（合并 mesh）</td>
+</tr>
+<tr>
+<td align="left">动态 Batching</td>
+<td align="left">✅</td>
+<td align="left">❌</td>
+<td align="left">极小物体（&lt;300顶点）</td>
+<td align="left">无</td>
+</tr>
+<tr>
+<td align="left">SRP Batcher</td>
+<td align="left">❌</td>
+<td align="left">✅</td>
+<td align="left">URP&#x2F;HDRP 通用</td>
+<td align="left">无</td>
+</tr>
+<tr>
+<td align="left">GPU Instancing</td>
+<td align="left">✅</td>
+<td align="left">✅</td>
+<td align="left">大量相同物体</td>
+<td align="left">低</td>
+</tr>
+</tbody></table>
+<p><strong>实战组合</strong>：URP 项目默认开 SRP Batcher，再对静态场景物体做静态 Batching，对大量相同物体用 GPU Instancing。</p>
+<h2 id="三、Shader-优化"><a href="#三、Shader-优化" class="headerlink" title="三、Shader 优化"></a>三、Shader 优化</h2><h3 id="3-1-Shader-Variant-爆炸"><a href="#3-1-Shader-Variant-爆炸" class="headerlink" title="3.1 Shader Variant 爆炸"></a>3.1 Shader Variant 爆炸</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">// ❌ multi_compile 会编译所有关键字组合，变体数量爆炸</span><br><span class="line">#pragma multi_compile _ FOG_ON FOG_OFF</span><br><span class="line">#pragma multi_compile _ NORMAL_MAP_ON NORMAL_MAP_OFF</span><br><span class="line"></span><br><span class="line">// ✅ shader_feature 只编译实际用到的组合</span><br><span class="line">#pragma shader_feature _ NORMAL_MAP_ON</span><br></pre></td></tr></table></figure>
+
+<p><code>multi_compile</code> 编译所有组合（2×2&#x3D;4 个变体），<code>shader_feature</code> 只编译用到的。<strong>能用 shader_feature 就不要 multi_compile</strong>，否则构建时间和包体都会膨胀。</p>
+<h3 id="3-2-ShaderVariantCollection-预热"><a href="#3-2-ShaderVariantCollection-预热" class="headerlink" title="3.2 ShaderVariantCollection 预热"></a>3.2 ShaderVariantCollection 预热</h3><p>Shader 变体在<strong>第一次用到时才编译</strong>，运行时编译会造成卡顿。用 <code>ShaderVariantCollection</code> 把会用到的变体提前收集，构建时一并编译：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Edit → Project Settings → Graphics → Shader Stripping</span><br><span class="line">新建 ShaderVariantCollection，加入项目用到的 Shader 变体</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-3-移动端慎用-discard-clip"><a href="#3-3-移动端慎用-discard-clip" class="headerlink" title="3.3 移动端慎用 discard &#x2F; clip"></a>3.3 移动端慎用 discard &#x2F; clip</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">// ❌ discard 会关闭 Early-Z，让隐藏像素也被完整计算</span><br><span class="line">if (alpha &lt; 0.5) discard;</span><br><span class="line"></span><br><span class="line">// ✅ 尽量用 alpha test 或改用不透明渲染</span><br></pre></td></tr></table></figure>
+
+<p><code>discard</code>&#x2F;<code>clip</code> 会破坏 GPU 的 Early-Z 优化，导致被遮挡的片元也被计算。移动端尤其敏感。</p>
+<h3 id="3-4-精度选择：half-vs-float"><a href="#3-4-精度选择：half-vs-float" class="headerlink" title="3.4 精度选择：half vs float"></a>3.4 精度选择：half vs float</h3><p>移动端 GPU（Mali&#x2F;Adreno）的 <code>half</code> 精度运算比 <code>float</code> 快，且省带宽：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">// ✅ 移动端优先 half（颜色、法线等不需要 full float 精度）</span><br><span class="line">half4 frag(v2f i) : SV_Target &#123;</span><br><span class="line">    half3 normal = normalize(i.normal);</span><br><span class="line">    half lighting = dot(normal, half3(0, 1, 0));</span><br><span class="line">    return half4(lighting, lighting, lighting, 1);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>PC 端收益不大，但移动端能明显省功耗和带宽。</p>
+<h2 id="四、几何与可见性"><a href="#四、几何与可见性" class="headerlink" title="四、几何与可见性"></a>四、几何与可见性</h2><h3 id="4-1-LOD：远小近大"><a href="#4-1-LOD：远小近大" class="headerlink" title="4.1 LOD：远小近大"></a>4.1 LOD：远小近大</h3><p>LOD Group 根据物体与相机的距离，切换不同精度的模型：</p>
+<ul>
+<li><strong>配置</strong>：给模型准备 LOD0（高模）、LOD1（中模）、LOD2（低模）</li>
+<li><strong>收益</strong>：远处物体面数骤降，GPU 顶点负担大幅下降</li>
+<li><strong>注意</strong>：LOD 切换有过渡开销，层级不要设太密（3 级够用）</li>
+</ul>
+<h3 id="4-2-遮挡剔除：看不见就别画"><a href="#4-2-遮挡剔除：看不见就别画" class="headerlink" title="4.2 遮挡剔除：看不见就别画"></a>4.2 遮挡剔除：看不见就别画</h3><p>遮挡剔除（Occlusion Culling）在<strong>烘焙阶段</strong>计算场景的空间遮挡关系，运行时隐藏被墙壁等完全遮挡的物体。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Window → Rendering → Occlusion Culling → Bake</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>只对<strong>静态物体</strong>有效</li>
+<li>动态物体作为”被遮挡者”需要额外设置（Occludee Static）</li>
+<li>大场景、室内场景收益极高</li>
+</ul>
+<h3 id="4-3-视锥剔除：Unity-自动做"><a href="#4-3-视锥剔除：Unity-自动做" class="headerlink" title="4.3 视锥剔除：Unity 自动做"></a>4.3 视锥剔除：Unity 自动做</h3><p>相机视锥外的物体，Unity 会自动剔除、不渲染。<strong>这是自动的，不要自己再实现一遍</strong>。你只需确保物体的 bounds 设置正确（<code>Mesh.bounds</code>、<code>Renderer.bounds</code>），否则 Unity 可能误判。</p>
+<h2 id="五、光照与后处理"><a href="#五、光照与后处理" class="headerlink" title="五、光照与后处理"></a>五、光照与后处理</h2><h3 id="5-1-Forward-vs-Deferred"><a href="#5-1-Forward-vs-Deferred" class="headerlink" title="5.1 Forward vs Deferred"></a>5.1 Forward vs Deferred</h3><table>
+<thead>
+<tr>
+<th align="left"></th>
+<th align="left">Forward（前向）</th>
+<th align="left">Deferred（延迟）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">多光源</td>
+<td align="left">每盏灯增加一次 Pass</td>
+<td align="left">光源数量影响小</td>
+</tr>
+<tr>
+<td align="left">MSAA</td>
+<td align="left">支持</td>
+<td align="left">不支持</td>
+</tr>
+<tr>
+<td align="left">移动端</td>
+<td align="left">✅ 首选</td>
+<td align="left">❌ 带宽压力大</td>
+</tr>
+</tbody></table>
+<p>移动端几乎一律用 <strong>Forward</strong>。</p>
+<h3 id="5-2-烘焙光照"><a href="#5-2-烘焙光照" class="headerlink" title="5.2 烘焙光照"></a>5.2 烘焙光照</h3><p>静态物体和静态光源的光照，<strong>烘焙进光照贴图</strong>，运行时零光照计算：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Lighting 设置 → 静态物体标记 Static → 光源标 Baked → 烘焙</span><br></pre></td></tr></table></figure>
+
+<p>动态物体用光照探针（Light Probe）接收烘焙的间接光。</p>
+<h3 id="5-3-阴影设置"><a href="#5-3-阴影设置" class="headerlink" title="5.3 阴影设置"></a>5.3 阴影设置</h3><p>阴影是 GPU 大户，按需收敛：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Light light = GetComponent&lt;Light&gt;();</span><br><span class="line">light.shadows = LightShadows.Soft;      <span class="comment">// 或用 Hard / None</span></span><br><span class="line">light.shadowStrength = <span class="number">0.8f</span>;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>减少投影阴影的光源数量</li>
+<li>降低阴影分辨率、缩短阴影距离</li>
+<li>减少阴影级联数（Cascades）</li>
+</ul>
+<h3 id="5-4-后处理的-GPU-代价"><a href="#5-4-后处理的-GPU-代价" class="headerlink" title="5.4 后处理的 GPU 代价"></a>5.4 后处理的 GPU 代价</h3><p>Post Processing 的 Bloom、SSAO、DOF 都是 GPU 重度开销：</p>
+<ul>
+<li><strong>Bloom</strong> 是移动端最常用的后处理，但也是填充率杀手，慎用高分辨率</li>
+<li><strong>移动端建议</strong>：只保留 Bloom + ToneMapping，其余关掉</li>
+<li>后处理分辨率可适当降低</li>
+</ul>
+<h2 id="六、实战案例：大世界-DrawCall-从-3000-到-200"><a href="#六、实战案例：大世界-DrawCall-从-3000-到-200" class="headerlink" title="六、实战案例：大世界 DrawCall 从 3000 到 200"></a>六、实战案例：大世界 DrawCall 从 3000 到 200</h2><h3 id="6-1-症状"><a href="#6-1-症状" class="headerlink" title="6.1 症状"></a>6.1 症状</h3><p>开放世界场景，Frame Debugger 显示 DrawCall <strong>3000+</strong>，帧率 25 FPS。CPU 主线程不忙，GPU Usage 满。</p>
+<h3 id="6-2-诊断"><a href="#6-2-诊断" class="headerlink" title="6.2 诊断"></a>6.2 诊断</h3><ol>
+<li>开 Frame Debugger，发现大量零散 DrawCall：树木、石头、草、建筑装饰各自独立提交</li>
+<li>大量静态物体未标记 Static</li>
+<li>同类物体（树木、草地）未用 GPU Instancing</li>
+<li>Shader 变体过多，构建时编译了上千个变体</li>
+</ol>
+<h3 id="6-3-修复"><a href="#6-3-修复" class="headerlink" title="6.3 修复"></a>6.3 修复</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">1. 静态物体标记 Static + 静态 Batching：DrawCall -1500</span><br><span class="line">2. 树木/草地/石头用 GPU Instancing：DrawCall -800</span><br><span class="line">3. 项目切 URP + 开 SRP Batcher：单 DrawCall CPU 成本 -60%</span><br><span class="line">4. Shader multi_compile 改 shader_feature：变体数 -70%</span><br><span class="line">5. 远处物体加 LOD + 烘焙遮挡剔除：GPU 顶点负担 -40%</span><br></pre></td></tr></table></figure>
+
+<h3 id="6-4-验证"><a href="#6-4-验证" class="headerlink" title="6.4 验证"></a>6.4 验证</h3><table>
+<thead>
+<tr>
+<th align="left">指标</th>
+<th align="left">优化前</th>
+<th align="left">优化后</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">DrawCall</td>
+<td align="left">3000+</td>
+<td align="left">200</td>
+</tr>
+<tr>
+<td align="left">帧率</td>
+<td align="left">25 FPS</td>
+<td align="left">55 FPS</td>
+</tr>
+<tr>
+<td align="left">GPU 顶点负担</td>
+<td align="left">高</td>
+<td align="left">-40%</td>
+</tr>
+<tr>
+<td align="left">构建时间</td>
+<td align="left">长</td>
+<td align="left">-30%</td>
+</tr>
+</tbody></table>
+<h2 id="七、GPU-优化-Checklist"><a href="#七、GPU-优化-Checklist" class="headerlink" title="七、GPU 优化 Checklist"></a>七、GPU 优化 Checklist</h2><ol>
+<li><strong>[ ] 归属</strong>：Profiler 确认 GPU bound（GPU Usage 高、CPU 空闲）</li>
+<li><strong>[ ] 合批方案</strong>：静态物体标 Static、大量同类物体用 Instancing、URP 开 SRP Batcher</li>
+<li><strong>[ ] DrawCall 基线</strong>：Frame Debugger 记录优化前 DrawCall 数</li>
+<li><strong>[ ] Shader 变体</strong>：multi_compile 已换 shader_feature，变体已收集预热</li>
+<li><strong>[ ] discard&#x2F;clip</strong>：移动端 Shader 已避免</li>
+<li><strong>[ ] 精度</strong>：移动端 Shader 已用 half</li>
+<li><strong>[ ] LOD</strong>：模型已配 3 级 LOD</li>
+<li><strong>[ ] 遮挡剔除</strong>：静态场景已烘焙</li>
+<li><strong>[ ] 光照</strong>：静态光已烘焙、阴影已收敛</li>
+<li><strong>[ ] 后处理</strong>：移动端只留 Bloom&#x2F;ToneMapping，分辨率已调</li>
+<li><strong>[ ] 验证</strong>：复测 DrawCall、GPU Usage、帧率</li>
+</ol>
+<h2 id="八、结语"><a href="#八、结语" class="headerlink" title="八、结语"></a>八、结语</h2><p>GPU 优化的主线是<strong>让 CPU 少打单、让 GPU 少算无用的像素</strong>：合批解决”单太多”，LOD&#x2F;剔除解决”画太多”，Shader 简化解决”算太重”。四种合批方案各有边界，别盲目全开——静态 Batching 吃内存，动态 Batching 条件苛刻，SRP Batcher 只降单次成本，Instancing 只适合相同物体。理解了边界，才能在 Frame Debugger 里做出正确的取舍。</p>
+<hr>
+<p><em>系列导航：</em><br><em>- 上一篇：[Unity性能优化（1）：CPU 与脚本优化]</em><br><em>- 下一篇：[Unity性能优化（3）：内存管理与 GC]</em><br><em>- 系列规划：[Unity性能优化系列-规划]</em></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://csy7749.github.io">Csy7749</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://csy7749.github.io/2026/08/14/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%882%EF%BC%89%EF%BC%9AGPU%E4%B8%8E%E6%B8%B2%E6%9F%93%E4%BC%98%E5%8C%96/">https://csy7749.github.io/2026/08/14/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%882%EF%BC%89%EF%BC%9AGPU%E4%B8%8E%E6%B8%B2%E6%9F%93%E4%BC%98%E5%8C%96/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Unity/">Unity</a><a class="post-meta__tags" href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/">性能优化</a><a class="post-meta__tags" href="/tags/DrawCall/">DrawCall</a><a class="post-meta__tags" href="/tags/GPU/">GPU</a><a class="post-meta__tags" href="/tags/%E6%B8%B2%E6%9F%93%E4%BC%98%E5%8C%96/">渲染优化</a><a class="post-meta__tags" href="/tags/SRP-Batcher/">SRP Batcher</a><a class="post-meta__tags" href="/tags/Shader/">Shader</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/08/14/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%885%EF%BC%89%EF%BC%9A%E8%B5%84%E6%BA%90%E4%B8%8E%E8%B5%84%E4%BA%A7%E7%AE%A1%E7%90%86/" title="Unity性能优化（5）：资源与资产管理"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">Unity性能优化（5）：资源与资产管理</div></div><div class="info-2"><div class="info-item-1"> 资源优化是”配置即性能”的典型——很多项目不改一行代码，只把纹理导入设置、音频格式、加载策略调一遍，就能砍掉一半内存和一半加载时间。本文按”导入 → 加载 → 卸载”三个阶段，逐个拆解纹理、网格、音频的导入设置，再对比 AssetBundle 与 Addressables 两种加载方案，最后给出一个首场景从 8 秒到 1.5 秒的实战案例。    一、资源三大阶段：导入 → 加载 → 卸载一个资源的完整生命周期分三个阶段，每阶段的优化手段完全不同：    阶段 决定什么 优化手段    导入 资源在包里的格式、体积 Import Settings（本文 2~4 节）   加载 运行时进内存的速度和方式 AssetBundle &#x2F; Addressables（本文第 5 节）   卸载 不用时能否正确释放 引用管理、UnloadUnusedAssets   最常见的坑：只关注加载（用了 Addressables 就以为万事大吉），却忽略了导入——一张 4096 的无压缩纹理，无论怎么加载，内存都是几百 MB。 所以正确的优化顺序是：先导入、再加载、最后卸载。 二、纹理优化...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%881%EF%BC%89%EF%BC%9ACPU%E4%B8%8E%E8%84%9A%E6%9C%AC%E4%BC%98%E5%8C%96/" title="Unity性能优化（1）：CPU 与脚本优化"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">Unity性能优化（1）：CPU 与脚本优化</div></div><div class="info-2"><div class="info-item-1"> CPU 是游戏性能的”第一现场”——大多数卡顿，追到最后都落在主线程的某段脚本上。本文先帮你建立 CPU 性能模型、判断瓶颈归属，再逐个击破四个高频开销源：Update 模式、GameObject&#x2F;Component 操作、物理动画、以及最后的杀手锏 Job System + Burst。每节都给”坏代码 → 好代码”的对照，配一个 1000 敌人寻路的完整实战案例。    一、CPU 性能模型：主线程到底在忙什么Unity 的 CPU 侧由多条线程协作，理解它们的分工是优化的前提。 1.1 三条关键线程   线程 职责    主线程 你的脚本逻辑、物理、动画、以及向渲染线程提交渲染命令   渲染线程 把主线程提交的渲染命令整理后发给 GPU（多线程渲染模式下独立）   Job 线程池 Job System 的工作线程，数量约等于 CPU 核数 − 1   大多数游戏逻辑都挤在主线程上，所以”CPU 优化”约等于”主线程脚本优化”。 1.2 PlayerLoop：主线程的固定班次主线程不是随意执行的，它按 PlayerLoop 的固定顺序逐段推进。骨架大致是： 123...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/08/13/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96-UGUI%EF%BC%882%EF%BC%89%EF%BC%9ARebuild%E4%B8%8ERebatch%E6%B7%B1%E5%BA%A6%E8%A7%A3%E6%9E%90/" title="Unity性能优化-UGUI（2）：Rebuild 与 Rebatch 深度解析"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity性能优化-UGUI（2）：Rebuild 与 Rebatch 深度解析</div></div><div class="info-2"><div class="info-item-1"> 上一篇建立了 UGUI 的底层地基：Canvas 是渲染单元，CanvasRenderer 持有网格，脏标记触发重建，CanvasUpdateRegistry 统一调度。这一篇往深里走两步——Rebuild 到底怎么”重造网格”，Rebatch 又凭什么决定哪些元素能合进同一个 DrawCall。读完你会明白 Frame Debugger 里每一条红色高亮到底在告诉你什么。    一、两个动作，两种成本模型先回顾边界：Rebuild 是点成本（单个元素重造网格），Rebatch 是面成本（整个 Canvas 重新合批）。 两者遵循一个铁律：Rebuild 必然触发 Rebatch，但 Rebatch 不一定由 Rebuild 引起。  你改了 Image 的颜色 → Rebuild 这个 Image（顶点颜色重算）→ 必然 Rebatch 整个 Canvas 你只调整了元素在 Hierarchy 里的兄弟顺序 → 没有 Rebuild，但渲染深度变了 → 单独触发 Rebatch  理解这个铁律，才能读懂 Profiler 里的两个指标：Canvas.SendWillRende...</div></div></div></a><a class="pagination-related" href="/2026/08/14/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%885%EF%BC%89%EF%BC%9A%E8%B5%84%E6%BA%90%E4%B8%8E%E8%B5%84%E4%BA%A7%E7%AE%A1%E7%90%86/" title="Unity性能优化（5）：资源与资产管理"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-14</div><div class="info-item-2">Unity性能优化（5）：资源与资产管理</div></div><div class="info-2"><div class="info-item-1"> 资源优化是”配置即性能”的典型——很多项目不改一行代码，只把纹理导入设置、音频格式、加载策略调一遍，就能砍掉一半内存和一半加载时间。本文按”导入 → 加载 → 卸载”三个阶段，逐个拆解纹理、网格、音频的导入设置，再对比 AssetBundle 与 Addressables 两种加载方案，最后给出一个首场景从 8 秒到 1.5 秒的实战案例。    一、资源三大阶段：导入 → 加载 → 卸载一个资源的完整生命周期分三个阶段，每阶段的优化手段完全不同：    阶段 决定什么 优化手段    导入 资源在包里的格式、体积 Import Settings（本文 2~4 节）   加载 运行时进内存的速度和方式 AssetBundle &#x2F; Addressables（本文第 5 节）   卸载 不用时能否正确释放 引用管理、UnloadUnusedAssets   最常见的坑：只关注加载（用了 Addressables 就以为万事大吉），却忽略了导入——一张 4096 的无压缩纹理，无论怎么加载，内存都是几百 MB。 所以正确的优化顺序是：先导入、再加载、最后卸载。 二、纹理优化...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96-UGUI%EF%BC%881%EF%BC%89%EF%BC%9A%E5%BA%95%E5%B1%82%E6%B8%B2%E6%9F%93%E6%9C%BA%E5%88%B6/" title="Unity性能优化-UGUI（1）：底层渲染机制"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity性能优化-UGUI（1）：底层渲染机制</div></div><div class="info-2"><div class="info-item-1"> 这是”Unity 性能优化”系列中 UGUI 专题的第一篇。很多人背熟了”少用 Layout Group、多打图集、关闭 Raycast Target”这些口诀，却说不清为什么有效——因为真正的优化依据藏在 UGUI 的底层渲染机制里。本文从源码层面拆解 Canvas、CanvasRenderer、脏标记系统和重建调度器，让你理解每一条优化建议背后的因果链。    一、先回答一个根本问题：UGUI 为什么”慢”？先破除一个常见误解：UGUI 的瓶颈几乎不在 GPU，而在 CPU。 普通 3D 模型的渲染是”顶点数据早就备好了，每帧直接提交”；而 UGUI 的画面是”每帧根据当前 UI 状态临时拼出来的”——一个按钮的位置变了，它的顶点坐标、三角形索引、UV、颜色全部要重新生成一遍，再把生成结果提交给渲染管线。 这个”临时拼装”的过程就是 UGUI 性能问题的根源。要理解它，必须先搞清楚四层结构： 1234Canvas（渲染单元）  └── Graphic（UI 组件：Image / Text / RawImage）        └── CanvasRenderer（网格数据的...</div></div></div></a><a class="pagination-related" href="/2026/08/10/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E7%B3%BB%E5%88%97-%E8%A7%84%E5%88%92/" title="Unity 性能优化系列·写作规划"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-10</div><div class="info-item-2">Unity 性能优化系列·写作规划</div></div><div class="info-2"><div class="info-item-1">系列定位名称：Unity 性能优化七讲 目标读者：有 1-3 年 Unity 经验的开发者，能读代码、有基本 Profiler 概念，但缺乏系统性优化方法论。 篇幅标准：单篇 3000-5000 字，可独立阅读，合起来构成完整体系。 写作原则：  每篇必须有”从问题到修复”的完整链路（建数据 → 定位 → 改 → 验证） 代码示例完整可运行，不做伪代码 优先使用 Unity 2022.3 LTS+ API，标注版本差异 每篇末尾附 checklist，方便读者自查项目   篇目总览1234567第1讲 CPU 与脚本优化        ← 开发者最常触碰的层（✅ 已完成）第2讲 GPU 与渲染优化        ← 画面瓶颈（✅ 已完成）第3讲 内存管理与 GC         ← 卡顿根源（✅ 已完成）第4讲 UGUI 专题（3篇）      ← UI 是重灾区（✅ 已完成）第5讲 资源与资产管理        ← 导入→加载→卸载全生命周期（✅ 已完成）第6讲 C# 语言层优化         ← 从语言特性要性能（✅ 已完成）第7讲 工具链与工作流        ← 授人以...</div></div></div></a><a class="pagination-related" href="/2026/08/14/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%887%EF%BC%89%EF%BC%9A%E5%B7%A5%E5%85%B7%E9%93%BE%E4%B8%8E%E5%B7%A5%E4%BD%9C%E6%B5%81/" title="Unity性能优化（7）：工具链与工作流"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-14</div><div class="info-item-2">Unity性能优化（7）：工具链与工作流</div></div><div class="info-2"><div class="info-item-1"> 这是”Unity 性能优化”系列的收官篇。前六讲都在讲”优化什么”，这一讲讲”怎么找到要优化的地方”——工具就是你的武器。本文覆盖 Profiler 的深度用法、Frame Debugger、Memory Profiler、外部抓帧工具，以及如何把性能检测自动化进 CI&#x2F;CD，最后给出贯穿全系列的优化工作流。    一、Profiler 深度使用：性能优化的主战场1.1 模块布局Profiler（Window → Analysis → Profiler）按资源类型分模块：    模块 定位什么    CPU Usage 主线程各段耗时（脚本、物理、渲染提交）   GPU Usage GPU 各阶段耗时（顶点、片元、后处理）   Memory 托管&#x2F;原生内存、GC 分配   Rendering DrawCall、SetPass、三角面、顶点数   Audio &#x2F; Physics 音频、物理子系统开销   先看 CPU Usage 判断瓶颈归属，再看对应模块深挖，这是标准起步动作。 1.2 连接真机Editor 里跑的数据和真机天差地别，性能优化必须上...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96-UGUI%EF%BC%883%EF%BC%89%EF%BC%9A%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E5%AE%9E%E6%88%98/" title="Unity性能优化-UGUI（3）：性能优化实战"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity性能优化-UGUI（3）：性能优化实战</div></div><div class="info-2"><div class="info-item-1"> 前两篇讲清了 UGUI 的底层机制和诊断方法，这一篇落地到可执行的代码。你会拿到一套”拿来即用”的优化武器库：脏值检查、CanvasGroup 显隐、Layout 禁用、TextMeshPro 迁移、Raycast 批量关闭、对象池与循环列表，最后用一个排行榜实战案例串起全部技巧，并给出可直接打印贴在工位上的 Checklist。    一、优化策略总览按”投入产出比”从高到低排序，这就是本文的行进路线：    优先级 策略 一句话理由    ★★★★★ 脏值检查 消除 80% 的无效 Rebuild，代价几乎为零   ★★★★★ 关闭 Raycast Target 一行代码，EventSystem 压力骤降   ★★★★☆ CanvasGroup 代替 SetActive 频繁显隐零重建   ★★★★☆ 打 Sprite Atlas 消灭合批的最大敌人：纹理不一致   ★★★★☆ 禁用 Layout Group 掐掉指数级递归计算   ★★★☆☆ TextMeshPro 迁移 文字渲染全面降本   ★★★☆☆ 对象池 + 循环列表 海量列表的唯一正解   下面逐个展开，每个都...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Csy7749</div><div class="author-info-description">键来！</div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">16</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">42</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">6</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/csy7749"><i class="fab fa-github"></i><span>GitHub</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">日积月累</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%B8%B2%E6%9F%93%E7%AE%A1%E7%BA%BF%E9%80%9F%E8%A7%88%E4%B8%8E-GPU-%E7%93%B6%E9%A2%88%E5%88%A4%E6%96%AD"><span class="toc-number">1.</span> <span class="toc-text">一、渲染管线速览与 GPU 瓶颈判断</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E4%B8%80%E6%9D%A1%E5%B8%A7%E7%9A%84%E6%B8%B2%E6%9F%93%E8%B7%AF%E5%BE%84"><span class="toc-number">1.1.</span> <span class="toc-text">1.1 一条帧的渲染路径</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E5%88%A4%E6%96%AD-GPU-%E7%93%B6%E9%A2%88"><span class="toc-number">1.2.</span> <span class="toc-text">1.2 判断 GPU 瓶颈</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E7%A7%BB%E5%8A%A8%E7%AB%AF-vs-PC-%E7%AB%AF%E7%9A%84%E5%B7%AE%E5%BC%82"><span class="toc-number">1.3.</span> <span class="toc-text">1.3 移动端 vs PC 端的差异</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81DrawCall-%E4%B8%8E-Batcher%EF%BC%9A%E5%90%88%E6%89%B9%E7%9A%84%E5%9B%9B%E7%A7%8D%E6%AD%A6%E5%99%A8"><span class="toc-number">2.</span> <span class="toc-text">二、DrawCall 与 Batcher：合批的四种武器</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-DrawCall-%E4%B8%BA%E4%BB%80%E4%B9%88%E8%B4%B5"><span class="toc-number">2.1.</span> <span class="toc-text">2.1 DrawCall 为什么贵</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E9%9D%99%E6%80%81-Batching%EF%BC%9A%E4%B8%80%E6%AC%A1%E5%90%88%E5%B9%B6%EF%BC%8C%E9%95%BF%E6%9C%9F%E5%A4%8D%E7%94%A8"><span class="toc-number">2.2.</span> <span class="toc-text">2.2 静态 Batching：一次合并，长期复用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E5%8A%A8%E6%80%81-Batching%EF%BC%9A%E6%9D%A1%E4%BB%B6%E8%8B%9B%E5%88%BB%EF%BC%8C%E5%88%AB%E6%8C%87%E6%9C%9B%E5%AE%83"><span class="toc-number">2.3.</span> <span class="toc-text">2.3 动态 Batching：条件苛刻，别指望它</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-SRP-Batcher%EF%BC%88%E9%87%8D%E7%82%B9%EF%BC%89%EF%BC%9A%E4%B8%8D%E5%87%8F%E5%B0%91-DrawCall%EF%BC%8C%E4%BD%86%E8%AE%A9%E6%AF%8F%E4%B8%AA-DrawCall-%E5%8F%98%E5%BF%AB"><span class="toc-number">2.4.</span> <span class="toc-text">2.4 SRP Batcher（重点）：不减少 DrawCall，但让每个 DrawCall 变快</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-5-GPU-Instancing%EF%BC%9A%E5%90%8C%E4%B8%80%E7%89%A9%E4%BD%93%E7%9A%84%E5%8D%83%E5%86%9B%E4%B8%87%E9%A9%AC"><span class="toc-number">2.5.</span> <span class="toc-text">2.5 GPU Instancing：同一物体的千军万马</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-6-%E5%9B%9B%E7%A7%8D%E6%96%B9%E6%A1%88%E5%AF%B9%E6%AF%94"><span class="toc-number">2.6.</span> <span class="toc-text">2.6 四种方案对比</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81Shader-%E4%BC%98%E5%8C%96"><span class="toc-number">3.</span> <span class="toc-text">三、Shader 优化</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-Shader-Variant-%E7%88%86%E7%82%B8"><span class="toc-number">3.1.</span> <span class="toc-text">3.1 Shader Variant 爆炸</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-ShaderVariantCollection-%E9%A2%84%E7%83%AD"><span class="toc-number">3.2.</span> <span class="toc-text">3.2 ShaderVariantCollection 预热</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E7%A7%BB%E5%8A%A8%E7%AB%AF%E6%85%8E%E7%94%A8-discard-clip"><span class="toc-number">3.3.</span> <span class="toc-text">3.3 移动端慎用 discard &#x2F; clip</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-4-%E7%B2%BE%E5%BA%A6%E9%80%89%E6%8B%A9%EF%BC%9Ahalf-vs-float"><span class="toc-number">3.4.</span> <span class="toc-text">3.4 精度选择：half vs float</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E5%87%A0%E4%BD%95%E4%B8%8E%E5%8F%AF%E8%A7%81%E6%80%A7"><span class="toc-number">4.</span> <span class="toc-text">四、几何与可见性</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-LOD%EF%BC%9A%E8%BF%9C%E5%B0%8F%E8%BF%91%E5%A4%A7"><span class="toc-number">4.1.</span> <span class="toc-text">4.1 LOD：远小近大</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E9%81%AE%E6%8C%A1%E5%89%94%E9%99%A4%EF%BC%9A%E7%9C%8B%E4%B8%8D%E8%A7%81%E5%B0%B1%E5%88%AB%E7%94%BB"><span class="toc-number">4.2.</span> <span class="toc-text">4.2 遮挡剔除：看不见就别画</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E8%A7%86%E9%94%A5%E5%89%94%E9%99%A4%EF%BC%9AUnity-%E8%87%AA%E5%8A%A8%E5%81%9A"><span class="toc-number">4.3.</span> <span class="toc-text">4.3 视锥剔除：Unity 自动做</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E5%85%89%E7%85%A7%E4%B8%8E%E5%90%8E%E5%A4%84%E7%90%86"><span class="toc-number">5.</span> <span class="toc-text">五、光照与后处理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-Forward-vs-Deferred"><span class="toc-number">5.1.</span> <span class="toc-text">5.1 Forward vs Deferred</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7"><span class="toc-number">5.2.</span> <span class="toc-text">5.2 烘焙光照</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-%E9%98%B4%E5%BD%B1%E8%AE%BE%E7%BD%AE"><span class="toc-number">5.3.</span> <span class="toc-text">5.3 阴影设置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-4-%E5%90%8E%E5%A4%84%E7%90%86%E7%9A%84-GPU-%E4%BB%A3%E4%BB%B7"><span class="toc-number">5.4.</span> <span class="toc-text">5.4 后处理的 GPU 代价</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E5%AE%9E%E6%88%98%E6%A1%88%E4%BE%8B%EF%BC%9A%E5%A4%A7%E4%B8%96%E7%95%8C-DrawCall-%E4%BB%8E-3000-%E5%88%B0-200"><span class="toc-number">6.</span> <span class="toc-text">六、实战案例：大世界 DrawCall 从 3000 到 200</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E7%97%87%E7%8A%B6"><span class="toc-number">6.1.</span> <span class="toc-text">6.1 症状</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E8%AF%8A%E6%96%AD"><span class="toc-number">6.2.</span> <span class="toc-text">6.2 诊断</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3-%E4%BF%AE%E5%A4%8D"><span class="toc-number">6.3.</span> <span class="toc-text">6.3 修复</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-4-%E9%AA%8C%E8%AF%81"><span class="toc-number">6.4.</span> <span class="toc-text">6.4 验证</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81GPU-%E4%BC%98%E5%8C%96-Checklist"><span class="toc-number">7.</span> <span class="toc-text">七、GPU 优化 Checklist</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E7%BB%93%E8%AF%AD"><span class="toc-number">8.</span> <span class="toc-text">八、结语</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/14/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%887%EF%BC%89%EF%BC%9A%E5%B7%A5%E5%85%B7%E9%93%BE%E4%B8%8E%E5%B7%A5%E4%BD%9C%E6%B5%81/" title="Unity性能优化（7）：工具链与工作流">Unity性能优化（7）：工具链与工作流</a><time datetime="2026-08-13T16:30:00.000Z" title="Created 2026-08-14 00:30:00">2026-08-14</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/14/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%886%EF%BC%89%EF%BC%9AC#%E8%AF%AD%E8%A8%80%E5%B1%82%E4%BC%98%E5%8C%96/" title="Unity性能优化（6）：C# 语言层优化">Unity性能优化（6）：C# 语言层优化</a><time datetime="2026-08-13T16:20:00.000Z" title="Created 2026-08-14 00:20:00">2026-08-14</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/14/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%885%EF%BC%89%EF%BC%9A%E8%B5%84%E6%BA%90%E4%B8%8E%E8%B5%84%E4%BA%A7%E7%AE%A1%E7%90%86/" title="Unity性能优化（5）：资源与资产管理">Unity性能优化（5）：资源与资产管理</a><time datetime="2026-08-13T16:10:00.000Z" title="Created 2026-08-14 00:10:00">2026-08-14</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/14/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%882%EF%BC%89%EF%BC%9AGPU%E4%B8%8E%E6%B8%B2%E6%9F%93%E4%BC%98%E5%8C%96/" title="Unity性能优化（2）：GPU 与渲染优化">Unity性能优化（2）：GPU 与渲染优化</a><time datetime="2026-08-13T16:00:00.000Z" title="Created 2026-08-14 00:00:00">2026-08-14</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/13/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%881%EF%BC%89%EF%BC%9ACPU%E4%B8%8E%E8%84%9A%E6%9C%AC%E4%BC%98%E5%8C%96/" title="Unity性能优化（1）：CPU 与脚本优化">Unity性能优化（1）：CPU 与脚本优化</a><time datetime="2026-08-13T15:50:00.000Z" title="Created 2026-08-13 23:50:00">2026-08-13</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2020 - 2026 By Csy7749</span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/koharu.model.json"},"display":{"position":"left","width":150,"height":300},"mobile":{"show":false},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/"});</script></body></html>

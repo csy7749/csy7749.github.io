@@ -1,0 +1,404 @@
+<!DOCTYPE html><html lang="zh-cn" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Unity性能优化（1）：CPU 与脚本优化 | Csy7749-Blog</title><meta name="author" content="Csy7749"><meta name="copyright" content="Csy7749"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="CPU 是游戏性能的”第一现场”——大多数卡顿，追到最后都落在主线程的某段脚本上。本文先帮你建立 CPU 性能模型、判断瓶颈归属，再逐个击破四个高频开销源：Update 模式、GameObject&#x2F;Component 操作、物理动画、以及最后的杀手锏 Job System + Burst。每节都给”坏代码 → 好代码”的对照，配一个 1000 敌人寻路的完整实战案例。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Unity性能优化（1）：CPU 与脚本优化">
+<meta property="og:url" content="https://csy7749.github.io/2026/08/13/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%881%EF%BC%89%EF%BC%9ACPU%E4%B8%8E%E8%84%9A%E6%9C%AC%E4%BC%98%E5%8C%96/index.html">
+<meta property="og:site_name" content="Csy7749-Blog">
+<meta property="og:description" content="CPU 是游戏性能的”第一现场”——大多数卡顿，追到最后都落在主线程的某段脚本上。本文先帮你建立 CPU 性能模型、判断瓶颈归属，再逐个击破四个高频开销源：Update 模式、GameObject&#x2F;Component 操作、物理动画、以及最后的杀手锏 Job System + Burst。每节都给”坏代码 → 好代码”的对照，配一个 1000 敌人寻路的完整实战案例。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://csy7749.github.io/img/avatar.png">
+<meta property="article:published_time" content="2026-08-13T15:50:00.000Z">
+<meta property="article:modified_time" content="2026-08-13T08:23:43.982Z">
+<meta property="article:author" content="Csy7749">
+<meta property="article:tag" content="Unity">
+<meta property="article:tag" content="性能优化">
+<meta property="article:tag" content="CPU">
+<meta property="article:tag" content="脚本优化">
+<meta property="article:tag" content="Job System">
+<meta property="article:tag" content="Burst">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://csy7749.github.io/img/avatar.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Unity性能优化（1）：CPU 与脚本优化",
+  "url": "https://csy7749.github.io/2026/08/13/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%881%EF%BC%89%EF%BC%9ACPU%E4%B8%8E%E8%84%9A%E6%9C%AC%E4%BC%98%E5%8C%96/",
+  "image": "https://csy7749.github.io/img/avatar.png",
+  "datePublished": "2026-08-13T15:50:00.000Z",
+  "dateModified": "2026-08-13T08:23:43.982Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Csy7749",
+      "url": "https://csy7749.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://csy7749.github.io/2026/08/13/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%881%EF%BC%89%EF%BC%9ACPU%E4%B8%8E%E8%84%9A%E6%9C%AC%E4%BC%98%E5%8C%96/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        const data = { value }
+
+        if (ttl != null) {
+          data.expiry = Date.now() + ttl * 86400000
+        }
+
+        localStorage.setItem(key, JSON.stringify(data))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return
+
+        try {
+          const data = JSON.parse(itemStr)
+
+          if (data.expiry && Date.now() > data.expiry) {
+            localStorage.removeItem(key)
+            return
+          }
+
+          return data.value
+        } catch {
+          localStorage.removeItem(key)
+        }
+      }
+    }
+
+    const scriptCache = new Map()
+    const cssCache = new Map()
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => {
+        if (scriptCache.has(url)) {
+          return scriptCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const script = document.createElement('script')
+
+          script.src = url
+          script.async = true
+
+          for (const key in attr) {
+            script.setAttribute(key, attr[key])
+          }
+
+          script.onload = resolve
+          script.onerror = reject
+
+          document.head.appendChild(script)
+        })
+
+        scriptCache.set(url, promise)
+
+        return promise
+      },
+      getCSS: (url, id) => {
+        if (cssCache.has(url)) {
+          return cssCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const link = document.createElement('link')
+
+          link.rel = 'stylesheet'
+          link.href = url
+
+          if (id) {
+            link.id = id
+          }
+
+          link.onload = resolve
+          link.onerror = reject
+
+          document.head.appendChild(link)
+        })
+
+        cssCache.set(url, promise)
+
+        return promise
+      },
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+      const activateDarkMode = () => {
+        document.documentElement.dataset.theme = 'dark'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.dataset.theme = 'light'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Unity性能优化（1）：CPU 与脚本优化',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">16</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">42</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">6</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Csy7749-Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Unity性能优化（1）：CPU 与脚本优化</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Unity性能优化（1）：CPU 与脚本优化</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-08-13T15:50:00.000Z" title="Created 2026-08-13 23:50:00">2026-08-13</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-08-13T08:23:43.982Z" title="Updated 2026-08-13 16:23:43">2026-08-13</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Unity/">Unity</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Unity/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/">性能优化</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><blockquote>
+<p>CPU 是游戏性能的”第一现场”——大多数卡顿，追到最后都落在主线程的某段脚本上。本文先帮你建立 CPU 性能模型、判断瓶颈归属，再逐个击破四个高频开销源：Update 模式、GameObject&#x2F;Component 操作、物理动画、以及最后的杀手锏 Job System + Burst。每节都给”坏代码 → 好代码”的对照，配一个 1000 敌人寻路的完整实战案例。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="一、CPU-性能模型：主线程到底在忙什么"><a href="#一、CPU-性能模型：主线程到底在忙什么" class="headerlink" title="一、CPU 性能模型：主线程到底在忙什么"></a>一、CPU 性能模型：主线程到底在忙什么</h2><p>Unity 的 CPU 侧由多条线程协作，理解它们的分工是优化的前提。</p>
+<h3 id="1-1-三条关键线程"><a href="#1-1-三条关键线程" class="headerlink" title="1.1 三条关键线程"></a>1.1 三条关键线程</h3><table>
+<thead>
+<tr>
+<th align="left">线程</th>
+<th align="left">职责</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>主线程</strong></td>
+<td align="left">你的脚本逻辑、物理、动画、以及向渲染线程提交渲染命令</td>
+</tr>
+<tr>
+<td align="left"><strong>渲染线程</strong></td>
+<td align="left">把主线程提交的渲染命令整理后发给 GPU（多线程渲染模式下独立）</td>
+</tr>
+<tr>
+<td align="left"><strong>Job 线程池</strong></td>
+<td align="left">Job System 的工作线程，数量约等于 CPU 核数 − 1</td>
+</tr>
+</tbody></table>
+<p>大多数游戏逻辑都挤在<strong>主线程</strong>上，所以”CPU 优化”约等于”主线程脚本优化”。</p>
+<h3 id="1-2-PlayerLoop：主线程的固定班次"><a href="#1-2-PlayerLoop：主线程的固定班次" class="headerlink" title="1.2 PlayerLoop：主线程的固定班次"></a>1.2 PlayerLoop：主线程的固定班次</h3><p>主线程不是随意执行的，它按 <strong>PlayerLoop</strong> 的固定顺序逐段推进。骨架大致是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">PlayerLoop</span><br><span class="line">├── EarlyUpdate（输入、粒子系统预更新）</span><br><span class="line">├── FixedUpdate（物理步进，默认 50Hz）</span><br><span class="line">├── Update（你的 Update 在这里，每帧一次）</span><br><span class="line">├── PreLateUpdate / LateUpdate（AI、相机跟随）</span><br><span class="line">├── PreRender（UGUI 重建、剔除）</span><br><span class="line">└── Render（提交渲染）</span><br></pre></td></tr></table></figure>
+
+<p>每个段都有”固定配额”，某一段超时，整帧就超时。所以优化的第一件事，永远是<strong>搞清楚你的代码跑在哪个段、吃掉多少配额</strong>。</p>
+<h2 id="二、先判断：到底是不是-CPU-瓶颈"><a href="#二、先判断：到底是不是-CPU-瓶颈" class="headerlink" title="二、先判断：到底是不是 CPU 瓶颈"></a>二、先判断：到底是不是 CPU 瓶颈</h2><p>别急着优化脚本，先确认瓶颈真的在 CPU。</p>
+<h3 id="2-1-两个关键信号"><a href="#2-1-两个关键信号" class="headerlink" title="2.1 两个关键信号"></a>2.1 两个关键信号</h3><p>打开 Profiler 的 CPU Usage 模块：</p>
+<ul>
+<li><strong><code>Gfx.WaitForPresent</code> 高</strong>：CPU 和 GPU 都很快，但都在<strong>等显示器刷新</strong>（Vsync 空闲）。这不是瓶颈，反而说明你还有余量。</li>
+<li><strong><code>Camera.Render</code> 或某段脚本高</strong>：CPU 真的在忙，这才是要优化的对象。</li>
+</ul>
+<h3 id="2-2-判断口诀"><a href="#2-2-判断口诀" class="headerlink" title="2.2 判断口诀"></a>2.2 判断口诀</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">帧率低</span><br><span class="line">  ├─ Profiler 里 CPU 段很高 → CPU bound → 优化脚本（本文）</span><br><span class="line">  └─ Profiler 里 GPU 段很高 → GPU bound → 优化渲染（第2讲）</span><br></pre></td></tr></table></figure>
+
+<p>确认是 CPU bound 后，再往下读。</p>
+<h2 id="三、Update-模式：隐形成本大户"><a href="#三、Update-模式：隐形成本大户" class="headerlink" title="三、Update 模式：隐形成本大户"></a>三、Update 模式：隐形成本大户</h2><h3 id="3-1-空-Update-的真实代价"><a href="#3-1-空-Update-的真实代价" class="headerlink" title="3.1 空 Update 的真实代价"></a>3.1 空 Update 的真实代价</h3><p>很多人以为空 Update 会被编译器优化掉，<strong>在 IL2CPP 下不会</strong>。每个 MonoBehaviour 的 <code>Update</code> 都通过 C++ 层的函数指针调用，即使方法体是空的，调用本身也有开销。</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ❌ 1000 个挂着空 Update 的物体，每帧 1000 次无意义的 C++ 虚调用</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Update</span>()</span> &#123; &#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>处理原则</strong>：</p>
+<ul>
+<li>不需要每帧更新的脚本，<strong>删掉 Update</strong></li>
+<li>需要低频更新的，用下面的降频策略</li>
+</ul>
+<h3 id="3-2-降频策略：自实现-Timer"><a href="#3-2-降频策略：自实现-Timer" class="headerlink" title="3.2 降频策略：自实现 Timer"></a>3.2 降频策略：自实现 Timer</h3><p>不是所有逻辑都需要每帧跑。用计数器把”每帧”变成”每 N 帧”：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">AIBrain</span> : <span class="title">MonoBehaviour</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">const</span> <span class="built_in">int</span> TICK_INTERVAL = <span class="number">10</span>;  <span class="comment">// 每 10 帧决策一次</span></span><br><span class="line">    <span class="keyword">private</span> <span class="built_in">int</span> frameCounter;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">Update</span>()</span> &#123;</span><br><span class="line">        frameCounter++;</span><br><span class="line">        <span class="keyword">if</span> (frameCounter &lt; TICK_INTERVAL) <span class="keyword">return</span>;</span><br><span class="line">        frameCounter = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">        DecideAction();   <span class="comment">// 原本每帧跑的重逻辑，现在 10 帧一次</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>更平滑的做法是<strong>分帧</strong>——把一批对象轮流处理，让每帧的负载恒定：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 1000 个敌人，每帧只处理 100 个，10 帧轮完一圈</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Update</span>()</span> &#123;</span><br><span class="line">    <span class="built_in">int</span> batchSize = <span class="number">100</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="built_in">int</span> i = <span class="number">0</span>; i &lt; batchSize; i++) &#123;</span><br><span class="line">        <span class="built_in">int</span> idx = (currentOffset + i) % enemies.Count;</span><br><span class="line">        enemies[idx].DecideAction();</span><br><span class="line">    &#125;</span><br><span class="line">    currentOffset = (currentOffset + batchSize) % enemies.Count;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-3-何时用-FixedUpdate-LateUpdate"><a href="#3-3-何时用-FixedUpdate-LateUpdate" class="headerlink" title="3.3 何时用 FixedUpdate &#x2F; LateUpdate"></a>3.3 何时用 FixedUpdate &#x2F; LateUpdate</h3><table>
+<thead>
+<tr>
+<th align="left">回调</th>
+<th align="left">用途</th>
+<th align="left">禁忌</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>Update</code></td>
+<td align="left">每帧逻辑</td>
+<td align="left">别放物理操作</td>
+</tr>
+<tr>
+<td align="left"><code>FixedUpdate</code></td>
+<td align="left">物理相关（刚体施力）</td>
+<td align="left">别放普通逻辑（它每帧可能跑 0 次或多次）</td>
+</tr>
+<tr>
+<td align="left"><code>LateUpdate</code></td>
+<td align="left">相机跟随、结果收集</td>
+<td align="left">别放本应早跑的 AI&#x2F;输入</td>
+</tr>
+</tbody></table>
+<p>一个常见错误：在 <code>FixedUpdate</code> 里读 <code>Time.deltaTime</code>——它其实是固定步长，应该读 <code>Time.fixedDeltaTime</code>。同理，物理操作放 <code>Update</code> 里，在帧率波动时表现会不稳定。</p>
+<h2 id="四、GameObject-与-Component-操作"><a href="#四、GameObject-与-Component-操作" class="headerlink" title="四、GameObject 与 Component 操作"></a>四、GameObject 与 Component 操作</h2><h3 id="4-1-Find-的代价"><a href="#4-1-Find-的代价" class="headerlink" title="4.1 Find 的代价"></a>4.1 Find 的代价</h3><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ❌ GameObject.Find 遍历整个场景，O(n)，且每帧调用</span></span><br><span class="line"><span class="keyword">var</span> player = GameObject.Find(<span class="string">&quot;Player&quot;</span>);</span><br><span class="line">player.transform.position = target;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ❌ 每帧 Transform.Find 也不该</span></span><br><span class="line"><span class="keyword">var</span> hp = transform.Find(<span class="string">&quot;HPText&quot;</span>).GetComponent&lt;Text&gt;();</span><br><span class="line"></span><br><span class="line"><span class="comment">// ✅ Awake 里 Find + 缓存成员变量</span></span><br><span class="line"><span class="keyword">private</span> Transform playerTransform;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Awake</span>()</span> &#123;</span><br><span class="line">    playerTransform = GameObject.Find(<span class="string">&quot;Player&quot;</span>).transform;</span><br><span class="line">    <span class="comment">// 或更好：Inspector 直接拖引用 / 依赖注入</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>规律：<strong>Find 只能在初始化（Awake&#x2F;Start）出现，且结果必须缓存。</strong></p>
+<h3 id="4-2-GetComponent：缓存是铁律"><a href="#4-2-GetComponent：缓存是铁律" class="headerlink" title="4.2 GetComponent：缓存是铁律"></a>4.2 GetComponent：缓存是铁律</h3><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ❌ 每帧 GetComponent</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Update</span>()</span> &#123;</span><br><span class="line">    <span class="keyword">var</span> rb = GetComponent&lt;Rigidbody&gt;();</span><br><span class="line">    rb.AddForce(...);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ✅ 启动时缓存</span></span><br><span class="line"><span class="keyword">private</span> Rigidbody rb;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Awake</span>()</span> &#123;</span><br><span class="line">    rb = GetComponent&lt;Rigidbody&gt;();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>GetComponent</code> 不是免费的——它要做类型查找。高频调用累积起来是一笔可观开销。</p>
+<h3 id="4-3-SendMessage-BroadcastMessage：反射陷阱"><a href="#4-3-SendMessage-BroadcastMessage：反射陷阱" class="headerlink" title="4.3 SendMessage &#x2F; BroadcastMessage：反射陷阱"></a>4.3 SendMessage &#x2F; BroadcastMessage：反射陷阱</h3><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ❌ 反射调用，慢且无法重构安全</span></span><br><span class="line">SendMessage(<span class="string">&quot;OnPlayerDied&quot;</span>, damage);</span><br><span class="line">BroadcastMessage(<span class="string">&quot;ApplyEffect&quot;</span>, buff);</span><br><span class="line"></span><br><span class="line"><span class="comment">// ✅ 直接引用 / 接口 / 事件</span></span><br><span class="line">player.TakeDamage(damage);</span><br><span class="line">effectReceiver.ApplyEffect(buff);</span><br><span class="line">EventBus.Raise(<span class="keyword">new</span> PlayerDiedEvent(damage));</span><br></pre></td></tr></table></figure>
+
+<p><code>SendMessage</code> 和 <code>BroadcastMessage</code> 基于字符串反射查找方法，是历史遗留 API，性能差、易出错，新代码不要用。</p>
+<h3 id="4-4-Instantiate-Destroy-的位置"><a href="#4-4-Instantiate-Destroy-的位置" class="headerlink" title="4.4 Instantiate &#x2F; Destroy 的位置"></a>4.4 Instantiate &#x2F; Destroy 的位置</h3><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ❌ 战斗中频繁 Instantiate + Destroy（GC + 初始化双倍开销）</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Spawn</span>()</span> &#123;</span><br><span class="line">    Instantiate(enemyPrefab, pos, rot);   <span class="comment">// 克隆 + Awake/OnEnable 全套初始化</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ✅ 用对象池复用（见第3讲对象池），或预热 + 复用</span></span><br></pre></td></tr></table></figure>
+
+<p><code>Instantiate</code> 的代价远高于”复制一份数据”——它要完整走一遍 <code>Awake</code>、<code>OnEnable</code>、组件初始化。<code>Destroy</code> 也是延迟销毁、产生 GC。高频创建销毁的对象，<strong>对象池是唯一正解</strong>。</p>
+<h2 id="五、物理与动画"><a href="#五、物理与动画" class="headerlink" title="五、物理与动画"></a>五、物理与动画</h2><h3 id="5-1-物理设置"><a href="#5-1-物理设置" class="headerlink" title="5.1 物理设置"></a>5.1 物理设置</h3><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 修改固定步长：降低 FixedUpdate 频率可省 CPU，但会牺牲物理精度</span></span><br><span class="line">Time.fixedDeltaTime = <span class="number">0.02f</span>;  <span class="comment">// 默认 50Hz</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 帧率极低时物理可能&quot;追帧&quot;，必要时限制最大步长</span></span><br><span class="line">Time.maximumDeltaTime = <span class="number">0.1f</span>;</span><br></pre></td></tr></table></figure>
+
+<p>物理模拟是 CPU 大户，移动端可以适当把 <code>fixedDeltaTime</code> 调到 0.033（30Hz）以省开销。</p>
+<h3 id="5-2-碰撞体复杂度"><a href="#5-2-碰撞体复杂度" class="headerlink" title="5.2 碰撞体复杂度"></a>5.2 碰撞体复杂度</h3><table>
+<thead>
+<tr>
+<th align="left">碰撞体</th>
+<th align="left">代价</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Sphere &#x2F; Capsule &#x2F; Box</td>
+<td align="left">低（解析几何，计算快）</td>
+</tr>
+<tr>
+<td align="left">Convex MeshCollider</td>
+<td align="left">高（凸包检测）</td>
+</tr>
+<tr>
+<td align="left">非凸 MeshCollider</td>
+<td align="left">极高（三角面级检测，且不能挂 Rigidbody 动）</td>
+</tr>
+</tbody></table>
+<p>规则：<strong>能用简单碰撞体就不 MeshCollider；非要 Mesh，用多个简单碰撞体组合近似。</strong></p>
+<h3 id="5-3-Animator-的两个开关"><a href="#5-3-Animator-的两个开关" class="headerlink" title="5.3 Animator 的两个开关"></a>5.3 Animator 的两个开关</h3><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Culling Mode：离开屏幕的 Animator 自动降级</span></span><br><span class="line">animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;</span><br><span class="line"><span class="comment">// 完全不可见时跳过动画计算，但保留位置更新</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// UpdateMode：不受时间缩放影响的动画</span></span><br><span class="line">animator.updateMode = AnimatorUpdateMode.UnscaledTime;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>Cull Completely</code>：不可见时完全停更（最省，但要注意动画状态恢复）</li>
+<li>减少 Animator 数量、合并 Layer，也能显著省 CPU</li>
+</ul>
+<h3 id="5-4-Playable-API"><a href="#5-4-Playable-API" class="headerlink" title="5.4 Playable API"></a>5.4 Playable API</h3><p>传统 <code>Animation</code> 组件和 Animator Controller 有大量隐式开销。<code>PlayableGraph</code> 让动画播放更可控、更省：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Playable API 手动控制动画混合，绕过 AnimatorController 的隐式开销</span></span><br><span class="line"><span class="keyword">var</span> graph = PlayableGraph.Create(<span class="string">&quot;SimpleAnim&quot;</span>);</span><br><span class="line"><span class="keyword">var</span> output = AnimationPlayableOutput.Create(graph, <span class="string">&quot;Anim&quot;</span>, animator);</span><br><span class="line"><span class="keyword">var</span> clipPlayable = AnimationClipPlayable.Create(graph, clip);</span><br><span class="line">output.SetSourcePlayable(clipPlayable);</span><br><span class="line">graph.Play();</span><br></pre></td></tr></table></figure>
+
+<p>适合动画需求简单（单 clip、简单混合）的场景，可比 Animator Controller 省不少 CPU。</p>
+<h2 id="六、Job-System-Burst：CPU-的杀手锏"><a href="#六、Job-System-Burst：CPU-的杀手锏" class="headerlink" title="六、Job System + Burst：CPU 的杀手锏"></a>六、Job System + Burst：CPU 的杀手锏</h2><h3 id="6-1-何时值得上-Job"><a href="#6-1-何时值得上-Job" class="headerlink" title="6.1 何时值得上 Job"></a>6.1 何时值得上 Job</h3><p>满足这些条件才上 Job：</p>
+<ul>
+<li>数据量<strong>大</strong>（&gt; 1000 个元素，太少反而被调度开销抵消）</li>
+<li>计算<strong>纯数据、相互独立</strong>（各元素互不依赖）</li>
+<li>不涉及 GameObject&#x2F;Transform 的引用操作（Job 里碰不到托管对象）</li>
+</ul>
+<p>典型场景：批量位置更新、寻路计算、粒子模拟、网格变形。</p>
+<h3 id="6-2-最小示例：并行移动-1000-个单位"><a href="#6-2-最小示例：并行移动-1000-个单位" class="headerlink" title="6.2 最小示例：并行移动 1000 个单位"></a>6.2 最小示例：并行移动 1000 个单位</h3><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">using</span> Unity.Burst;</span><br><span class="line"><span class="keyword">using</span> Unity.Collections;</span><br><span class="line"><span class="keyword">using</span> Unity.Jobs;</span><br><span class="line"><span class="keyword">using</span> UnityEngine;</span><br><span class="line"></span><br><span class="line">[<span class="meta">BurstCompile</span>]</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">struct</span> MoveJob : IJobParallelFor &#123;</span><br><span class="line">    <span class="keyword">public</span> NativeArray&lt;Vector3&gt; positions;</span><br><span class="line">    <span class="keyword">public</span> <span class="built_in">float</span> deltaTime;</span><br><span class="line">    <span class="keyword">public</span> <span class="built_in">float</span> speed;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Execute</span>(<span class="params"><span class="built_in">int</span> index</span>)</span> &#123;</span><br><span class="line">        positions[index] += <span class="keyword">new</span> Vector3(<span class="number">0</span>, <span class="number">0</span>, speed * deltaTime);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">JobDemo</span> : <span class="title">MonoBehaviour</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> NativeArray&lt;Vector3&gt; positions;</span><br><span class="line">    <span class="keyword">private</span> NativeArray&lt;Vector3&gt; result;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">Start</span>()</span> &#123;</span><br><span class="line">        positions = <span class="keyword">new</span> NativeArray&lt;Vector3&gt;(<span class="number">1000</span>, Allocator.Persistent);</span><br><span class="line">        result = <span class="keyword">new</span> NativeArray&lt;Vector3&gt;(<span class="number">1000</span>, Allocator.Persistent);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">Update</span>()</span> &#123;</span><br><span class="line">        <span class="keyword">var</span> job = <span class="keyword">new</span> MoveJob &#123;</span><br><span class="line">            positions = positions,</span><br><span class="line">            deltaTime = Time.deltaTime,</span><br><span class="line">            speed = <span class="number">5f</span></span><br><span class="line">        &#125;;</span><br><span class="line">        JobHandle handle = job.Schedule(positions.Length, <span class="number">64</span>); <span class="comment">// 每 64 个一批</span></span><br><span class="line">        handle.Complete();  <span class="comment">// 等所有批次完成</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">OnDestroy</span>()</span> &#123;</span><br><span class="line">        positions.Dispose();  <span class="comment">// NativeArray 必须手动释放</span></span><br><span class="line">        result.Dispose();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="6-3-Burst-的魔法与限制"><a href="#6-3-Burst-的魔法与限制" class="headerlink" title="6.3 Burst 的魔法与限制"></a>6.3 Burst 的魔法与限制</h3><p><code>[BurstCompile]</code> 把这段 C# 编译成高度优化的 native 代码（SIMD 向量化），性能可提升数倍到数十倍。但它有严格限制：</p>
+<ul>
+<li><strong>不能 <code>new</code> 托管对象</strong>（只能操作 blittable 类型）</li>
+<li><strong>不能调托管方法</strong>（不能碰 <code>GameObject</code>、<code>Transform</code>、<code>List&lt;T&gt;</code>）</li>
+<li><strong>只能读写 <code>NativeContainer</code></strong>（<code>NativeArray</code>、<code>NativeList</code> 等）</li>
+<li>需要 <code>using Unity.Collections</code>，且容器用完必须 <code>Dispose()</code></li>
+</ul>
+<blockquote>
+<p>经验：把”纯计算”从主线程剥离到 Job + Burst，是 CPU 优化里回报最高的手段之一，但工程复杂度也最高——先用前面五节的主线程优化”止血”，再对热点上 Job。</p>
+</blockquote>
+<h2 id="七、实战案例：1000-个敌人的-AI-寻路"><a href="#七、实战案例：1000-个敌人的-AI-寻路" class="headerlink" title="七、实战案例：1000 个敌人的 AI 寻路"></a>七、实战案例：1000 个敌人的 AI 寻路</h2><h3 id="7-1-症状"><a href="#7-1-症状" class="headerlink" title="7.1 症状"></a>7.1 症状</h3><p>RTS 场景，1000 个敌人在场时，主线程 <code>AIBrain.Update</code> 每帧吃掉 45ms，帧率掉到 20 FPS。</p>
+<h3 id="7-2-诊断"><a href="#7-2-诊断" class="headerlink" title="7.2 诊断"></a>7.2 诊断</h3><ol>
+<li>Profiler 展开 <code>AIBrain.Update</code>，发现两个热点：<ul>
+<li>每帧对每个敌人做一次 <code>GameObject.Find(&quot;Player&quot;)</code>（1000 次场景遍历）</li>
+<li>每个敌人每帧完整跑一遍寻路决策</li>
+</ul>
+</li>
+</ol>
+<h3 id="7-3-修复"><a href="#7-3-修复" class="headerlink" title="7.3 修复"></a>7.3 修复</h3><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 修复1：Player 引用改成静态缓存</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> Transform PlayerTransform;   <span class="comment">// 场景加载时赋值一次</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 修复2：寻路决策降频 + 分帧</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Update</span>()</span> &#123;</span><br><span class="line">    <span class="comment">// 每 10 帧决策一次，且每帧只处理 100 个，轮转分摊</span></span><br><span class="line">    <span class="keyword">if</span> (frame++ % <span class="number">10</span> != <span class="number">0</span>) <span class="keyword">return</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="built_in">int</span> i = <span class="number">0</span>; i &lt; <span class="number">100</span>; i++) &#123;</span><br><span class="line">        <span class="built_in">int</span> idx = (offset + i) % enemies.Count;</span><br><span class="line">        enemies[idx].DecideMoveDirection();  <span class="comment">// 不再每帧全量决策</span></span><br><span class="line">    &#125;</span><br><span class="line">    offset = (offset + <span class="number">100</span>) % enemies.Count;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 修复3：把&quot;寻路数值计算&quot;从主线程搬到 Job + Burst</span></span><br><span class="line">[<span class="meta">BurstCompile</span>]</span><br><span class="line"><span class="keyword">struct</span> PathComputeJob : IJobParallelFor &#123; <span class="comment">/* 纯数据寻路计算 */</span> &#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="7-4-验证"><a href="#7-4-验证" class="headerlink" title="7.4 验证"></a>7.4 验证</h3><table>
+<thead>
+<tr>
+<th align="left">指标</th>
+<th align="left">优化前</th>
+<th align="left">优化后</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">AIBrain.Update</td>
+<td align="left">45ms</td>
+<td align="left">6ms</td>
+</tr>
+<tr>
+<td align="left">帧率</td>
+<td align="left">20 FPS</td>
+<td align="left">58 FPS</td>
+</tr>
+<tr>
+<td align="left">CPU 主线程占用</td>
+<td align="left">95%</td>
+<td align="left">55%</td>
+</tr>
+</tbody></table>
+<h2 id="八、CPU-优化-Checklist"><a href="#八、CPU-优化-Checklist" class="headerlink" title="八、CPU 优化 Checklist"></a>八、CPU 优化 Checklist</h2><ol>
+<li><strong>[ ] 归属</strong>：Profiler 确认是 CPU bound（非 GPU、非 WaitForPresent）</li>
+<li><strong>[ ] 空 Update</strong>：无逻辑的脚本已删掉 Update</li>
+<li><strong>[ ] 降频</strong>：低频逻辑已用 Timer&#x2F;Interval 降低调用频率</li>
+<li><strong>[ ] 分帧</strong>：大批量对象已分帧轮转处理</li>
+<li><strong>[ ] Find 缓存</strong>：GameObject.Find &#x2F; Transform.Find 只在初始化、结果已缓存</li>
+<li><strong>[ ] GetComponent 缓存</strong>：高频访问的组件已在 Awake 缓存</li>
+<li><strong>[ ] 反射</strong>：无 SendMessage &#x2F; BroadcastMessage，改用接口&#x2F;事件</li>
+<li><strong>[ ] 对象池</strong>：频繁 Instantiate&#x2F;Destroy 的对象已池化</li>
+<li><strong>[ ] 物理</strong>：碰撞体已简化，fixedDeltaTime 已按平台调整</li>
+<li><strong>[ ] 动画</strong>：Animator CullingMode 已配置，简单动画用 Playable</li>
+<li><strong>[ ] Job&#x2F;Burst</strong>：大数据纯计算热点已迁移到 Job System + Burst</li>
+<li><strong>[ ] 验证</strong>：复测 Profiler，主线程各段耗时明显下降</li>
+</ol>
+<h2 id="九、结语"><a href="#九、结语" class="headerlink" title="九、结语"></a>九、结语</h2><p>CPU 优化有一条清晰的优先级链：<strong>先消除无意义调用（空 Update、每帧 Find），再降低调用频率（降频、分帧），最后才上重型武器（Job + Burst）</strong>。多数项目走到前两步就能解决 80% 的卡顿，第三类手段留给真正的计算密集热点。记住：主线程的每一毫秒，都是你写下的每行代码的账单。</p>
+<hr>
+<p><em>系列导航：</em><br><em>- 上一篇：[Unity性能优化（2）：GPU 与渲染优化]</em><br><em>- 下一篇：[Unity性能优化（3）：内存管理与 GC]</em><br><em>- 系列规划：[Unity性能优化系列-规划]</em></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://csy7749.github.io">Csy7749</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://csy7749.github.io/2026/08/13/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%881%EF%BC%89%EF%BC%9ACPU%E4%B8%8E%E8%84%9A%E6%9C%AC%E4%BC%98%E5%8C%96/">https://csy7749.github.io/2026/08/13/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%881%EF%BC%89%EF%BC%9ACPU%E4%B8%8E%E8%84%9A%E6%9C%AC%E4%BC%98%E5%8C%96/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Unity/">Unity</a><a class="post-meta__tags" href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/">性能优化</a><a class="post-meta__tags" href="/tags/CPU/">CPU</a><a class="post-meta__tags" href="/tags/%E8%84%9A%E6%9C%AC%E4%BC%98%E5%8C%96/">脚本优化</a><a class="post-meta__tags" href="/tags/Job-System/">Job System</a><a class="post-meta__tags" href="/tags/Burst/">Burst</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/08/14/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%882%EF%BC%89%EF%BC%9AGPU%E4%B8%8E%E6%B8%B2%E6%9F%93%E4%BC%98%E5%8C%96/" title="Unity性能优化（2）：GPU 与渲染优化"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">Unity性能优化（2）：GPU 与渲染优化</div></div><div class="info-2"><div class="info-item-1"> 解决了 CPU，就该看 GPU 了。很多项目 CPU 主线程并不忙，帧率却上不去——瓶颈在渲染端：DrawCall 太多、Shader 太重、Overdraw 太凶。本文从渲染管线讲起，教你判断 GPU 瓶颈，再重点拆解四种合批方案（静态&#x2F;动态 Batching、SRP Batcher、GPU Instancing）的适用边界，最后覆盖 Shader、LOD、光照与后处理，配一个大世界 DrawCall 从 3000 降到 200 的实战案例。    一、渲染管线速览与 GPU 瓶颈判断1.1 一条帧的渲染路径123456789CPU 侧                           GPU 侧──────                           ──────准备渲染状态（材质/纹理/参数）     顶点着色器（变换顶点）  ↓                                ↓提交 DrawCall                    光栅化（生成片元）  ↓                                ↓（等待 ...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%883%EF%BC%89%EF%BC%9A%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E4%B8%8EGC/" title="Unity性能优化（3）：内存管理与 GC"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">Unity性能优化（3）：内存管理与 GC</div></div><div class="info-2"><div class="info-item-1"> 内存问题是最”阴险”的性能杀手：代码逻辑完全正确，没有报错，也没有明显的慢函数，但帧率却每隔几秒规律性地掉一下。这种规律性卡顿十有八九是 GC 在作祟。本文从 Unity 的内存模型讲起，拆解托管内存与原生内存的边界、值类型的分配位置、GC 的工作原理，再逐个击破七类隐形分配，最后给出内存泄漏的排查方法和一个完整实战案例。    一、先建立内存地图：托管 vs 原生Unity 的内存分两个世界，混在一起看会完全迷失方向。 1.1 托管内存（Managed）这是 C# 代码直接接触的内存，由 GC（垃圾回收器） 管理。你在 C# 里 new 出来的对象，绝大多数都住在这里。 123var list = new List&lt;int&gt;();        // 托管内存：List 对象本身var text = &quot;hello&quot; + &quot;world&quot;;      // 托管内存：string 对象var enemy = new Enemy();           // 托管内存：MonoBehaviour 的 C# 壳  1.2 原生内存...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/08/10/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E7%B3%BB%E5%88%97-%E8%A7%84%E5%88%92/" title="Unity 性能优化系列·写作规划"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-10</div><div class="info-item-2">Unity 性能优化系列·写作规划</div></div><div class="info-2"><div class="info-item-1">系列定位名称：Unity 性能优化七讲 目标读者：有 1-3 年 Unity 经验的开发者，能读代码、有基本 Profiler 概念，但缺乏系统性优化方法论。 篇幅标准：单篇 3000-5000 字，可独立阅读，合起来构成完整体系。 写作原则：  每篇必须有”从问题到修复”的完整链路（建数据 → 定位 → 改 → 验证） 代码示例完整可运行，不做伪代码 优先使用 Unity 2022.3 LTS+ API，标注版本差异 每篇末尾附 checklist，方便读者自查项目   篇目总览1234567第1讲 CPU 与脚本优化        ← 开发者最常触碰的层（✅ 已完成）第2讲 GPU 与渲染优化        ← 画面瓶颈（✅ 已完成）第3讲 内存管理与 GC         ← 卡顿根源（✅ 已完成）第4讲 UGUI 专题（3篇）      ← UI 是重灾区（✅ 已完成）第5讲 资源与资产管理        ← 导入→加载→卸载全生命周期（✅ 已完成）第6讲 C# 语言层优化         ← 从语言特性要性能（✅ 已完成）第7讲 工具链与工作流        ← 授人以...</div></div></div></a><a class="pagination-related" href="/2026/08/14/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%886%EF%BC%89%EF%BC%9AC#%E8%AF%AD%E8%A8%80%E5%B1%82%E4%BC%98%E5%8C%96/" title="Unity性能优化（6）：C# 语言层优化"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-14</div><div class="info-item-2">Unity性能优化（6）：C# 语言层优化</div></div><div class="info-2"><div class="info-item-1"> 前面五讲偏 Unity 引擎层，这一讲回归语言本身。很多分配和 CPU 问题，根源不在 Unity API，而在 C# 代码的写法：一个不该装箱的 struct、一条本该用 for 的 LINQ 链、一次 string 的 + 拼接。本文从值类型与引用类型讲起，覆盖集合选择、Span&lt;T&gt;、LINQ 代价、字符串处理和 unsafe，帮你把 C# 的每一个字节都算清楚。    一、值类型 vs 引用类型：先破除一个经典误解1.1 struct 分配在栈？——看上下文“struct 在栈上，class 在堆上”是流传最广、也最害人的一句话。真相是：分配位置取决于存放位置，不取决于类型。 12345678public class Player &#123;    public Vector3 position;   // ① struct 作为类字段 → 分配在堆上（随 Player）&#125;void Update() &#123;    Vector3 localPos;          // ② struct 作为局部变量 → 分配在栈上    object ...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%883%EF%BC%89%EF%BC%9A%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E4%B8%8EGC/" title="Unity性能优化（3）：内存管理与 GC"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity性能优化（3）：内存管理与 GC</div></div><div class="info-2"><div class="info-item-1"> 内存问题是最”阴险”的性能杀手：代码逻辑完全正确，没有报错，也没有明显的慢函数，但帧率却每隔几秒规律性地掉一下。这种规律性卡顿十有八九是 GC 在作祟。本文从 Unity 的内存模型讲起，拆解托管内存与原生内存的边界、值类型的分配位置、GC 的工作原理，再逐个击破七类隐形分配，最后给出内存泄漏的排查方法和一个完整实战案例。    一、先建立内存地图：托管 vs 原生Unity 的内存分两个世界，混在一起看会完全迷失方向。 1.1 托管内存（Managed）这是 C# 代码直接接触的内存，由 GC（垃圾回收器） 管理。你在 C# 里 new 出来的对象，绝大多数都住在这里。 123var list = new List&lt;int&gt;();        // 托管内存：List 对象本身var text = &quot;hello&quot; + &quot;world&quot;;      // 托管内存：string 对象var enemy = new Enemy();           // 托管内存：MonoBehaviour 的 C# 壳  1.2 原生内存...</div></div></div></a><a class="pagination-related" href="/2026/08/14/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%882%EF%BC%89%EF%BC%9AGPU%E4%B8%8E%E6%B8%B2%E6%9F%93%E4%BC%98%E5%8C%96/" title="Unity性能优化（2）：GPU 与渲染优化"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-14</div><div class="info-item-2">Unity性能优化（2）：GPU 与渲染优化</div></div><div class="info-2"><div class="info-item-1"> 解决了 CPU，就该看 GPU 了。很多项目 CPU 主线程并不忙，帧率却上不去——瓶颈在渲染端：DrawCall 太多、Shader 太重、Overdraw 太凶。本文从渲染管线讲起，教你判断 GPU 瓶颈，再重点拆解四种合批方案（静态&#x2F;动态 Batching、SRP Batcher、GPU Instancing）的适用边界，最后覆盖 Shader、LOD、光照与后处理，配一个大世界 DrawCall 从 3000 降到 200 的实战案例。    一、渲染管线速览与 GPU 瓶颈判断1.1 一条帧的渲染路径123456789CPU 侧                           GPU 侧──────                           ──────准备渲染状态（材质/纹理/参数）     顶点着色器（变换顶点）  ↓                                ↓提交 DrawCall                    光栅化（生成片元）  ↓                                ↓（等待 ...</div></div></div></a><a class="pagination-related" href="/2026/08/14/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%885%EF%BC%89%EF%BC%9A%E8%B5%84%E6%BA%90%E4%B8%8E%E8%B5%84%E4%BA%A7%E7%AE%A1%E7%90%86/" title="Unity性能优化（5）：资源与资产管理"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-14</div><div class="info-item-2">Unity性能优化（5）：资源与资产管理</div></div><div class="info-2"><div class="info-item-1"> 资源优化是”配置即性能”的典型——很多项目不改一行代码，只把纹理导入设置、音频格式、加载策略调一遍，就能砍掉一半内存和一半加载时间。本文按”导入 → 加载 → 卸载”三个阶段，逐个拆解纹理、网格、音频的导入设置，再对比 AssetBundle 与 Addressables 两种加载方案，最后给出一个首场景从 8 秒到 1.5 秒的实战案例。    一、资源三大阶段：导入 → 加载 → 卸载一个资源的完整生命周期分三个阶段，每阶段的优化手段完全不同：    阶段 决定什么 优化手段    导入 资源在包里的格式、体积 Import Settings（本文 2~4 节）   加载 运行时进内存的速度和方式 AssetBundle &#x2F; Addressables（本文第 5 节）   卸载 不用时能否正确释放 引用管理、UnloadUnusedAssets   最常见的坑：只关注加载（用了 Addressables 就以为万事大吉），却忽略了导入——一张 4096 的无压缩纹理，无论怎么加载，内存都是几百 MB。 所以正确的优化顺序是：先导入、再加载、最后卸载。 二、纹理优化...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96-UGUI%EF%BC%882%EF%BC%89%EF%BC%9ARebuild%E4%B8%8ERebatch%E6%B7%B1%E5%BA%A6%E8%A7%A3%E6%9E%90/" title="Unity性能优化-UGUI（2）：Rebuild 与 Rebatch 深度解析"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity性能优化-UGUI（2）：Rebuild 与 Rebatch 深度解析</div></div><div class="info-2"><div class="info-item-1"> 上一篇建立了 UGUI 的底层地基：Canvas 是渲染单元，CanvasRenderer 持有网格，脏标记触发重建，CanvasUpdateRegistry 统一调度。这一篇往深里走两步——Rebuild 到底怎么”重造网格”，Rebatch 又凭什么决定哪些元素能合进同一个 DrawCall。读完你会明白 Frame Debugger 里每一条红色高亮到底在告诉你什么。    一、两个动作，两种成本模型先回顾边界：Rebuild 是点成本（单个元素重造网格），Rebatch 是面成本（整个 Canvas 重新合批）。 两者遵循一个铁律：Rebuild 必然触发 Rebatch，但 Rebatch 不一定由 Rebuild 引起。  你改了 Image 的颜色 → Rebuild 这个 Image（顶点颜色重算）→ 必然 Rebatch 整个 Canvas 你只调整了元素在 Hierarchy 里的兄弟顺序 → 没有 Rebuild，但渲染深度变了 → 单独触发 Rebatch  理解这个铁律，才能读懂 Profiler 里的两个指标：Canvas.SendWillRende...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Csy7749</div><div class="author-info-description">键来！</div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">16</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">42</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">6</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/csy7749"><i class="fab fa-github"></i><span>GitHub</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">日积月累</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81CPU-%E6%80%A7%E8%83%BD%E6%A8%A1%E5%9E%8B%EF%BC%9A%E4%B8%BB%E7%BA%BF%E7%A8%8B%E5%88%B0%E5%BA%95%E5%9C%A8%E5%BF%99%E4%BB%80%E4%B9%88"><span class="toc-number">1.</span> <span class="toc-text">一、CPU 性能模型：主线程到底在忙什么</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E4%B8%89%E6%9D%A1%E5%85%B3%E9%94%AE%E7%BA%BF%E7%A8%8B"><span class="toc-number">1.1.</span> <span class="toc-text">1.1 三条关键线程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-PlayerLoop%EF%BC%9A%E4%B8%BB%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%9B%BA%E5%AE%9A%E7%8F%AD%E6%AC%A1"><span class="toc-number">1.2.</span> <span class="toc-text">1.2 PlayerLoop：主线程的固定班次</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E5%85%88%E5%88%A4%E6%96%AD%EF%BC%9A%E5%88%B0%E5%BA%95%E6%98%AF%E4%B8%8D%E6%98%AF-CPU-%E7%93%B6%E9%A2%88"><span class="toc-number">2.</span> <span class="toc-text">二、先判断：到底是不是 CPU 瓶颈</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E4%B8%A4%E4%B8%AA%E5%85%B3%E9%94%AE%E4%BF%A1%E5%8F%B7"><span class="toc-number">2.1.</span> <span class="toc-text">2.1 两个关键信号</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E5%88%A4%E6%96%AD%E5%8F%A3%E8%AF%80"><span class="toc-number">2.2.</span> <span class="toc-text">2.2 判断口诀</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81Update-%E6%A8%A1%E5%BC%8F%EF%BC%9A%E9%9A%90%E5%BD%A2%E6%88%90%E6%9C%AC%E5%A4%A7%E6%88%B7"><span class="toc-number">3.</span> <span class="toc-text">三、Update 模式：隐形成本大户</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E7%A9%BA-Update-%E7%9A%84%E7%9C%9F%E5%AE%9E%E4%BB%A3%E4%BB%B7"><span class="toc-number">3.1.</span> <span class="toc-text">3.1 空 Update 的真实代价</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E9%99%8D%E9%A2%91%E7%AD%96%E7%95%A5%EF%BC%9A%E8%87%AA%E5%AE%9E%E7%8E%B0-Timer"><span class="toc-number">3.2.</span> <span class="toc-text">3.2 降频策略：自实现 Timer</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E4%BD%95%E6%97%B6%E7%94%A8-FixedUpdate-LateUpdate"><span class="toc-number">3.3.</span> <span class="toc-text">3.3 何时用 FixedUpdate &#x2F; LateUpdate</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81GameObject-%E4%B8%8E-Component-%E6%93%8D%E4%BD%9C"><span class="toc-number">4.</span> <span class="toc-text">四、GameObject 与 Component 操作</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-Find-%E7%9A%84%E4%BB%A3%E4%BB%B7"><span class="toc-number">4.1.</span> <span class="toc-text">4.1 Find 的代价</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-GetComponent%EF%BC%9A%E7%BC%93%E5%AD%98%E6%98%AF%E9%93%81%E5%BE%8B"><span class="toc-number">4.2.</span> <span class="toc-text">4.2 GetComponent：缓存是铁律</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-SendMessage-BroadcastMessage%EF%BC%9A%E5%8F%8D%E5%B0%84%E9%99%B7%E9%98%B1"><span class="toc-number">4.3.</span> <span class="toc-text">4.3 SendMessage &#x2F; BroadcastMessage：反射陷阱</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-4-Instantiate-Destroy-%E7%9A%84%E4%BD%8D%E7%BD%AE"><span class="toc-number">4.4.</span> <span class="toc-text">4.4 Instantiate &#x2F; Destroy 的位置</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E7%89%A9%E7%90%86%E4%B8%8E%E5%8A%A8%E7%94%BB"><span class="toc-number">5.</span> <span class="toc-text">五、物理与动画</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E7%89%A9%E7%90%86%E8%AE%BE%E7%BD%AE"><span class="toc-number">5.1.</span> <span class="toc-text">5.1 物理设置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-%E7%A2%B0%E6%92%9E%E4%BD%93%E5%A4%8D%E6%9D%82%E5%BA%A6"><span class="toc-number">5.2.</span> <span class="toc-text">5.2 碰撞体复杂度</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-Animator-%E7%9A%84%E4%B8%A4%E4%B8%AA%E5%BC%80%E5%85%B3"><span class="toc-number">5.3.</span> <span class="toc-text">5.3 Animator 的两个开关</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-4-Playable-API"><span class="toc-number">5.4.</span> <span class="toc-text">5.4 Playable API</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81Job-System-Burst%EF%BC%9ACPU-%E7%9A%84%E6%9D%80%E6%89%8B%E9%94%8F"><span class="toc-number">6.</span> <span class="toc-text">六、Job System + Burst：CPU 的杀手锏</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E4%BD%95%E6%97%B6%E5%80%BC%E5%BE%97%E4%B8%8A-Job"><span class="toc-number">6.1.</span> <span class="toc-text">6.1 何时值得上 Job</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E6%9C%80%E5%B0%8F%E7%A4%BA%E4%BE%8B%EF%BC%9A%E5%B9%B6%E8%A1%8C%E7%A7%BB%E5%8A%A8-1000-%E4%B8%AA%E5%8D%95%E4%BD%8D"><span class="toc-number">6.2.</span> <span class="toc-text">6.2 最小示例：并行移动 1000 个单位</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3-Burst-%E7%9A%84%E9%AD%94%E6%B3%95%E4%B8%8E%E9%99%90%E5%88%B6"><span class="toc-number">6.3.</span> <span class="toc-text">6.3 Burst 的魔法与限制</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E5%AE%9E%E6%88%98%E6%A1%88%E4%BE%8B%EF%BC%9A1000-%E4%B8%AA%E6%95%8C%E4%BA%BA%E7%9A%84-AI-%E5%AF%BB%E8%B7%AF"><span class="toc-number">7.</span> <span class="toc-text">七、实战案例：1000 个敌人的 AI 寻路</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#7-1-%E7%97%87%E7%8A%B6"><span class="toc-number">7.1.</span> <span class="toc-text">7.1 症状</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-2-%E8%AF%8A%E6%96%AD"><span class="toc-number">7.2.</span> <span class="toc-text">7.2 诊断</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-3-%E4%BF%AE%E5%A4%8D"><span class="toc-number">7.3.</span> <span class="toc-text">7.3 修复</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-4-%E9%AA%8C%E8%AF%81"><span class="toc-number">7.4.</span> <span class="toc-text">7.4 验证</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81CPU-%E4%BC%98%E5%8C%96-Checklist"><span class="toc-number">8.</span> <span class="toc-text">八、CPU 优化 Checklist</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B9%9D%E3%80%81%E7%BB%93%E8%AF%AD"><span class="toc-number">9.</span> <span class="toc-text">九、结语</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/14/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%887%EF%BC%89%EF%BC%9A%E5%B7%A5%E5%85%B7%E9%93%BE%E4%B8%8E%E5%B7%A5%E4%BD%9C%E6%B5%81/" title="Unity性能优化（7）：工具链与工作流">Unity性能优化（7）：工具链与工作流</a><time datetime="2026-08-13T16:30:00.000Z" title="Created 2026-08-14 00:30:00">2026-08-14</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/14/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%886%EF%BC%89%EF%BC%9AC#%E8%AF%AD%E8%A8%80%E5%B1%82%E4%BC%98%E5%8C%96/" title="Unity性能优化（6）：C# 语言层优化">Unity性能优化（6）：C# 语言层优化</a><time datetime="2026-08-13T16:20:00.000Z" title="Created 2026-08-14 00:20:00">2026-08-14</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/14/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%885%EF%BC%89%EF%BC%9A%E8%B5%84%E6%BA%90%E4%B8%8E%E8%B5%84%E4%BA%A7%E7%AE%A1%E7%90%86/" title="Unity性能优化（5）：资源与资产管理">Unity性能优化（5）：资源与资产管理</a><time datetime="2026-08-13T16:10:00.000Z" title="Created 2026-08-14 00:10:00">2026-08-14</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/14/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%882%EF%BC%89%EF%BC%9AGPU%E4%B8%8E%E6%B8%B2%E6%9F%93%E4%BC%98%E5%8C%96/" title="Unity性能优化（2）：GPU 与渲染优化">Unity性能优化（2）：GPU 与渲染优化</a><time datetime="2026-08-13T16:00:00.000Z" title="Created 2026-08-14 00:00:00">2026-08-14</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/13/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%881%EF%BC%89%EF%BC%9ACPU%E4%B8%8E%E8%84%9A%E6%9C%AC%E4%BC%98%E5%8C%96/" title="Unity性能优化（1）：CPU 与脚本优化">Unity性能优化（1）：CPU 与脚本优化</a><time datetime="2026-08-13T15:50:00.000Z" title="Created 2026-08-13 23:50:00">2026-08-13</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2020 - 2026 By Csy7749</span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/koharu.model.json"},"display":{"position":"left","width":150,"height":300},"mobile":{"show":false},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/"});</script></body></html>

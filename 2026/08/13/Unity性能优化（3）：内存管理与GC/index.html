@@ -1,0 +1,411 @@
+<!DOCTYPE html><html lang="zh-cn" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Unity性能优化（3）：内存管理与 GC | Csy7749-Blog</title><meta name="author" content="Csy7749"><meta name="copyright" content="Csy7749"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="内存问题是最”阴险”的性能杀手：代码逻辑完全正确，没有报错，也没有明显的慢函数，但帧率却每隔几秒规律性地掉一下。这种规律性卡顿十有八九是 GC 在作祟。本文从 Unity 的内存模型讲起，拆解托管内存与原生内存的边界、值类型的分配位置、GC 的工作原理，再逐个击破七类隐形分配，最后给出内存泄漏的排查方法和一个完整实战案例。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Unity性能优化（3）：内存管理与 GC">
+<meta property="og:url" content="https://csy7749.github.io/2026/08/13/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%883%EF%BC%89%EF%BC%9A%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E4%B8%8EGC/index.html">
+<meta property="og:site_name" content="Csy7749-Blog">
+<meta property="og:description" content="内存问题是最”阴险”的性能杀手：代码逻辑完全正确，没有报错，也没有明显的慢函数，但帧率却每隔几秒规律性地掉一下。这种规律性卡顿十有八九是 GC 在作祟。本文从 Unity 的内存模型讲起，拆解托管内存与原生内存的边界、值类型的分配位置、GC 的工作原理，再逐个击破七类隐形分配，最后给出内存泄漏的排查方法和一个完整实战案例。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://csy7749.github.io/img/avatar.png">
+<meta property="article:published_time" content="2026-08-13T15:40:00.000Z">
+<meta property="article:modified_time" content="2026-08-13T08:23:47.877Z">
+<meta property="article:author" content="Csy7749">
+<meta property="article:tag" content="Unity">
+<meta property="article:tag" content="性能优化">
+<meta property="article:tag" content="对象池">
+<meta property="article:tag" content="C#">
+<meta property="article:tag" content="内存管理">
+<meta property="article:tag" content="GC">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://csy7749.github.io/img/avatar.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Unity性能优化（3）：内存管理与 GC",
+  "url": "https://csy7749.github.io/2026/08/13/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%883%EF%BC%89%EF%BC%9A%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E4%B8%8EGC/",
+  "image": "https://csy7749.github.io/img/avatar.png",
+  "datePublished": "2026-08-13T15:40:00.000Z",
+  "dateModified": "2026-08-13T08:23:47.877Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Csy7749",
+      "url": "https://csy7749.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://csy7749.github.io/2026/08/13/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%883%EF%BC%89%EF%BC%9A%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E4%B8%8EGC/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        const data = { value }
+
+        if (ttl != null) {
+          data.expiry = Date.now() + ttl * 86400000
+        }
+
+        localStorage.setItem(key, JSON.stringify(data))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return
+
+        try {
+          const data = JSON.parse(itemStr)
+
+          if (data.expiry && Date.now() > data.expiry) {
+            localStorage.removeItem(key)
+            return
+          }
+
+          return data.value
+        } catch {
+          localStorage.removeItem(key)
+        }
+      }
+    }
+
+    const scriptCache = new Map()
+    const cssCache = new Map()
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => {
+        if (scriptCache.has(url)) {
+          return scriptCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const script = document.createElement('script')
+
+          script.src = url
+          script.async = true
+
+          for (const key in attr) {
+            script.setAttribute(key, attr[key])
+          }
+
+          script.onload = resolve
+          script.onerror = reject
+
+          document.head.appendChild(script)
+        })
+
+        scriptCache.set(url, promise)
+
+        return promise
+      },
+      getCSS: (url, id) => {
+        if (cssCache.has(url)) {
+          return cssCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const link = document.createElement('link')
+
+          link.rel = 'stylesheet'
+          link.href = url
+
+          if (id) {
+            link.id = id
+          }
+
+          link.onload = resolve
+          link.onerror = reject
+
+          document.head.appendChild(link)
+        })
+
+        cssCache.set(url, promise)
+
+        return promise
+      },
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+      const activateDarkMode = () => {
+        document.documentElement.dataset.theme = 'dark'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.dataset.theme = 'light'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Unity性能优化（3）：内存管理与 GC',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">16</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">42</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">6</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Csy7749-Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Unity性能优化（3）：内存管理与 GC</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Unity性能优化（3）：内存管理与 GC</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-08-13T15:40:00.000Z" title="Created 2026-08-13 23:40:00">2026-08-13</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-08-13T08:23:47.877Z" title="Updated 2026-08-13 16:23:47">2026-08-13</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Unity/">Unity</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Unity/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/">性能优化</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><blockquote>
+<p>内存问题是最”阴险”的性能杀手：代码逻辑完全正确，没有报错，也没有明显的慢函数，但帧率却每隔几秒规律性地掉一下。这种规律性卡顿十有八九是 GC 在作祟。本文从 Unity 的内存模型讲起，拆解托管内存与原生内存的边界、值类型的分配位置、GC 的工作原理，再逐个击破七类隐形分配，最后给出内存泄漏的排查方法和一个完整实战案例。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="一、先建立内存地图：托管-vs-原生"><a href="#一、先建立内存地图：托管-vs-原生" class="headerlink" title="一、先建立内存地图：托管 vs 原生"></a>一、先建立内存地图：托管 vs 原生</h2><p>Unity 的内存分两个世界，混在一起看会完全迷失方向。</p>
+<h3 id="1-1-托管内存（Managed）"><a href="#1-1-托管内存（Managed）" class="headerlink" title="1.1 托管内存（Managed）"></a>1.1 托管内存（Managed）</h3><p>这是 C# 代码直接接触的内存，由 <strong>GC（垃圾回收器）</strong> 管理。你在 C# 里 <code>new</code> 出来的对象，绝大多数都住在这里。</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> list = <span class="keyword">new</span> List&lt;<span class="built_in">int</span>&gt;();        <span class="comment">// 托管内存：List 对象本身</span></span><br><span class="line"><span class="keyword">var</span> text = <span class="string">&quot;hello&quot;</span> + <span class="string">&quot;world&quot;</span>;      <span class="comment">// 托管内存：string 对象</span></span><br><span class="line"><span class="keyword">var</span> enemy = <span class="keyword">new</span> Enemy();           <span class="comment">// 托管内存：MonoBehaviour 的 C# 壳</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="1-2-原生内存（Native）"><a href="#1-2-原生内存（Native）" class="headerlink" title="1.2 原生内存（Native）"></a>1.2 原生内存（Native）</h3><p>这是 Unity 引擎内部使用的内存，由<strong>引擎自己管理</strong>，GC 看不见也管不着。纹理、网格、音频、Shader、动画数据都住在这里。</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> tex = Resources.Load&lt;Texture2D&gt;(<span class="string">&quot;hero&quot;</span>);  <span class="comment">// 原生内存：真正的像素数据</span></span><br><span class="line"><span class="keyword">var</span> mesh = GetComponent&lt;MeshFilter&gt;().mesh;   <span class="comment">// 原生内存：顶点/三角形数据</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="1-3-最容易踩的坑：一个对象两份内存"><a href="#1-3-最容易踩的坑：一个对象两份内存" class="headerlink" title="1.3 最容易踩的坑：一个对象两份内存"></a>1.3 最容易踩的坑：一个对象两份内存</h3><p>关键认知：<strong>很多 C# 对象只是”壳”，真正的数据在原生内存</strong>。</p>
+<p><code>Texture2D</code> 就是典型——C# 侧只有一个轻量的引用壳（托管内存，几十字节），但它的像素数据在原生内存（可能几十 MB）。所以：</p>
+<ul>
+<li>Profiler 里 <code>Managed Memory</code> 很低 ≠ 内存占用低</li>
+<li>卸载一个 <code>Texture2D</code>，C# 壳被 GC 回收了，但原生像素数据可能还占着</li>
+</ul>
+<p>正确释放纹理要显式销毁：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 只置空引用不够，原生数据还在</span></span><br><span class="line">tex = <span class="literal">null</span>;                      <span class="comment">// ❌ 原生内存不释放</span></span><br><span class="line">Destroy(tex);                    <span class="comment">// ✅ 显式销毁原生资源</span></span><br><span class="line">Resources.UnloadUnusedAssets();  <span class="comment">// 配合清理无引用的资源</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="二、值类型到底分配在哪：栈还是堆"><a href="#二、值类型到底分配在哪：栈还是堆" class="headerlink" title="二、值类型到底分配在哪：栈还是堆"></a>二、值类型到底分配在哪：栈还是堆</h2><p>这个问题答案不是”struct 在栈、class 在堆”这么简单，要<strong>看值类型的存放位置</strong>。</p>
+<h3 id="2-1-三种情况"><a href="#2-1-三种情况" class="headerlink" title="2.1 三种情况"></a>2.1 三种情况</h3><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">Player</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="built_in">int</span> hp;              <span class="comment">// ① 类字段：分配在堆上（随 Player 对象）</span></span><br><span class="line">    <span class="keyword">public</span> Vector3 position;    <span class="comment">// ① 类字段：也在堆上</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Update</span>()</span> &#123;</span><br><span class="line">    <span class="built_in">int</span> localHp = <span class="number">100</span>;          <span class="comment">// ② 局部变量：分配在栈上（方法返回即消失）</span></span><br><span class="line">    Vector3 localPos = Vector3.zero; <span class="comment">// ② 局部变量：栈上</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="built_in">object</span> boxed = <span class="number">100</span>;             <span class="comment">// ③ 装箱：值类型被复制进堆上的一个 box</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="2-2-为什么”struct-在栈上”会误导人"><a href="#2-2-为什么”struct-在栈上”会误导人" class="headerlink" title="2.2 为什么”struct 在栈上”会误导人"></a>2.2 为什么”struct 在栈上”会误导人</h3><p>一个 <code>struct</code> 只要成为类的字段，就跟着类对象住在堆上。真正决定”栈还是堆”的是<strong>存放位置</strong>，不是类型本身。</p>
+<p>理解这一点，才能明白 struct 优化的适用边界：<strong>小而短命的值类型用 struct 能省堆分配；但把 struct 塞进长期存活的 class 里，它照样在堆上，省不了多少。</strong></p>
+<h3 id="2-3-装箱：隐藏的堆分配"><a href="#2-3-装箱：隐藏的堆分配" class="headerlink" title="2.3 装箱：隐藏的堆分配"></a>2.3 装箱：隐藏的堆分配</h3><p>当值类型被当作 <code>object</code> 或接口使用时，会触发装箱——把值复制进堆上的一个新对象：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">int</span> count = <span class="number">10</span>;</span><br><span class="line"><span class="built_in">object</span> obj = count;              <span class="comment">// ❌ 装箱：堆分配一个 int box</span></span><br><span class="line">Debug.Log(count);                <span class="comment">// ❌ Debug.Log(object) 会装箱</span></span><br><span class="line">ArrayList list = <span class="keyword">new</span> ArrayList();</span><br><span class="line">list.Add(count);                 <span class="comment">// ❌ ArrayList.Add(object) 装箱</span></span><br></pre></td></tr></table></figure>
+
+<p><code>ArrayList</code> 和 <code>Hashtable</code> 是装箱重灾区，现代代码应一律用泛型 <code>List&lt;T&gt;</code> 和 <code>Dictionary&lt;TKey,TValue&gt;</code>。</p>
+<h2 id="三、GC-的真相：Unity-用的是哪种-GC"><a href="#三、GC-的真相：Unity-用的是哪种-GC" class="headerlink" title="三、GC 的真相：Unity 用的是哪种 GC"></a>三、GC 的真相：Unity 用的是哪种 GC</h2><h3 id="3-1-Boehm-GC：保守式、非分代"><a href="#3-1-Boehm-GC：保守式、非分代" class="headerlink" title="3.1 Boehm GC：保守式、非分代"></a>3.1 Boehm GC：保守式、非分代</h3><p>Unity 的 Mono 和 IL2CPP 后端，默认都使用 <strong>Boehm GC</strong>。它有两个关键特性，直接影响你的优化策略：</p>
+<ol>
+<li><p><strong>非分代</strong>：不像 .NET 的 Gen0&#x2F;Gen1&#x2F;Gen2 三代模型，Boehm 每次回收都要<strong>扫描整个托管堆</strong>。这意味着——对象越多，单次 GC 越慢，无论对象是刚分配的还是活了很久的。</p>
+</li>
+<li><p><strong>保守式</strong>：它”看不清”栈和寄存器里的精确类型，只能猜。这偶尔会导致”该回收的没回收”（轻微的内存滞留），但不会导致崩溃。</p>
+</li>
+</ol>
+<h3 id="3-2-核心结论：让对象”少而短命”"><a href="#3-2-核心结论：让对象”少而短命”" class="headerlink" title="3.2 核心结论：让对象”少而短命”"></a>3.2 核心结论：让对象”少而短命”</h3><p>既然每次 GC 都是全堆扫描，优化的核心就非常明确：</p>
+<ul>
+<li><strong>减少分配</strong>：从源头不让垃圾产生</li>
+<li><strong>缩短存活时间</strong>：让临时对象尽早变成垃圾，别跨帧驻留</li>
+<li><strong>控制总量</strong>：长期存活的对象越少，每次扫描越快</li>
+</ul>
+<h3 id="3-3-一句话判断-GC-是否在作祟"><a href="#3-3-一句话判断-GC-是否在作祟" class="headerlink" title="3.3 一句话判断 GC 是否在作祟"></a>3.3 一句话判断 GC 是否在作祟</h3><p>规律性卡顿（比如每 5 秒掉一次）→ 打开 Profiler，看 CPU Usage 里是否每隔一段出现一个 <code>GC.Collect</code> 尖峰。是的话，你的问题就是分配过多。</p>
+<h2 id="四、分配热点排查：GC-Alloc-列怎么读"><a href="#四、分配热点排查：GC-Alloc-列怎么读" class="headerlink" title="四、分配热点排查：GC.Alloc 列怎么读"></a>四、分配热点排查：GC.Alloc 列怎么读</h2><p>打开 Profiler（<code>Window → Analysis → Profiler</code>），切到 CPU Usage 模块，看每一帧的 <strong>GC Alloc</strong> 列——它直接告诉你这一帧的脚本分配了多少字节托管内存。</p>
+<p>排查流程：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">帧率规律性卡顿</span><br><span class="line">  ↓</span><br><span class="line">Profiler 里看到周期性 GC.Collect 尖峰</span><br><span class="line">  ↓</span><br><span class="line">找到 GC.Alloc 高的帧</span><br><span class="line">  ↓</span><br><span class="line">展开脚本方法，找到分配量最大的那一行</span><br><span class="line">  ↓</span><br><span class="line">对照本文第五节的七类隐形分配逐一排除</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>经验值参考：<strong>每帧 GC.Alloc 应控制在几 KB 以内</strong>。如果一帧分配超过 100KB，且每帧都如此，移动端几乎必然卡顿。以下数值是我在典型中端设备上观察到的量级，具体以你项目的 Profiler 实测为准。</p>
+</blockquote>
+<h2 id="五、七类隐形分配，逐个击破"><a href="#五、七类隐形分配，逐个击破" class="headerlink" title="五、七类隐形分配，逐个击破"></a>五、七类隐形分配，逐个击破</h2><h3 id="5-1-字符串拼接"><a href="#5-1-字符串拼接" class="headerlink" title="5.1 字符串拼接"></a>5.1 字符串拼接</h3><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ❌ 每次 + 都分配新 string，三个 + 就是三次分配</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Update</span>()</span> &#123;</span><br><span class="line">    <span class="built_in">string</span> s = <span class="string">&quot;HP: &quot;</span> + hp + <span class="string">&quot; / &quot;</span> + maxHp;</span><br><span class="line">    label.text = s;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ✅ 用 StringBuilder 缓存 + Clear 复用</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">readonly</span> StringBuilder sb = <span class="keyword">new</span> StringBuilder(<span class="number">64</span>);</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Update</span>()</span> &#123;</span><br><span class="line">    sb.Clear();</span><br><span class="line">    sb.Append(<span class="string">&quot;HP: &quot;</span>).Append(hp).Append(<span class="string">&quot; / &quot;</span>).Append(maxHp);</span><br><span class="line">    label.text = sb.ToString();  <span class="comment">// ToString 本身仍分配一次</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>更彻底的零分配做法，是配合 TextMeshPro 的格式化方法（见 UGUI 篇）：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tmpText.SetText(<span class="string">&quot;HP: &#123;0&#125; / &#123;1&#125;&quot;</span>, hp, maxHp);  <span class="comment">// 参数直接进顶点，不拼字符串</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="5-2-LINQ"><a href="#5-2-LINQ" class="headerlink" title="5.2 LINQ"></a>5.2 LINQ</h3><p>LINQ 的每个操作符都会分配枚举器对象，链越长分配越多：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ❌ 每帧三个分配：Where 的委托 + 枚举器 + ToList 的结果</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Update</span>()</span> &#123;</span><br><span class="line">    <span class="keyword">var</span> visible = enemies.Where(e =&gt; e.IsVisible).ToList();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ✅ 换成 for + if，零分配</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Update</span>()</span> &#123;</span><br><span class="line">    visibleList.Clear();</span><br><span class="line">    <span class="keyword">for</span> (<span class="built_in">int</span> i = <span class="number">0</span>; i &lt; enemies.Count; i++) &#123;</span><br><span class="line">        <span class="keyword">if</span> (enemies[i].IsVisible) &#123;</span><br><span class="line">            visibleList.Add(enemies[i]);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>结论</strong>：LINQ 适合初始化阶段、一次性执行的代码；高频路径（Update、循环内）一律用 <code>for</code>&#x2F;<code>foreach</code> + <code>if</code>。</p>
+<h3 id="5-3-闭包捕获"><a href="#5-3-闭包捕获" class="headerlink" title="5.3 闭包捕获"></a>5.3 闭包捕获</h3><p>匿名方法和 Lambda 若捕获了外部变量，会分配一个闭包对象：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ❌ 每次点击分配一个闭包对象（捕获了 count）</span></span><br><span class="line">button.onClick.AddListener(() =&gt; &#123; count++; &#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// ✅ 用成员方法，无捕获</span></span><br><span class="line">button.onClick.AddListener(IncrementCount);</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">IncrementCount</span>()</span> &#123; count++; &#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-4-协程的-new-WaitForSeconds"><a href="#5-4-协程的-new-WaitForSeconds" class="headerlink" title="5.4 协程的 new WaitForSeconds"></a>5.4 协程的 new WaitForSeconds</h3><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ❌ 每次 yield 都 new 一个 WaitForSeconds</span></span><br><span class="line"><span class="function">IEnumerator <span class="title">Loop</span>()</span> &#123;</span><br><span class="line">    <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">        <span class="function"><span class="keyword">yield</span> <span class="keyword">return</span> <span class="keyword">new</span> <span class="title">WaitForSeconds</span>(<span class="params"><span class="number">1f</span></span>)</span>;   <span class="comment">// 分配</span></span><br><span class="line">        Tick();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ✅ 缓存复用一个实例</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">readonly</span> WaitForSeconds WaitOneSecond = <span class="keyword">new</span> WaitForSeconds(<span class="number">1f</span>);</span><br><span class="line"></span><br><span class="line"><span class="function">IEnumerator <span class="title">Loop</span>()</span> &#123;</span><br><span class="line">    <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> WaitOneSecond;            <span class="comment">// 零分配</span></span><br><span class="line">        Tick();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>同理缓存 <code>WaitForEndOfFrame</code>、<code>WaitForFixedUpdate</code>。</p>
+<h3 id="5-5-返回数组-集合的-API"><a href="#5-5-返回数组-集合的-API" class="headerlink" title="5.5 返回数组&#x2F;集合的 API"></a>5.5 返回数组&#x2F;集合的 API</h3><p>Unity 有一批 API 默认返回新分配的数组，高频调用会产生大量垃圾：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ❌ 每帧分配一个新数组</span></span><br><span class="line"><span class="keyword">var</span> cols = Physics.OverlapSphere(pos, radius);</span><br><span class="line"><span class="keyword">var</span> children = GetComponentsInChildren&lt;Transform&gt;();</span><br><span class="line"><span class="keyword">var</span> allEnemies = FindObjectsOfType&lt;Enemy&gt;();</span><br><span class="line"></span><br><span class="line"><span class="comment">// ✅ 用 NonAlloc / 传入缓存的版本</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">readonly</span> Collider[] colsBuffer = <span class="keyword">new</span> Collider[<span class="number">32</span>];</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">readonly</span> List&lt;Transform&gt; childrenBuffer = <span class="keyword">new</span> List&lt;Transform&gt;();</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Check</span>()</span> &#123;</span><br><span class="line">    <span class="built_in">int</span> count = Physics.OverlapSphereNonAlloc(pos, radius, colsBuffer);  <span class="comment">// 零分配</span></span><br><span class="line">    childrenBuffer.Clear();</span><br><span class="line">    GetComponentsInChildren(childrenBuffer);  <span class="comment">// List 版本复用缓冲</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>规律：<strong>凡是带 <code>NonAlloc</code> 后缀，或接受 <code>List&lt;T&gt;</code> 参数的 API，都是零分配版本</strong>，优先使用。</p>
+<h3 id="5-6-Debug-Log-残留"><a href="#5-6-Debug-Log-残留" class="headerlink" title="5.6 Debug.Log 残留"></a>5.6 Debug.Log 残留</h3><p><code>Debug.Log</code> 在拼字符串、装箱参数时会分配，更重要的是它在<strong>发布版里也不该存在</strong>：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ❌ 每次拼字符串 + 装箱</span></span><br><span class="line">Debug.Log(<span class="string">&quot;Enemy &quot;</span> + enemy.name + <span class="string">&quot; hp = &quot;</span> + enemy.hp);</span><br><span class="line"></span><br><span class="line"><span class="comment">// ✅ 用条件编译，发布版直接剔除</span></span><br><span class="line">[<span class="meta">System.Diagnostics.Conditional(<span class="string">&quot;ENABLE_LOG&quot;</span>)</span>]</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Log</span>(<span class="params"><span class="built_in">string</span> msg</span>)</span> =&gt; Debug.Log(msg);</span><br></pre></td></tr></table></figure>
+
+<p>或者项目里统一封装日志组件，发布时一键关闭。</p>
+<h3 id="5-7-装箱"><a href="#5-7-装箱" class="headerlink" title="5.7 装箱"></a>5.7 装箱</h3><p>第五节第 2.3 已讲过，这里再给一个高频场景：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ❌ 用 int 做 Dictionary 的 key 装箱（Dictionary&lt;int,...&gt; 不装箱，</span></span><br><span class="line"><span class="comment">//    但 object 或非泛型容器会装箱）</span></span><br><span class="line">Hashtable ht = <span class="keyword">new</span> Hashtable();</span><br><span class="line">ht.Add(<span class="number">1</span>, <span class="string">&quot;a&quot;</span>);                    <span class="comment">// 装箱</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// ✅ 泛型 Dictionary，零装箱</span></span><br><span class="line"><span class="keyword">var</span> dict = <span class="keyword">new</span> Dictionary&lt;<span class="built_in">int</span>, <span class="built_in">string</span>&gt;();</span><br><span class="line">dict.Add(<span class="number">1</span>, <span class="string">&quot;a&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<h2 id="六、减少分配的设计模式"><a href="#六、减少分配的设计模式" class="headerlink" title="六、减少分配的设计模式"></a>六、减少分配的设计模式</h2><h3 id="6-1-对象池"><a href="#6-1-对象池" class="headerlink" title="6.1 对象池"></a>6.1 对象池</h3><p>频繁创建&#x2F;销毁的对象（子弹、粒子、UI Item、敌人）用池管理，从源头消除”new + 销毁”的分配。</p>
+<p>Unity 2021+ 内置了 <code>ObjectPool&lt;T&gt;</code>：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">using</span> UnityEngine.Pool;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">BulletPool</span> : <span class="title">MonoBehaviour</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> Bullet bulletPrefab;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> ObjectPool&lt;Bullet&gt; pool;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">Awake</span>()</span> &#123;</span><br><span class="line">        pool = <span class="keyword">new</span> ObjectPool&lt;Bullet&gt;(</span><br><span class="line">            createFunc: () =&gt; Instantiate(bulletPrefab),</span><br><span class="line">            actionOnGet: b =&gt; b.gameObject.SetActive(<span class="literal">true</span>),</span><br><span class="line">            actionOnRelease: b =&gt; b.gameObject.SetActive(<span class="literal">false</span>),</span><br><span class="line">            actionOnDestroy: b =&gt; Destroy(b.gameObject),</span><br><span class="line">            collectionCheck: <span class="literal">false</span>,</span><br><span class="line">            defaultCapacity: <span class="number">20</span>,</span><br><span class="line">            maxSize: <span class="number">100</span></span><br><span class="line">        );</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Bullet <span class="title">Get</span>()</span> =&gt; pool.Get();</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Release</span>(<span class="params">Bullet b</span>)</span> =&gt; pool.Release(b);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="6-2-NonAlloc-系列"><a href="#6-2-NonAlloc-系列" class="headerlink" title="6.2 NonAlloc 系列"></a>6.2 NonAlloc 系列</h3><p>覆盖物理查询、组件遍历、射线检测等高频 API：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 物理</span></span><br><span class="line">Physics.OverlapSphereNonAlloc / OverlapBoxNonAlloc / RaycastNonAlloc</span><br><span class="line"><span class="comment">// 组件</span></span><br><span class="line">GetComponentsInChildren(List&lt;T&gt;) / GetComponents(List&lt;T&gt;)</span><br><span class="line"><span class="comment">// 渲染</span></span><br><span class="line">Mesh.GetVertices(List&lt;Vector3&gt;) / GetIndices(List&lt;<span class="built_in">int</span>&gt;)</span><br></pre></td></tr></table></figure>
+
+<h3 id="6-3-缓存静态实例"><a href="#6-3-缓存静态实例" class="headerlink" title="6.3 缓存静态实例"></a>6.3 缓存静态实例</h3><p>把 <code>WaitForSeconds</code>、<code>Color</code>、<code>Vector3</code> 常量等不可变对象缓存成静态只读字段，全项目复用：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">readonly</span> Color EnemyColor = <span class="keyword">new</span> Color(<span class="number">1f</span>, <span class="number">0f</span>, <span class="number">0f</span>);</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">readonly</span> Vector3 Forward = Vector3.forward;</span><br></pre></td></tr></table></figure>
+
+<h3 id="6-4-struct-的正确姿势"><a href="#6-4-struct-的正确姿势" class="headerlink" title="6.4 struct 的正确姿势"></a>6.4 struct 的正确姿势</h3><p>用 struct 省分配的前提是：<strong>小（建议 &lt; 16 字节）、不可变、短命、不装箱</strong>。</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ✅ 好的 struct：小、只读、不会被装箱</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">readonly</span> <span class="keyword">struct</span> PlayerInput &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">readonly</span> <span class="built_in">float</span> horizontal;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">readonly</span> <span class="built_in">float</span> vertical;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">PlayerInput</span>(<span class="params"><span class="built_in">float</span> h, <span class="built_in">float</span> v</span>)</span> &#123; horizontal = h; vertical = v; &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>一旦 struct 含引用类型字段、被频繁装箱、或体积过大，收益就消失甚至变负。</p>
+<h2 id="七、GC-调优"><a href="#七、GC-调优" class="headerlink" title="七、GC 调优"></a>七、GC 调优</h2><h3 id="7-1-Incremental-GC：把长停顿切成碎片"><a href="#7-1-Incremental-GC：把长停顿切成碎片" class="headerlink" title="7.1 Incremental GC：把长停顿切成碎片"></a>7.1 Incremental GC：把长停顿切成碎片</h3><p>Unity 2019.1 引入增量 GC，IL2CPP 后端自 2021.2 起默认开启。它的思想是：把一次大的全堆回收，<strong>分摊到多帧</strong>，每帧只做一小片，避免单帧卡顿 50ms。</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 检查是否开启增量 GC</span></span><br><span class="line"><span class="built_in">bool</span> incremental = UnityEngine.Scripting.GarbageCollector.isIncremental;</span><br></pre></td></tr></table></figure>
+
+<p><strong>注意事项</strong>：</p>
+<ul>
+<li>增量 GC 的<strong>总耗时</strong>比非增量略高（分摊有额外开销），但<strong>单帧峰值</strong>大幅下降，适合对帧率稳定要求高的项目</li>
+<li>它只解决”单次停顿过长”，不解决”总分配过多”——治标不治本，源头仍是减少分配</li>
+</ul>
+<h3 id="7-2-手动-GC-Collect-的时机"><a href="#7-2-手动-GC-Collect-的时机" class="headerlink" title="7.2 手动 GC.Collect 的时机"></a>7.2 手动 GC.Collect 的时机</h3><p>在<strong>可控的时机</strong>主动触发 GC，把它挪到玩家无感知的时刻：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 场景切换、加载完成后、结算界面打开时</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">OnSceneLoaded</span>()</span> &#123;</span><br><span class="line">    System.GC.Collect();</span><br><span class="line">    Resources.UnloadUnusedAssets();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>不要在 Update 里手动 <code>GC.Collect()</code>——那等于自己制造卡顿。</p>
+<h3 id="7-3-IL2CPP-与-Mono-的差异"><a href="#7-3-IL2CPP-与-Mono-的差异" class="headerlink" title="7.3 IL2CPP 与 Mono 的差异"></a>7.3 IL2CPP 与 Mono 的差异</h3><table>
+<thead>
+<tr>
+<th align="left">维度</th>
+<th align="left">Mono</th>
+<th align="left">IL2CPP</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">GC 实现</td>
+<td align="left">Boehm GC</td>
+<td align="left">Boehm GC（2021.2+ 支持增量）</td>
+</tr>
+<tr>
+<td align="left">增量 GC</td>
+<td align="left">支持</td>
+<td align="left">默认开启</td>
+</tr>
+<tr>
+<td align="left">代码体积</td>
+<td align="left">小</td>
+<td align="left">大（C++ 编译产物）</td>
+</tr>
+<tr>
+<td align="left">运行性能</td>
+<td align="left">较慢</td>
+<td align="left">更快</td>
+</tr>
+<tr>
+<td align="left">内存占用</td>
+<td align="left">较低</td>
+<td align="left">略高（C++ 运行时）</td>
+</tr>
+</tbody></table>
+<p>核心结论：<strong>发布构建几乎都用 IL2CPP</strong>，测试时也要在 IL2CPP 下测内存表现，Editor 里（通常 Mono）的数据只能做参考。</p>
+<h2 id="八、内存泄漏检测"><a href="#八、内存泄漏检测" class="headerlink" title="八、内存泄漏检测"></a>八、内存泄漏检测</h2><h3 id="8-1-用-Memory-Profiler-抓泄漏"><a href="#8-1-用-Memory-Profiler-抓泄漏" class="headerlink" title="8.1 用 Memory Profiler 抓泄漏"></a>8.1 用 Memory Profiler 抓泄漏</h3><p>Unity 2022+ 的 Memory Profiler 包（Package Manager 安装 <code>com.unity.memoryprofiler</code>）支持快照对比：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1. 进入场景 A，拍快照 1</span><br><span class="line">2. 切到场景 B，再切回场景 A</span><br><span class="line">3. 拍快照 2</span><br><span class="line">4. 对比两张快照：场景 A 的资产本应释放，却还在 = 泄漏</span><br></pre></td></tr></table></figure>
+
+<h3 id="8-2-三大经典泄漏源"><a href="#8-2-三大经典泄漏源" class="headerlink" title="8.2 三大经典泄漏源"></a>8.2 三大经典泄漏源</h3><p><strong>① 静态引用</strong></p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ❌ 静态字段持有场景对象，场景切换后仍被引用，永不释放</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> List&lt;Enemy&gt; GlobalEnemies = <span class="keyword">new</span> List&lt;Enemy&gt;();</span><br></pre></td></tr></table></figure>
+
+<p><strong>② 事件未退订</strong></p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ❌ 订阅了事件但 OnDestroy 里不退订，发布者长期持有订阅者</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">OnEnable</span>()</span> =&gt; GameEvents.OnPlayerDied += OnPlayerDied;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">OnDestroy</span>()</span> =&gt; GameEvents.OnPlayerDied -= OnPlayerDied;  <span class="comment">// 这一行必须有</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>③ DontDestroyOnLoad 的双刃剑</strong></p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// DontDestroyOnLoad 让对象跨场景存活，但也让它&quot;永不释放&quot;</span></span><br><span class="line"><span class="comment">// 只在真正需要全局存活的单例上使用，且要提供销毁接口</span></span><br><span class="line">DontDestroyOnLoad(gameObject);</span><br></pre></td></tr></table></figure>
+
+<h2 id="九、实战案例：每-5-秒一次的规律卡顿"><a href="#九、实战案例：每-5-秒一次的规律卡顿" class="headerlink" title="九、实战案例：每 5 秒一次的规律卡顿"></a>九、实战案例：每 5 秒一次的规律卡顿</h2><h3 id="9-1-症状"><a href="#9-1-症状" class="headerlink" title="9.1 症状"></a>9.1 症状</h3><p>战斗场景，帧率整体 50 FPS 左右，但每隔 5 秒稳定掉到 10 FPS 一瞬，然后恢复。逻辑代码无明显慢函数。</p>
+<h3 id="9-2-诊断"><a href="#9-2-诊断" class="headerlink" title="9.2 诊断"></a>9.2 诊断</h3><ol>
+<li>Profiler 开 CPU Usage，发现每隔 5 秒出现一个 <code>GC.Collect</code> 尖峰，耗时约 <strong>50ms</strong></li>
+<li>看 GC.Alloc 列，战斗期间每帧分配约 <strong>2MB</strong></li>
+<li>展开热点方法，锁定两个元凶：<ul>
+<li><code>DamageNumber.Show()</code> 里用 LINQ 计算伤害数字排序</li>
+<li><code>UpdateHUD()</code> 里每帧字符串拼接血条文本</li>
+</ul>
+</li>
+</ol>
+<h3 id="9-3-修复"><a href="#9-3-修复" class="headerlink" title="9.3 修复"></a>9.3 修复</h3><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 修复1：LINQ 换 for</span></span><br><span class="line"><span class="comment">// 旧：var sorted = damages.Where(d =&gt; d.active).OrderBy(d =&gt; d.value).ToList();</span></span><br><span class="line"><span class="comment">// 新：先收集进复用 List，再用 for 冒泡/选择排序，零分配</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 修复2：字符串拼接换 StringBuilder 缓存</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">readonly</span> StringBuilder hudSb = <span class="keyword">new</span> StringBuilder(<span class="number">32</span>);</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">UpdateHUD</span>()</span> &#123;</span><br><span class="line">    hudSb.Clear();</span><br><span class="line">    hudSb.Append(hp).Append(<span class="string">&#x27;/&#x27;</span>).Append(maxHp);</span><br><span class="line">    hpText.SetText(hudSb);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 修复3：伤害数字用对象池 + TMP.SetText 格式化</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="9-4-验证"><a href="#9-4-验证" class="headerlink" title="9.4 验证"></a>9.4 验证</h3><table>
+<thead>
+<tr>
+<th align="left">指标</th>
+<th align="left">优化前</th>
+<th align="left">优化后</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">GC.Alloc&#x2F;帧</td>
+<td align="left">2MB</td>
+<td align="left">2KB</td>
+</tr>
+<tr>
+<td align="left">GC.Collect 峰值</td>
+<td align="left">50ms &#x2F; 每5秒</td>
+<td align="left">8ms &#x2F; 每30秒</td>
+</tr>
+<tr>
+<td align="left">最低帧率</td>
+<td align="left">10 FPS</td>
+<td align="left">48 FPS</td>
+</tr>
+</tbody></table>
+<h2 id="十、内存优化-Checklist"><a href="#十、内存优化-Checklist" class="headerlink" title="十、内存优化 Checklist"></a>十、内存优化 Checklist</h2><ol>
+<li><strong>[ ] 基线</strong>：真机 Profiler，记录 GC.Alloc&#x2F;帧 和 GC.Collect 频率</li>
+<li><strong>[ ] 字符串</strong>：高频路径无 <code>+</code> 拼接，改用 StringBuilder 缓存或 TMP.SetText</li>
+<li><strong>[ ] LINQ</strong>：Update&#x2F;循环内无 LINQ，全部换成 for&#x2F;foreach + if</li>
+<li><strong>[ ] 闭包</strong>：Lambda 无捕获外部变量，改用成员方法</li>
+<li><strong>[ ] 协程</strong>：WaitForSeconds 等已缓存为静态实例</li>
+<li><strong>[ ] API</strong>：物理查询、组件遍历已用 NonAlloc &#x2F; List 复用版本</li>
+<li><strong>[ ] 装箱</strong>：无 ArrayList&#x2F;Hashtable，值类型未被当 object 传</li>
+<li><strong>[ ] 对象池</strong>：频繁创建销毁的对象已池化</li>
+<li><strong>[ ] 日志</strong>：Debug.Log 已用条件编译或统一开关</li>
+<li><strong>[ ] 泄漏</strong>：静态引用、事件订阅、DontDestroyOnLoad 已审计</li>
+<li><strong>[ ] 验证</strong>：相同场景复测，GC.Alloc 与卡顿频率明显下降</li>
+</ol>
+<h2 id="十一、结语"><a href="#十一、结语" class="headerlink" title="十一、结语"></a>十一、结语</h2><p>内存优化的本质是<strong>把 GC 变成”可预测”的东西</strong>：要么从源头减少分配（让 GC 无事可做），要么把回收挪到可控时机（让 GC 在玩家无感知时干活）。记住三句话——<strong>减少分配、缩短存活、控制总量</strong>。真正的内存高手不是会写对象池，而是每写一行 <code>new</code> 之前，都下意识地问一句：”这个对象非得现在分配吗？”</p>
+<hr>
+<p><em>系列导航：</em><br><em>- 下一篇：[Unity性能优化（4）：UGUI 专题（3篇）]</em><br><em>- 系列规划：[Unity性能优化系列-规划]</em></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://csy7749.github.io">Csy7749</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://csy7749.github.io/2026/08/13/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%883%EF%BC%89%EF%BC%9A%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E4%B8%8EGC/">https://csy7749.github.io/2026/08/13/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%883%EF%BC%89%EF%BC%9A%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E4%B8%8EGC/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Unity/">Unity</a><a class="post-meta__tags" href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/">性能优化</a><a class="post-meta__tags" href="/tags/%E5%AF%B9%E8%B1%A1%E6%B1%A0/">对象池</a><a class="post-meta__tags" href="/tags/C/">C#</a><a class="post-meta__tags" href="/tags/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/">内存管理</a><a class="post-meta__tags" href="/tags/GC/">GC</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/08/13/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%881%EF%BC%89%EF%BC%9ACPU%E4%B8%8E%E8%84%9A%E6%9C%AC%E4%BC%98%E5%8C%96/" title="Unity性能优化（1）：CPU 与脚本优化"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">Unity性能优化（1）：CPU 与脚本优化</div></div><div class="info-2"><div class="info-item-1"> CPU 是游戏性能的”第一现场”——大多数卡顿，追到最后都落在主线程的某段脚本上。本文先帮你建立 CPU 性能模型、判断瓶颈归属，再逐个击破四个高频开销源：Update 模式、GameObject&#x2F;Component 操作、物理动画、以及最后的杀手锏 Job System + Burst。每节都给”坏代码 → 好代码”的对照，配一个 1000 敌人寻路的完整实战案例。    一、CPU 性能模型：主线程到底在忙什么Unity 的 CPU 侧由多条线程协作，理解它们的分工是优化的前提。 1.1 三条关键线程   线程 职责    主线程 你的脚本逻辑、物理、动画、以及向渲染线程提交渲染命令   渲染线程 把主线程提交的渲染命令整理后发给 GPU（多线程渲染模式下独立）   Job 线程池 Job System 的工作线程，数量约等于 CPU 核数 − 1   大多数游戏逻辑都挤在主线程上，所以”CPU 优化”约等于”主线程脚本优化”。 1.2 PlayerLoop：主线程的固定班次主线程不是随意执行的，它按 PlayerLoop 的固定顺序逐段推进。骨架大致是： 123...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96-UGUI%EF%BC%883%EF%BC%89%EF%BC%9A%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E5%AE%9E%E6%88%98/" title="Unity性能优化-UGUI（3）：性能优化实战"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">Unity性能优化-UGUI（3）：性能优化实战</div></div><div class="info-2"><div class="info-item-1"> 前两篇讲清了 UGUI 的底层机制和诊断方法，这一篇落地到可执行的代码。你会拿到一套”拿来即用”的优化武器库：脏值检查、CanvasGroup 显隐、Layout 禁用、TextMeshPro 迁移、Raycast 批量关闭、对象池与循环列表，最后用一个排行榜实战案例串起全部技巧，并给出可直接打印贴在工位上的 Checklist。    一、优化策略总览按”投入产出比”从高到低排序，这就是本文的行进路线：    优先级 策略 一句话理由    ★★★★★ 脏值检查 消除 80% 的无效 Rebuild，代价几乎为零   ★★★★★ 关闭 Raycast Target 一行代码，EventSystem 压力骤降   ★★★★☆ CanvasGroup 代替 SetActive 频繁显隐零重建   ★★★★☆ 打 Sprite Atlas 消灭合批的最大敌人：纹理不一致   ★★★★☆ 禁用 Layout Group 掐掉指数级递归计算   ★★★☆☆ TextMeshPro 迁移 文字渲染全面降本   ★★★☆☆ 对象池 + 循环列表 海量列表的唯一正解   下面逐个展开，每个都...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/08/14/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%886%EF%BC%89%EF%BC%9AC#%E8%AF%AD%E8%A8%80%E5%B1%82%E4%BC%98%E5%8C%96/" title="Unity性能优化（6）：C# 语言层优化"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-14</div><div class="info-item-2">Unity性能优化（6）：C# 语言层优化</div></div><div class="info-2"><div class="info-item-1"> 前面五讲偏 Unity 引擎层，这一讲回归语言本身。很多分配和 CPU 问题，根源不在 Unity API，而在 C# 代码的写法：一个不该装箱的 struct、一条本该用 for 的 LINQ 链、一次 string 的 + 拼接。本文从值类型与引用类型讲起，覆盖集合选择、Span&lt;T&gt;、LINQ 代价、字符串处理和 unsafe，帮你把 C# 的每一个字节都算清楚。    一、值类型 vs 引用类型：先破除一个经典误解1.1 struct 分配在栈？——看上下文“struct 在栈上，class 在堆上”是流传最广、也最害人的一句话。真相是：分配位置取决于存放位置，不取决于类型。 12345678public class Player &#123;    public Vector3 position;   // ① struct 作为类字段 → 分配在堆上（随 Player）&#125;void Update() &#123;    Vector3 localPos;          // ② struct 作为局部变量 → 分配在栈上    object ...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96-UGUI%EF%BC%883%EF%BC%89%EF%BC%9A%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E5%AE%9E%E6%88%98/" title="Unity性能优化-UGUI（3）：性能优化实战"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity性能优化-UGUI（3）：性能优化实战</div></div><div class="info-2"><div class="info-item-1"> 前两篇讲清了 UGUI 的底层机制和诊断方法，这一篇落地到可执行的代码。你会拿到一套”拿来即用”的优化武器库：脏值检查、CanvasGroup 显隐、Layout 禁用、TextMeshPro 迁移、Raycast 批量关闭、对象池与循环列表，最后用一个排行榜实战案例串起全部技巧，并给出可直接打印贴在工位上的 Checklist。    一、优化策略总览按”投入产出比”从高到低排序，这就是本文的行进路线：    优先级 策略 一句话理由    ★★★★★ 脏值检查 消除 80% 的无效 Rebuild，代价几乎为零   ★★★★★ 关闭 Raycast Target 一行代码，EventSystem 压力骤降   ★★★★☆ CanvasGroup 代替 SetActive 频繁显隐零重建   ★★★★☆ 打 Sprite Atlas 消灭合批的最大敌人：纹理不一致   ★★★★☆ 禁用 Layout Group 掐掉指数级递归计算   ★★★☆☆ TextMeshPro 迁移 文字渲染全面降本   ★★★☆☆ 对象池 + 循环列表 海量列表的唯一正解   下面逐个展开，每个都...</div></div></div></a><a class="pagination-related" href="/2026/08/10/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E7%B3%BB%E5%88%97-%E8%A7%84%E5%88%92/" title="Unity 性能优化系列·写作规划"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-10</div><div class="info-item-2">Unity 性能优化系列·写作规划</div></div><div class="info-2"><div class="info-item-1">系列定位名称：Unity 性能优化七讲 目标读者：有 1-3 年 Unity 经验的开发者，能读代码、有基本 Profiler 概念，但缺乏系统性优化方法论。 篇幅标准：单篇 3000-5000 字，可独立阅读，合起来构成完整体系。 写作原则：  每篇必须有”从问题到修复”的完整链路（建数据 → 定位 → 改 → 验证） 代码示例完整可运行，不做伪代码 优先使用 Unity 2022.3 LTS+ API，标注版本差异 每篇末尾附 checklist，方便读者自查项目   篇目总览1234567第1讲 CPU 与脚本优化        ← 开发者最常触碰的层（✅ 已完成）第2讲 GPU 与渲染优化        ← 画面瓶颈（✅ 已完成）第3讲 内存管理与 GC         ← 卡顿根源（✅ 已完成）第4讲 UGUI 专题（3篇）      ← UI 是重灾区（✅ 已完成）第5讲 资源与资产管理        ← 导入→加载→卸载全生命周期（✅ 已完成）第6讲 C# 语言层优化         ← 从语言特性要性能（✅ 已完成）第7讲 工具链与工作流        ← 授人以...</div></div></div></a><a class="pagination-related" href="/2026/08/14/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%887%EF%BC%89%EF%BC%9A%E5%B7%A5%E5%85%B7%E9%93%BE%E4%B8%8E%E5%B7%A5%E4%BD%9C%E6%B5%81/" title="Unity性能优化（7）：工具链与工作流"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-14</div><div class="info-item-2">Unity性能优化（7）：工具链与工作流</div></div><div class="info-2"><div class="info-item-1"> 这是”Unity 性能优化”系列的收官篇。前六讲都在讲”优化什么”，这一讲讲”怎么找到要优化的地方”——工具就是你的武器。本文覆盖 Profiler 的深度用法、Frame Debugger、Memory Profiler、外部抓帧工具，以及如何把性能检测自动化进 CI&#x2F;CD，最后给出贯穿全系列的优化工作流。    一、Profiler 深度使用：性能优化的主战场1.1 模块布局Profiler（Window → Analysis → Profiler）按资源类型分模块：    模块 定位什么    CPU Usage 主线程各段耗时（脚本、物理、渲染提交）   GPU Usage GPU 各阶段耗时（顶点、片元、后处理）   Memory 托管&#x2F;原生内存、GC 分配   Rendering DrawCall、SetPass、三角面、顶点数   Audio &#x2F; Physics 音频、物理子系统开销   先看 CPU Usage 判断瓶颈归属，再看对应模块深挖，这是标准起步动作。 1.2 连接真机Editor 里跑的数据和真机天差地别，性能优化必须上...</div></div></div></a><a class="pagination-related" href="/2026/08/14/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%885%EF%BC%89%EF%BC%9A%E8%B5%84%E6%BA%90%E4%B8%8E%E8%B5%84%E4%BA%A7%E7%AE%A1%E7%90%86/" title="Unity性能优化（5）：资源与资产管理"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-14</div><div class="info-item-2">Unity性能优化（5）：资源与资产管理</div></div><div class="info-2"><div class="info-item-1"> 资源优化是”配置即性能”的典型——很多项目不改一行代码，只把纹理导入设置、音频格式、加载策略调一遍，就能砍掉一半内存和一半加载时间。本文按”导入 → 加载 → 卸载”三个阶段，逐个拆解纹理、网格、音频的导入设置，再对比 AssetBundle 与 Addressables 两种加载方案，最后给出一个首场景从 8 秒到 1.5 秒的实战案例。    一、资源三大阶段：导入 → 加载 → 卸载一个资源的完整生命周期分三个阶段，每阶段的优化手段完全不同：    阶段 决定什么 优化手段    导入 资源在包里的格式、体积 Import Settings（本文 2~4 节）   加载 运行时进内存的速度和方式 AssetBundle &#x2F; Addressables（本文第 5 节）   卸载 不用时能否正确释放 引用管理、UnloadUnusedAssets   最常见的坑：只关注加载（用了 Addressables 就以为万事大吉），却忽略了导入——一张 4096 的无压缩纹理，无论怎么加载，内存都是几百 MB。 所以正确的优化顺序是：先导入、再加载、最后卸载。 二、纹理优化...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96-UGUI%EF%BC%882%EF%BC%89%EF%BC%9ARebuild%E4%B8%8ERebatch%E6%B7%B1%E5%BA%A6%E8%A7%A3%E6%9E%90/" title="Unity性能优化-UGUI（2）：Rebuild 与 Rebatch 深度解析"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity性能优化-UGUI（2）：Rebuild 与 Rebatch 深度解析</div></div><div class="info-2"><div class="info-item-1"> 上一篇建立了 UGUI 的底层地基：Canvas 是渲染单元，CanvasRenderer 持有网格，脏标记触发重建，CanvasUpdateRegistry 统一调度。这一篇往深里走两步——Rebuild 到底怎么”重造网格”，Rebatch 又凭什么决定哪些元素能合进同一个 DrawCall。读完你会明白 Frame Debugger 里每一条红色高亮到底在告诉你什么。    一、两个动作，两种成本模型先回顾边界：Rebuild 是点成本（单个元素重造网格），Rebatch 是面成本（整个 Canvas 重新合批）。 两者遵循一个铁律：Rebuild 必然触发 Rebatch，但 Rebatch 不一定由 Rebuild 引起。  你改了 Image 的颜色 → Rebuild 这个 Image（顶点颜色重算）→ 必然 Rebatch 整个 Canvas 你只调整了元素在 Hierarchy 里的兄弟顺序 → 没有 Rebuild，但渲染深度变了 → 单独触发 Rebatch  理解这个铁律，才能读懂 Profiler 里的两个指标：Canvas.SendWillRende...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Csy7749</div><div class="author-info-description">键来！</div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">16</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">42</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">6</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/csy7749"><i class="fab fa-github"></i><span>GitHub</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">日积月累</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E5%85%88%E5%BB%BA%E7%AB%8B%E5%86%85%E5%AD%98%E5%9C%B0%E5%9B%BE%EF%BC%9A%E6%89%98%E7%AE%A1-vs-%E5%8E%9F%E7%94%9F"><span class="toc-number">1.</span> <span class="toc-text">一、先建立内存地图：托管 vs 原生</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E6%89%98%E7%AE%A1%E5%86%85%E5%AD%98%EF%BC%88Managed%EF%BC%89"><span class="toc-number">1.1.</span> <span class="toc-text">1.1 托管内存（Managed）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E5%8E%9F%E7%94%9F%E5%86%85%E5%AD%98%EF%BC%88Native%EF%BC%89"><span class="toc-number">1.2.</span> <span class="toc-text">1.2 原生内存（Native）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E6%9C%80%E5%AE%B9%E6%98%93%E8%B8%A9%E7%9A%84%E5%9D%91%EF%BC%9A%E4%B8%80%E4%B8%AA%E5%AF%B9%E8%B1%A1%E4%B8%A4%E4%BB%BD%E5%86%85%E5%AD%98"><span class="toc-number">1.3.</span> <span class="toc-text">1.3 最容易踩的坑：一个对象两份内存</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E5%80%BC%E7%B1%BB%E5%9E%8B%E5%88%B0%E5%BA%95%E5%88%86%E9%85%8D%E5%9C%A8%E5%93%AA%EF%BC%9A%E6%A0%88%E8%BF%98%E6%98%AF%E5%A0%86"><span class="toc-number">2.</span> <span class="toc-text">二、值类型到底分配在哪：栈还是堆</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E4%B8%89%E7%A7%8D%E6%83%85%E5%86%B5"><span class="toc-number">2.1.</span> <span class="toc-text">2.1 三种情况</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E4%B8%BA%E4%BB%80%E4%B9%88%E2%80%9Dstruct-%E5%9C%A8%E6%A0%88%E4%B8%8A%E2%80%9D%E4%BC%9A%E8%AF%AF%E5%AF%BC%E4%BA%BA"><span class="toc-number">2.2.</span> <span class="toc-text">2.2 为什么”struct 在栈上”会误导人</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E8%A3%85%E7%AE%B1%EF%BC%9A%E9%9A%90%E8%97%8F%E7%9A%84%E5%A0%86%E5%88%86%E9%85%8D"><span class="toc-number">2.3.</span> <span class="toc-text">2.3 装箱：隐藏的堆分配</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81GC-%E7%9A%84%E7%9C%9F%E7%9B%B8%EF%BC%9AUnity-%E7%94%A8%E7%9A%84%E6%98%AF%E5%93%AA%E7%A7%8D-GC"><span class="toc-number">3.</span> <span class="toc-text">三、GC 的真相：Unity 用的是哪种 GC</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-Boehm-GC%EF%BC%9A%E4%BF%9D%E5%AE%88%E5%BC%8F%E3%80%81%E9%9D%9E%E5%88%86%E4%BB%A3"><span class="toc-number">3.1.</span> <span class="toc-text">3.1 Boehm GC：保守式、非分代</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E6%A0%B8%E5%BF%83%E7%BB%93%E8%AE%BA%EF%BC%9A%E8%AE%A9%E5%AF%B9%E8%B1%A1%E2%80%9D%E5%B0%91%E8%80%8C%E7%9F%AD%E5%91%BD%E2%80%9D"><span class="toc-number">3.2.</span> <span class="toc-text">3.2 核心结论：让对象”少而短命”</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E4%B8%80%E5%8F%A5%E8%AF%9D%E5%88%A4%E6%96%AD-GC-%E6%98%AF%E5%90%A6%E5%9C%A8%E4%BD%9C%E7%A5%9F"><span class="toc-number">3.3.</span> <span class="toc-text">3.3 一句话判断 GC 是否在作祟</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E5%88%86%E9%85%8D%E7%83%AD%E7%82%B9%E6%8E%92%E6%9F%A5%EF%BC%9AGC-Alloc-%E5%88%97%E6%80%8E%E4%B9%88%E8%AF%BB"><span class="toc-number">4.</span> <span class="toc-text">四、分配热点排查：GC.Alloc 列怎么读</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E4%B8%83%E7%B1%BB%E9%9A%90%E5%BD%A2%E5%88%86%E9%85%8D%EF%BC%8C%E9%80%90%E4%B8%AA%E5%87%BB%E7%A0%B4"><span class="toc-number">5.</span> <span class="toc-text">五、七类隐形分配，逐个击破</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%8B%BC%E6%8E%A5"><span class="toc-number">5.1.</span> <span class="toc-text">5.1 字符串拼接</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-LINQ"><span class="toc-number">5.2.</span> <span class="toc-text">5.2 LINQ</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-%E9%97%AD%E5%8C%85%E6%8D%95%E8%8E%B7"><span class="toc-number">5.3.</span> <span class="toc-text">5.3 闭包捕获</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-4-%E5%8D%8F%E7%A8%8B%E7%9A%84-new-WaitForSeconds"><span class="toc-number">5.4.</span> <span class="toc-text">5.4 协程的 new WaitForSeconds</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-5-%E8%BF%94%E5%9B%9E%E6%95%B0%E7%BB%84-%E9%9B%86%E5%90%88%E7%9A%84-API"><span class="toc-number">5.5.</span> <span class="toc-text">5.5 返回数组&#x2F;集合的 API</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-6-Debug-Log-%E6%AE%8B%E7%95%99"><span class="toc-number">5.6.</span> <span class="toc-text">5.6 Debug.Log 残留</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-7-%E8%A3%85%E7%AE%B1"><span class="toc-number">5.7.</span> <span class="toc-text">5.7 装箱</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E5%87%8F%E5%B0%91%E5%88%86%E9%85%8D%E7%9A%84%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F"><span class="toc-number">6.</span> <span class="toc-text">六、减少分配的设计模式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E5%AF%B9%E8%B1%A1%E6%B1%A0"><span class="toc-number">6.1.</span> <span class="toc-text">6.1 对象池</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-NonAlloc-%E7%B3%BB%E5%88%97"><span class="toc-number">6.2.</span> <span class="toc-text">6.2 NonAlloc 系列</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3-%E7%BC%93%E5%AD%98%E9%9D%99%E6%80%81%E5%AE%9E%E4%BE%8B"><span class="toc-number">6.3.</span> <span class="toc-text">6.3 缓存静态实例</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-4-struct-%E7%9A%84%E6%AD%A3%E7%A1%AE%E5%A7%BF%E5%8A%BF"><span class="toc-number">6.4.</span> <span class="toc-text">6.4 struct 的正确姿势</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81GC-%E8%B0%83%E4%BC%98"><span class="toc-number">7.</span> <span class="toc-text">七、GC 调优</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#7-1-Incremental-GC%EF%BC%9A%E6%8A%8A%E9%95%BF%E5%81%9C%E9%A1%BF%E5%88%87%E6%88%90%E7%A2%8E%E7%89%87"><span class="toc-number">7.1.</span> <span class="toc-text">7.1 Incremental GC：把长停顿切成碎片</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-2-%E6%89%8B%E5%8A%A8-GC-Collect-%E7%9A%84%E6%97%B6%E6%9C%BA"><span class="toc-number">7.2.</span> <span class="toc-text">7.2 手动 GC.Collect 的时机</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-3-IL2CPP-%E4%B8%8E-Mono-%E7%9A%84%E5%B7%AE%E5%BC%82"><span class="toc-number">7.3.</span> <span class="toc-text">7.3 IL2CPP 与 Mono 的差异</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E6%A3%80%E6%B5%8B"><span class="toc-number">8.</span> <span class="toc-text">八、内存泄漏检测</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#8-1-%E7%94%A8-Memory-Profiler-%E6%8A%93%E6%B3%84%E6%BC%8F"><span class="toc-number">8.1.</span> <span class="toc-text">8.1 用 Memory Profiler 抓泄漏</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-2-%E4%B8%89%E5%A4%A7%E7%BB%8F%E5%85%B8%E6%B3%84%E6%BC%8F%E6%BA%90"><span class="toc-number">8.2.</span> <span class="toc-text">8.2 三大经典泄漏源</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B9%9D%E3%80%81%E5%AE%9E%E6%88%98%E6%A1%88%E4%BE%8B%EF%BC%9A%E6%AF%8F-5-%E7%A7%92%E4%B8%80%E6%AC%A1%E7%9A%84%E8%A7%84%E5%BE%8B%E5%8D%A1%E9%A1%BF"><span class="toc-number">9.</span> <span class="toc-text">九、实战案例：每 5 秒一次的规律卡顿</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#9-1-%E7%97%87%E7%8A%B6"><span class="toc-number">9.1.</span> <span class="toc-text">9.1 症状</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-2-%E8%AF%8A%E6%96%AD"><span class="toc-number">9.2.</span> <span class="toc-text">9.2 诊断</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-3-%E4%BF%AE%E5%A4%8D"><span class="toc-number">9.3.</span> <span class="toc-text">9.3 修复</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-4-%E9%AA%8C%E8%AF%81"><span class="toc-number">9.4.</span> <span class="toc-text">9.4 验证</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%81%E3%80%81%E5%86%85%E5%AD%98%E4%BC%98%E5%8C%96-Checklist"><span class="toc-number">10.</span> <span class="toc-text">十、内存优化 Checklist</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%81%E4%B8%80%E3%80%81%E7%BB%93%E8%AF%AD"><span class="toc-number">11.</span> <span class="toc-text">十一、结语</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/14/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%887%EF%BC%89%EF%BC%9A%E5%B7%A5%E5%85%B7%E9%93%BE%E4%B8%8E%E5%B7%A5%E4%BD%9C%E6%B5%81/" title="Unity性能优化（7）：工具链与工作流">Unity性能优化（7）：工具链与工作流</a><time datetime="2026-08-13T16:30:00.000Z" title="Created 2026-08-14 00:30:00">2026-08-14</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/14/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%886%EF%BC%89%EF%BC%9AC#%E8%AF%AD%E8%A8%80%E5%B1%82%E4%BC%98%E5%8C%96/" title="Unity性能优化（6）：C# 语言层优化">Unity性能优化（6）：C# 语言层优化</a><time datetime="2026-08-13T16:20:00.000Z" title="Created 2026-08-14 00:20:00">2026-08-14</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/14/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%885%EF%BC%89%EF%BC%9A%E8%B5%84%E6%BA%90%E4%B8%8E%E8%B5%84%E4%BA%A7%E7%AE%A1%E7%90%86/" title="Unity性能优化（5）：资源与资产管理">Unity性能优化（5）：资源与资产管理</a><time datetime="2026-08-13T16:10:00.000Z" title="Created 2026-08-14 00:10:00">2026-08-14</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/14/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%882%EF%BC%89%EF%BC%9AGPU%E4%B8%8E%E6%B8%B2%E6%9F%93%E4%BC%98%E5%8C%96/" title="Unity性能优化（2）：GPU 与渲染优化">Unity性能优化（2）：GPU 与渲染优化</a><time datetime="2026-08-13T16:00:00.000Z" title="Created 2026-08-14 00:00:00">2026-08-14</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/13/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%881%EF%BC%89%EF%BC%9ACPU%E4%B8%8E%E8%84%9A%E6%9C%AC%E4%BC%98%E5%8C%96/" title="Unity性能优化（1）：CPU 与脚本优化">Unity性能优化（1）：CPU 与脚本优化</a><time datetime="2026-08-13T15:50:00.000Z" title="Created 2026-08-13 23:50:00">2026-08-13</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2020 - 2026 By Csy7749</span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/koharu.model.json"},"display":{"position":"left","width":150,"height":300},"mobile":{"show":false},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/"});</script></body></html>
