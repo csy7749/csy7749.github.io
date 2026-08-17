@@ -1,0 +1,471 @@
+<!DOCTYPE html><html lang="zh-cn" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>游戏AI-寻路算法（1）：A*寻路 | Csy7749-Blog</title><meta name="author" content="Csy7749"><meta name="copyright" content="Csy7749"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="A*（A-star，读作“A星”）是游戏寻路中出场率最高的图搜索算法。它不像 BFS 那样无差别地向四周扩散，也不像贪心最佳优先搜索那样只看“离终点近不近”，而是把两者折中：一边累计已经走完的真实代价，一边用启发函数估计剩余代价，从而在“探索广度”和“直奔目标”之间取得平衡。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="游戏AI-寻路算法（1）：A*寻路">
+<meta property="og:url" content="https://csy7749.github.io/2026/08/13/%E6%B8%B8%E6%88%8FAI-%E5%AF%BB%E8%B7%AF%E7%AE%97%E6%B3%95%EF%BC%881%EF%BC%89%EF%BC%9AA%E6%98%9F%E5%AF%BB%E8%B7%AF/index.html">
+<meta property="og:site_name" content="Csy7749-Blog">
+<meta property="og:description" content="A*（A-star，读作“A星”）是游戏寻路中出场率最高的图搜索算法。它不像 BFS 那样无差别地向四周扩散，也不像贪心最佳优先搜索那样只看“离终点近不近”，而是把两者折中：一边累计已经走完的真实代价，一边用启发函数估计剩余代价，从而在“探索广度”和“直奔目标”之间取得平衡。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://csy7749.github.io/img/avatar.png">
+<meta property="article:published_time" content="2026-08-13T14:00:00.000Z">
+<meta property="article:modified_time" content="2026-08-17T10:24:18.527Z">
+<meta property="article:author" content="Csy7749">
+<meta property="article:tag" content="游戏AI">
+<meta property="article:tag" content="寻路">
+<meta property="article:tag" content="A Star">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://csy7749.github.io/img/avatar.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "游戏AI-寻路算法（1）：A*寻路",
+  "url": "https://csy7749.github.io/2026/08/13/%E6%B8%B8%E6%88%8FAI-%E5%AF%BB%E8%B7%AF%E7%AE%97%E6%B3%95%EF%BC%881%EF%BC%89%EF%BC%9AA%E6%98%9F%E5%AF%BB%E8%B7%AF/",
+  "image": "https://csy7749.github.io/img/avatar.png",
+  "datePublished": "2026-08-13T14:00:00.000Z",
+  "dateModified": "2026-08-17T10:24:18.527Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Csy7749",
+      "url": "https://csy7749.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://csy7749.github.io/2026/08/13/%E6%B8%B8%E6%88%8FAI-%E5%AF%BB%E8%B7%AF%E7%AE%97%E6%B3%95%EF%BC%881%EF%BC%89%EF%BC%9AA%E6%98%9F%E5%AF%BB%E8%B7%AF/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        const data = { value }
+
+        if (ttl != null) {
+          data.expiry = Date.now() + ttl * 86400000
+        }
+
+        localStorage.setItem(key, JSON.stringify(data))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return
+
+        try {
+          const data = JSON.parse(itemStr)
+
+          if (data.expiry && Date.now() > data.expiry) {
+            localStorage.removeItem(key)
+            return
+          }
+
+          return data.value
+        } catch {
+          localStorage.removeItem(key)
+        }
+      }
+    }
+
+    const scriptCache = new Map()
+    const cssCache = new Map()
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => {
+        if (scriptCache.has(url)) {
+          return scriptCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const script = document.createElement('script')
+
+          script.src = url
+          script.async = true
+
+          for (const key in attr) {
+            script.setAttribute(key, attr[key])
+          }
+
+          script.onload = resolve
+          script.onerror = reject
+
+          document.head.appendChild(script)
+        })
+
+        scriptCache.set(url, promise)
+
+        return promise
+      },
+      getCSS: (url, id) => {
+        if (cssCache.has(url)) {
+          return cssCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const link = document.createElement('link')
+
+          link.rel = 'stylesheet'
+          link.href = url
+
+          if (id) {
+            link.id = id
+          }
+
+          link.onload = resolve
+          link.onerror = reject
+
+          document.head.appendChild(link)
+        })
+
+        cssCache.set(url, promise)
+
+        return promise
+      },
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+      const activateDarkMode = () => {
+        document.documentElement.dataset.theme = 'dark'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.dataset.theme = 'light'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '游戏AI-寻路算法（1）：A*寻路',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">38</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">79</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">10</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Csy7749-Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">游戏AI-寻路算法（1）：A*寻路</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">游戏AI-寻路算法（1）：A*寻路</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-08-13T14:00:00.000Z" title="Created 2026-08-13 22:00:00">2026-08-13</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-08-17T10:24:18.527Z" title="Updated 2026-08-17 18:24:18">2026-08-17</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%B8%B8%E6%88%8FAI/">游戏AI</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%B8%B8%E6%88%8FAI/%E5%AF%BB%E8%B7%AF/">寻路</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>A*（A-star，读作“A星”）是游戏寻路中出场率最高的图搜索算法。它不像 BFS 那样无差别地向四周扩散，也不像贪心最佳优先搜索那样只看“离终点近不近”，而是把两者折中：一边累计已经走完的真实代价，一边用启发函数估计剩余代价，从而在“探索广度”和“直奔目标”之间取得平衡。</p>
+<span id="more"></span>
+
+<h2 id="一、寻路的本质：把地图看成一张图"><a href="#一、寻路的本质：把地图看成一张图" class="headerlink" title="一、寻路的本质：把地图看成一张图"></a>一、寻路的本质：把地图看成一张图</h2><p>网格地图上的一格，本质上是一个图节点；相邻两格之间的移动，本质上是一条带权边。</p>
+<ul>
+<li><strong>节点</strong>：可通行格子（或路点、导航网格多边形）</li>
+<li><strong>边</strong>：相邻格子之间的移动</li>
+<li><strong>代价</strong>：走过这条边的开销，最简单的场景下每一步都是 1</li>
+</ul>
+<p>于是“从 A 点到 B 点找一条代价最小的路”就变成了图论里的“单源最短路径”问题。A* 只是解决这个问题的一种算法，理解它必须从图搜索的视角出发。</p>
+<h2 id="二、A-的核心公式"><a href="#二、A-的核心公式" class="headerlink" title="二、A* 的核心公式"></a>二、A* 的核心公式</h2><p>A* 给每个节点打分，每次挑“估计总代价最小”的节点往外扩展：</p>
+<pre><code class="language-text">f(n) = g(n) + h(n)
+```text
+
+- **g(n)**：从起点到节点 n 的**真实代价**（已经走过的距离，确定值）
+- **h(n)**：从节点 n 到终点的**估计代价**（启发函数，估计值）
+- **f(n)**：经过节点 n 的整条路径的**估计总代价**
+
+搜索过程中维护两个集合：
+
+- **Open List（开放表）**：候选节点，每次从里面取 f 最小的节点扩展
+- **Closed Set（关闭表）**：已经处理完的节点，不再重复扩展
+
+这个结构可以用最小堆实现，后面代码部分会展开。
+
+## 三、启发函数是 A* 的灵魂
+
+h(n) 选得好，A* 几乎直奔终点；选得不好，它要么退化成 Dijkstra，要么丢掉最优性。
+
+### 3.1 网格上常用的几种启发函数
+
+| 启发函数         | 公式                                          | 适用场景               |     |     |     |                        |
+| :----------- | :------------------------------------------ | :----------------- | --- | --- | --- | ---------------------- |
+| 曼哈顿距离        | `                                           | dx                 | +   | dy  | `   | 只允许上下左右 4 方向移动         |
+| 切比雪夫距离       | `max(                                       | dx                 | ,   | dy  | )`  | 允许 8 方向移动，且斜线代价 = 直线代价 |
+| 欧几里得距离       | `√(dx² + dy²)`                              | 任意角度移动             |     |     |     |                        |
+| 对角距离（Octile） | `√2·min(dx,dy) + (max(dx,dy) - min(dx,dy))` | 允许 8 方向移动，斜线代价为 √2 |     |     |     |                        |
+
+其中 `dx = |x1 - x2|`，`dy = |y1 - y2|`。Octile 距离是 8 方向网格上最精确的可采纳启发式，后面会解释“可采纳”是什么意思。
+
+### 3.2 两个关键性质
+
+**可采纳性（Admissible）**：对任意节点 n，都有
+
+```text
+h(n) ≤ 从 n 到终点的真实代价
+```text
+
+h 永远不高估剩余距离。满足可采纳性时，A* 的树搜索版本能保证找到最优路径。
+
+**一致性（Consistent / Monotone）**：对任意节点 n 及其后继 n&#39;，都有
+
+```text
+h(n) ≤ cost(n, n&#39;) + h(n&#39;)
+```text
+
+一致性比可采纳性更强（一致必然可采纳）。它带来两个直接好处：
+
+1. f(n) 沿路径单调不减，算法第一次弹出终点时就是最优解
+2. 已经关闭的节点不需要被重新打开
+
+因此工程实现几乎都用“一致的启发函数 + 关闭表”，省掉大量重开节点的开销。
+
+### 3.3 选错启发函数会怎样
+
+- **高估剩余距离**（违反可采纳性）：A* 可能“走捷径”，但这条捷径的剩余代价被高估，导致错过真正更优的路径，最终解不是最优。
+- **严重低估剩余距离**：解仍然最优，但 h 提供的“方向感”很弱，算法会探索大量无关节点，逼近 Dijkstra。
+- **h(n) ≡ 0**：退化成 Dijkstra。
+- **只保留 h、忽略 g**：退化成贪心最佳优先搜索（Greedy Best-First），快但通常不是最优。
+
+## 四、算法流程
+
+A* 的主循环很短：
+
+```text
+1. 把起点放进 Open List，g(start) = 0，f(start) = h(start)
+2. 重复以下步骤，直到 Open List 为空：
+   a. 从 Open List 取出 f 值最小的节点 current
+   b. 如果 current 是终点，回溯 cameFrom 得到路径，结束
+   c. 把 current 移入 Closed Set
+   d. 对 current 的每个相邻节点 neighbor：
+      - 计算 tentative_g = g(current) + cost(current, neighbor)
+      - 如果 tentative_g &lt; g(neighbor)（找到更短的路）：
+        · 更新 g(neighbor) = tentative_g
+        · 更新 f(neighbor) = tentative_g + h(neighbor)
+        · 记录 cameFrom[neighbor] = current
+        · 把 neighbor 放进 Open List
+3. Open List 为空仍没找到终点：起点到终点不可达
+```text
+
+用流程图表示：
+
+```mermaid
+flowchart TD
+    A[起点入 Open List] --&gt; B&#123;Open List 为空?&#125;
+    B -- 是 --&gt; X[不可达, 结束]
+    B -- 否 --&gt; C[取 f 最小的 current]
+    C --&gt; D&#123;current == 终点?&#125;
+    D -- 是 --&gt; Y[回溯路径, 结束]
+    D -- 否 --&gt; E[current 入 Closed Set]
+    E --&gt; F[遍历邻居 neighbor]
+    F --&gt; G&#123;tentative_g &lt; g neighbor?&#125;
+    G -- 是 --&gt; H[更新 g/f/cameFrom, neighbor 入 Open]
+    G -- 否 --&gt; F
+    H --&gt; F
+    F --&gt; B
+```text
+
+## 五、完整实现（Python）
+
+下面是网格寻路的完整可运行实现，4 方向移动、曼哈顿启发式：
+
+```python
+import heapq
+import math
+
+def astar(grid, start, goal):
+    rows, cols = len(grid), len(grid[0])
+    # 上下左右四个方向
+    directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+
+    def heuristic(a, b):
+        # 4 方向网格：曼哈顿距离
+        return abs(a[0] - b[0]) + abs(a[1] - b[1])
+
+    # 最小堆，元素为 (f, g, node)
+    open_heap = [(heuristic(start, goal), 0, start)]
+    g_score = &#123;start: 0&#125;          # 起点到各节点的真实代价
+    came_from = &#123;&#125;                # 记录来路，用于回溯路径
+
+    while open_heap:
+        _, g, current = heapq.heappop(open_heap)
+
+        if current == goal:
+            # 回溯路径
+            path = [current]
+            while current in came_from:
+                current = came_from[current]
+                path.append(current)
+            return path[::-1]
+
+        for dr, dc in directions:
+            neighbor = (current[0] + dr, current[1] + dc)
+
+            # 越界
+            if not (0 &lt;= neighbor[0] &lt; rows and 0 &lt;= neighbor[1] &lt; cols):
+                continue
+            # 障碍物（1 表示不可通行）
+            if grid[neighbor[0]][neighbor[1]] == 1:
+                continue
+
+            tentative_g = g + 1
+            if tentative_g &lt; g_score.get(neighbor, math.inf):
+                came_from[neighbor] = current
+                g_score[neighbor] = tentative_g
+                heapq.heappush(
+                    open_heap,
+                    (tentative_g + heuristic(neighbor, goal), tentative_g, neighbor),
+                )
+
+    return None  # 不可达
+```text
+
+测试一下：
+
+```python
+grid = [
+    [0, 0, 0, 0, 0],
+    [0, 1, 1, 0, 0],
+    [0, 1, 0, 0, 0],
+    [0, 0, 0, 1, 0],
+    [0, 0, 0, 0, 0],
+]
+
+print(astar(grid, (0, 0), (4, 4)))
+```text
+
+输出：
+
+```text
+[(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (1, 4), (2, 4), (3, 4), (4, 4)]
+```text
+
+几个实现细节值得说明：
+
+- **堆元素用三元组 `(f, g, node)`**：`heapq` 先按 f 排序；f 相同时比较 g；g 也相同时比较节点坐标，保证排序稳定、可复现。故意把 g 放进元组而不是用 `(f, node)`，是为了在 f 相等时优先选择“已经走得更远”的节点，相当于一种简单的 tie-breaking。
+- **没有显式的 Closed Set**：`g_score` 的字典查询 `tentative_g &lt; g_score.get(...)` 已经起到了关闭表的作用。因为曼哈顿距离是一致的，节点一旦被弹出就不会以更小 g 再次入堆，不需要单独维护 closed 集合。
+- **第一次弹出终点即返回**：同样依赖启发函数的一致性；若启发函数只可采纳但不一致，就不能在这里直接返回。
+
+## 六、A* 和其他搜索算法的关系
+
+把 BFS、Dijkstra、贪心最佳优先搜索和 A* 放在一起对比，会非常清楚：
+
+| 算法 | 代价处理 | 启发函数 | 结果 |
+| :--- | :--- | :--- | :--- |
+| BFS | 每步代价都是 1，用队列 | 无 | 无权图最短路径 |
+| Dijkstra | 累计真实代价 g | 无（h = 0） | 带权图最短路径，但探索面大 |
+| 贪心最佳优先 | 只看 h | 有 | 快，通常不是最优 |
+| A* | g + h | 有 | 平衡，启发一致时最优 |
+
+一句话记忆：**Dijkstra 是 h = 0 的 A*，贪心最佳优先是 g = 0 的 A*。** BFS 是边权全为 1 时的 Dijkstra。
+
+## 七、网格寻路的工程细节
+
+### 7.1 8 方向移动与“穿墙”
+
+允许斜向移动时，启发函数要换成 Octile 距离，同时必须禁止“对角线穿墙”：当 `(x+dx, y)` 和 `(x, y+dy)` 两个相邻格子都是障碍时，不能直接斜穿到 `(x+dx, y+dy)`，否则角色会从墙角缝里穿过去。
+
+```python
+DIRS_8 = [
+    (0, 1), (0, -1), (1, 0), (-1, 0),
+    (1, 1), (1, -1), (-1, 1), (-1, -1),
+]
+
+def octile(a, b):
+    dx = abs(a[0] - b[0])
+    dy = abs(a[1] - b[1])
+    return (2 ** 0.5) * min(dx, dy) + abs(dx - dy)
+```text
+
+斜向移动时，检查两个“卡角”格子是否可通行即可避免穿墙。
+
+### 7.2 二叉堆 vs 斐波那契堆
+
+理论上斐波那契堆能把 decrease-key 做到 O(1) 均摊，但对网格寻路来说，二叉堆常数小、实现简单，实际表现往往更好。绝大多数游戏直接用二叉堆（Python 的 `heapq`、C++ 的 `priority_queue`）。
+
+### 7.3 Tie-breaking
+
+f 值相同的节点很多时（尤其是开阔地形），不同 tie-breaking 策略会显著影响性能。常见做法是让 h 略微放大：
+
+```text
+f(n) = g(n) + (1 + ε) · h(n)
+```text
+
+ε 取一个很小的正数（如 0.001），让搜索稍微偏向终点方向，能大幅减少探索节点，代价是解可能不是严格最优（称为加权 A*）。取舍取决于场景。
+
+## 八、复杂度与适用场景
+
+- **时间复杂度**：最坏 O(b^d)，b 是分支因子、d 是解深度；实际取决于启发函数质量，h 越准越接近线性。
+- **空间复杂度**：O(|V|)，A* 需要保存所有探索过的节点，这是它在大地图上的主要瓶颈。
+- **适用**：网格地图、路点图、RTS/战棋/塔防的格子寻路、GOAP 规划器的状态空间搜索。
+- **不适用**：海量单位同时寻路时 A* 逐单位重复计算太贵，可改用 Flow Field（流场寻路）摊薄成本。
+
+## 九、在游戏里怎么落地
+
+- **Unity 的 NavMesh** 底层已经封装了基于图的寻路（内部用 A* 或类似算法），大多数 3D 场景直接用 `NavMeshAgent` 即可，不必手写。
+- **自己写 A* 的典型场景**：2D 格子地图、自定义移动规则（地形代价、单向通行）、需要精确控制路径的回合制游戏。
+- **A* 不止用于空间寻路**：GOAP 的 Planner 也是 A*，只是“节点”从格子变成了世界状态，“边”从移动变成了动作（见本博客 GOAP 系列）。
+
+## 十、自查清单
+
+- 我清楚 `g(n)`、`h(n)`、`f(n)` 各自的含义吗？
+- 我用的启发函数和移动规则匹配吗（4 方向用曼哈顿、8 方向用 Octile）？
+- 我的启发函数满足可采纳性、最好满足一致性吗？
+- 8 方向移动时，我处理了“对角线穿墙”吗？
+- Open List 用的是最小堆吗？取 f 最小的节点是 O(log n) 吗？
+- 终点第一次弹出时直接返回，是否依赖启发函数的一致性？
+
+## 参考
+
+[^1]: [A* search algorithm — Wikipedia](https://en.wikipedia.org/wiki/A*_search_algorithm) — 定义、可采纳性与一致性
+[^2]: [Introduction to the A* Algorithm — Red Blob Games](https://www.redblobgames.com/pathfinding/a-star/introduction.html) — 图文并茂的交互式讲解与实现
+[^3]: [Implementation of A* — Red Blob Games](https://www.redblobgames.com/pathfinding/a-star/implementation.html) — Python/C++ 实现细节与常见陷阱
+[^4]: [Heuristics — Amit&#39;s Thoughts on Pathfinding](https://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html) — 各启发函数适用场景
+</code></pre>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://csy7749.github.io">Csy7749</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://csy7749.github.io/2026/08/13/%E6%B8%B8%E6%88%8FAI-%E5%AF%BB%E8%B7%AF%E7%AE%97%E6%B3%95%EF%BC%881%EF%BC%89%EF%BC%9AA%E6%98%9F%E5%AF%BB%E8%B7%AF/">https://csy7749.github.io/2026/08/13/%E6%B8%B8%E6%88%8FAI-%E5%AF%BB%E8%B7%AF%E7%AE%97%E6%B3%95%EF%BC%881%EF%BC%89%EF%BC%9AA%E6%98%9F%E5%AF%BB%E8%B7%AF/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%B8%B8%E6%88%8FAI/">游戏AI</a><a class="post-meta__tags" href="/tags/%E5%AF%BB%E8%B7%AF/">寻路</a><a class="post-meta__tags" href="/tags/A-Star/">A Star</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/08/13/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96-UGUI%EF%BC%882%EF%BC%89%EF%BC%9ARebuild%E4%B8%8ERebatch%E6%B7%B1%E5%BA%A6%E8%A7%A3%E6%9E%90/" title="Unity性能优化-UGUI（2）：Rebuild 与 Rebatch 深度解析"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">Unity性能优化-UGUI（2）：Rebuild 与 Rebatch 深度解析</div></div><div class="info-2"><div class="info-item-1"> 上一篇建立了 UGUI 的底层地基：Canvas 是渲染单元，CanvasRenderer 持有网格，脏标记触发重建，CanvasUpdateRegistry 统一调度。这一篇往深里走两步——Rebuild 到底怎么”重造网格”，Rebatch 又凭什么决定哪些元素能合进同一个 DrawCall。读完你会明白 Frame Debugger 里每一条红色高亮到底在告诉你什么。    一、两个动作，两种成本模型先回顾边界：Rebuild 是点成本（单个元素重造网格），Rebatch 是面成本（整个 Canvas 重新合批）。 两者遵循一个铁律：Rebuild 必然触发 Rebatch，但 Rebatch 不一定由 Rebuild 引起。  你改了 Image 的颜色 → Rebuild 这个 Image（顶点颜色重算）→ 必然 Rebatch 整个 Canvas 你只调整了元素在 Hierarchy 里的兄弟顺序 → 没有 Rebuild，但渲染深度变了 → 单独触发 Rebatch  理解这个铁律，才能读懂 Profiler 里的两个指标：Canvas.SendWillRende...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96-UGUI%EF%BC%881%EF%BC%89%EF%BC%9A%E5%BA%95%E5%B1%82%E6%B8%B2%E6%9F%93%E6%9C%BA%E5%88%B6/" title="Unity性能优化-UGUI（1）：底层渲染机制"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">Unity性能优化-UGUI（1）：底层渲染机制</div></div><div class="info-2"><div class="info-item-1"> 这是”Unity 性能优化”系列中 UGUI 专题的第一篇。很多人背熟了”少用 Layout Group、多打图集、关闭 Raycast Target”这些口诀，却说不清为什么有效——因为真正的优化依据藏在 UGUI 的底层渲染机制里。本文从源码层面拆解 Canvas、CanvasRenderer、脏标记系统和重建调度器，让你理解每一条优化建议背后的因果链。    一、先回答一个根本问题：UGUI 为什么”慢”？先破除一个常见误解：UGUI 的瓶颈几乎不在 GPU，而在 CPU。 普通 3D 模型的渲染是”顶点数据早就备好了，每帧直接提交”；而 UGUI 的画面是”每帧根据当前 UI 状态临时拼出来的”——一个按钮的位置变了，它的顶点坐标、三角形索引、UV、颜色全部要重新生成一遍，再把生成结果提交给渲染管线。 这个”临时拼装”的过程就是 UGUI 性能问题的根源。要理解它，必须先搞清楚四层结构： Canvas（渲染单元）   └── Graphic（UI 组件：Image / Text / RawImage）         └── CanvasRenderer（网格数据的真正...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/08/13/%E6%B8%B8%E6%88%8FAI-%E5%AF%BB%E8%B7%AF%E7%AE%97%E6%B3%95%E7%B3%BB%E5%88%97-%E8%A7%84%E5%88%92/" title="游戏AI-寻路算法 系列·写作规划"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">游戏AI-寻路算法 系列·写作规划</div></div><div class="info-2"><div class="info-item-1">系列定位名称：游戏AI-寻路算法（从 A* 出发） 目标读者：写游戏逻辑、想自己实现或调优寻路的开发者；以及想理解 Unity NavMesh &#x2F; GOAP Planner 背后图搜索原理的人。 核心思路：以 A* 为锚点，向基础（BFS &#x2F; Dijkstra）和进阶（JPS &#x2F; Flow Field &#x2F; NavMesh）两个方向扩展。每篇可独立阅读，但共享同一套“图搜索”视角和术语。   写作原则：  先讲“为什么需要它、它解决什么问题”，再给算法流程，最后给完整可运行代码 代码可直接运行验证，不做伪代码 网格寻路统一用“格子 &#x3D; 节点、相邻格 &#x3D; 边、代价 &#x3D; 步长”的模型 每篇末尾附“自查清单”   篇目总览第1讲  A* 寻路                                  ← 本系列锚点，✅ 已完成 第2讲  BFS / DFS 与无权图搜索                    ← 基础回补（计划中） 第3讲  Dijkstra 与带权图最短路径                  ...</div></div></div></a><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%885%EF%BC%89%EF%BC%9AHTN%E5%88%86%E5%B1%82%E4%BB%BB%E5%8A%A1%E7%BD%91%E7%BB%9C/" title="游戏AI-决策架构（5）：HTN 分层任务网络"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构（5）：HTN 分层任务网络</div></div><div class="info-2"><div class="info-item-1">HTN（Hierarchical Task Network，分层任务网络）从高层任务出发，根据当前世界状态选择 Method，逐层拆解 Compound Task，最终生成可执行的 Primitive Task 序列。它适合步骤较长、领域套路明确，同时又需要根据局势选择不同执行方案的游戏 AI。   本文假设读者熟悉 C# 继承、委托、不可变记录和集合。示例使用 .NET 8，实现一个支持 Method 回溯、规划期状态效果和完整展开轨迹的总序 HTN Planner，可以直接放进控制台项目运行。 一、HTN 解决什么问题守卫 NPC 接到 DefendArea 任务后，可能面对不同情况： 低血量且有药品 -&gt; 治疗 -&gt; 接敌 低血量且没有药品 -&gt; 移动到掩体 发现敌人且距离较远 -&gt; 接近 -&gt; 攻击 发现敌人且已在射程 -&gt; 直接攻击 没有威胁 -&gt; 巡逻 ```text  FSM 可以为每一步建立状态，行为树可以把所有分支画出来，GOAP 可以在动作状态空间中搜索。HTN 采用另一种思路：把设计者已经知道的领域套路写成任务分解规...</div></div></div></a><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%883%EF%BC%89%EF%BC%9A%E8%A1%8C%E4%B8%BA%E6%A0%91/" title="游戏AI-决策架构（3）：行为树"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构（3）：行为树</div></div><div class="info-2"><div class="info-item-1">行为树（Behavior Tree）把 AI 行为组织成可组合节点，并用 Success、Failure、Running 三种结果驱动控制流。它特别适合持续重新评估威胁、按优先级选择分支，以及把复杂战斗逻辑拆成可复用子树。   本文假设读者理解基本的树结构和 C# 接口。示例使用 .NET 8，实现一棵响应式守卫行为树；重点不是可视化编辑器，而是编辑器背后必须稳定成立的 Tick、中断和状态语义。 一、行为树和状态机看问题的角度不同FSM 首先问： 我当前处于哪个状态？什么条件会让我切到另一个状态？ ```text  行为树首先问：  ```text 从根节点开始，这一帧哪条分支能够执行？执行到哪里还没结束？ ```text  同一个守卫逻辑可以写成：  ```text Priority Selector ├── Sequence: 撤退 │   ├── Condition: 低血量 │   └── Action: 逃离 ├── Sequence: 战斗 │   ├── Condition: 看见敌人 │   └── Selector │       ├── Sequence: ...</div></div></div></a><a class="pagination-related" href="/2026/08/08/%E6%B8%B8%E6%88%8FAI-GOAP%EF%BC%882%EF%BC%89%EF%BC%9A%E6%A1%86%E6%9E%B6%E6%B7%B1%E5%85%A5/" title="游戏AI-GOAP（2）：框架深入"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-08</div><div class="info-item-2">游戏AI-GOAP（2）：框架深入</div></div><div class="info-2"><div class="info-item-1">crashkonijn&#x2F;GOAP 是目前 Unity 生态中最成熟的 GOAP 开源框架。这篇文章深入剖析它的架构设计——强类型的 Key 系统、Capability 配置模式、Local&#x2F;Global 双层传感器、GraphBuilder+Resolver 的两阶段规划，以及多线程架构——看看一个工程化的 GOAP 实现是怎么把第一篇里的理论落到代码里的。  为什么选 crashkonijn&#x2F;GOAPUnity 生态中有好几个 GOAP 实现：adammyhre&#x2F;Unity-GOAP 是教学向的最小实现，AkiKurisu&#x2F;AkiGOAP 侧重可视化编辑器，mountain-goap 追求极简通用。而 crashkonijn&#x2F;GOAP（以下简称 crashkonijn）是生产级的选择——多线程、强类型、Capability 模式配置，在性能和可维护性之间取得了很好的平衡[^1]。 它的设计哲学很明确：不是”给你一个 AI 模板拿去改”，而是”给你一套类型安全的 GOAP 基础设施，用它搭建你自己的 AI”。 整体架构c...</div></div></div></a><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%886%EF%BC%89%EF%BC%9AAI%E5%86%B3%E7%AD%96%E6%AF%94%E8%BE%83/" title="游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型</div></div><div class="info-2"><div class="info-item-1">FSM、HFSM、行为树、Utility AI、GOAP、HTN 经常被放在一起比较，但它们并不完全处于同一层。本文按“解决什么问题、输出什么结果、适合什么场景”重新对齐六种方案，并给出面向实际项目的选型与组合方式。   本文假设读者已经了解游戏 AI 中的感知、移动和动作执行概念。重点不是重复每种算法的完整实现，而是建立一套能用于项目判断的比较坐标。 一、先区分：执行控制、即时选择与多步规划很多选型争论没有结果，是因为大家比较的并不是同一个问题。 感知层   收集血量、距离、目标、危险度、资源等事实         |         v 决策与规划层   Utility AI：当前哪个候选行为最值得做   GOAP：哪些动作可以组成一条达成目标的路径   HTN：高层任务应该按哪种方法逐层拆解         |         v 执行控制层   FSM：当前处于哪个明确状态   HFSM：当前处于哪条层级状态路径   行为树：当前哪条优先级分支可以继续执行         |         v 动作能力层   寻路、技能、动画、交互、Smart Object ```te...</div></div></div></a><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%884%EF%BC%89%EF%BC%9AUtilityAI%E6%95%88%E7%94%A8%E5%86%B3%E7%AD%96/" title="游戏AI-决策架构（4）：Utility AI 效用决策"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构（4）：Utility AI 效用决策</div></div><div class="info-2"><div class="info-item-1">Utility AI（效用型 AI）把血量、距离、风险、资源等上下文转换成统一分数，再从候选行为中选择当前效用最高的一项。它解决的不是“动作如何执行”，而是多个因素同时变化时，角色此刻更应该攻击、治疗、撤退还是巡逻。   本文假设读者熟悉 C# 委托、集合和基本数学函数。示例使用 .NET 8，实现归一化输入、响应曲线、评分合成、惯性修正和可解释的候选输出，可以直接放进控制台项目运行。 一、Utility AI 解决什么问题硬条件适合表达明确规则： if 死亡 -&gt; 进入死亡状态 if 技能未解锁 -&gt; 禁止释放 ```text  但下面这种选择很难只靠一组阈值维护：  ```text 血量低，希望治疗或撤退 敌人很近，希望攻击或拉开距离 敌人很多，希望找掩体 治疗技能可用，但释放过程可能被打断 当前攻击已经进行一半，切换也有成本 ```text  如果继续添加 `if / else`，不同条件的优先级会散落在代码顺序里，临界值附近还可能发生生硬切换。Utility AI 把问题改写为：  ```text Attack  = 0.65 Retreat = 0.56 H...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Csy7749</div><div class="author-info-description">键来！</div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">38</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">79</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">10</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/csy7749"><i class="fab fa-github"></i><span>GitHub</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">日积月累</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E5%AF%BB%E8%B7%AF%E7%9A%84%E6%9C%AC%E8%B4%A8%EF%BC%9A%E6%8A%8A%E5%9C%B0%E5%9B%BE%E7%9C%8B%E6%88%90%E4%B8%80%E5%BC%A0%E5%9B%BE"><span class="toc-number">1.</span> <span class="toc-text">一、寻路的本质：把地图看成一张图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81A-%E7%9A%84%E6%A0%B8%E5%BF%83%E5%85%AC%E5%BC%8F"><span class="toc-number">2.</span> <span class="toc-text">二、A* 的核心公式</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%886%EF%BC%89%EF%BC%9AAI%E5%86%B3%E7%AD%96%E6%AF%94%E8%BE%83/" title="游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型">游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型</a><time datetime="2026-08-17T08:00:00.000Z" title="Created 2026-08-17 16:00:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%885%EF%BC%89%EF%BC%9AHTN%E5%88%86%E5%B1%82%E4%BB%BB%E5%8A%A1%E7%BD%91%E7%BB%9C/" title="游戏AI-决策架构（5）：HTN 分层任务网络">游戏AI-决策架构（5）：HTN 分层任务网络</a><time datetime="2026-08-17T07:50:00.000Z" title="Created 2026-08-17 15:50:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%884%EF%BC%89%EF%BC%9AUtilityAI%E6%95%88%E7%94%A8%E5%86%B3%E7%AD%96/" title="游戏AI-决策架构（4）：Utility AI 效用决策">游戏AI-决策架构（4）：Utility AI 效用决策</a><time datetime="2026-08-17T07:40:00.000Z" title="Created 2026-08-17 15:40:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%883%EF%BC%89%EF%BC%9A%E8%A1%8C%E4%B8%BA%E6%A0%91/" title="游戏AI-决策架构（3）：行为树">游戏AI-决策架构（3）：行为树</a><time datetime="2026-08-17T07:30:00.000Z" title="Created 2026-08-17 15:30:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%882%EF%BC%89%EF%BC%9AHFSM%E5%88%86%E5%B1%82%E6%9C%89%E9%99%90%E7%8A%B6%E6%80%81%E6%9C%BA/" title="游戏AI-决策架构（2）：HFSM 分层有限状态机">游戏AI-决策架构（2）：HFSM 分层有限状态机</a><time datetime="2026-08-17T07:20:00.000Z" title="Created 2026-08-17 15:20:00">2026-08-17</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2020 - 2026 By Csy7749</span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/koharu.model.json"},"display":{"position":"left","width":150,"height":300},"mobile":{"show":false},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/"});</script></body></html>

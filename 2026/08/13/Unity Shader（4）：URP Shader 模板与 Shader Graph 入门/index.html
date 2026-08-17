@@ -1,0 +1,465 @@
+<!DOCTYPE html><html lang="zh-cn" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Unity Shader（4）：URP Shader 模板与 Shader Graph 入门 | Csy7749-Blog</title><meta name="author" content="Csy7749"><meta name="copyright" content="Csy7749"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="上一讲拆的是 Built-in 的模板，这一讲切到 URP。URP 是当前新项目的默认管线，它的 Shader 写法和 Built-in 有本质区别：头文件变了、纹理采样变了、还多了为 SRP Batcher 服务的数据声明。本文先讲 URP 自带的几个 Shader 模板，再逐行解析 URP Unlit 模板，最后带你看 Shader Graph 的入门逻辑，以及”手写 HLSL vs 连线”">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Unity Shader（4）：URP Shader 模板与 Shader Graph 入门">
+<meta property="og:url" content="https://csy7749.github.io/2026/08/13/Unity%20Shader%EF%BC%884%EF%BC%89%EF%BC%9AURP%20Shader%20%E6%A8%A1%E6%9D%BF%E4%B8%8E%20Shader%20Graph%20%E5%85%A5%E9%97%A8/index.html">
+<meta property="og:site_name" content="Csy7749-Blog">
+<meta property="og:description" content="上一讲拆的是 Built-in 的模板，这一讲切到 URP。URP 是当前新项目的默认管线，它的 Shader 写法和 Built-in 有本质区别：头文件变了、纹理采样变了、还多了为 SRP Batcher 服务的数据声明。本文先讲 URP 自带的几个 Shader 模板，再逐行解析 URP Unlit 模板，最后带你看 Shader Graph 的入门逻辑，以及”手写 HLSL vs 连线”">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://csy7749.github.io/img/avatar.png">
+<meta property="article:published_time" content="2026-08-13T05:00:00.000Z">
+<meta property="article:modified_time" content="2026-08-17T10:24:18.455Z">
+<meta property="article:author" content="Csy7749">
+<meta property="article:tag" content="Unity">
+<meta property="article:tag" content="Shader">
+<meta property="article:tag" content="URP">
+<meta property="article:tag" content="HLSL">
+<meta property="article:tag" content="Shader Graph">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://csy7749.github.io/img/avatar.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Unity Shader（4）：URP Shader 模板与 Shader Graph 入门",
+  "url": "https://csy7749.github.io/2026/08/13/Unity%20Shader%EF%BC%884%EF%BC%89%EF%BC%9AURP%20Shader%20%E6%A8%A1%E6%9D%BF%E4%B8%8E%20Shader%20Graph%20%E5%85%A5%E9%97%A8/",
+  "image": "https://csy7749.github.io/img/avatar.png",
+  "datePublished": "2026-08-13T05:00:00.000Z",
+  "dateModified": "2026-08-17T10:24:18.455Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Csy7749",
+      "url": "https://csy7749.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://csy7749.github.io/2026/08/13/Unity%20Shader%EF%BC%884%EF%BC%89%EF%BC%9AURP%20Shader%20%E6%A8%A1%E6%9D%BF%E4%B8%8E%20Shader%20Graph%20%E5%85%A5%E9%97%A8/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        const data = { value }
+
+        if (ttl != null) {
+          data.expiry = Date.now() + ttl * 86400000
+        }
+
+        localStorage.setItem(key, JSON.stringify(data))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return
+
+        try {
+          const data = JSON.parse(itemStr)
+
+          if (data.expiry && Date.now() > data.expiry) {
+            localStorage.removeItem(key)
+            return
+          }
+
+          return data.value
+        } catch {
+          localStorage.removeItem(key)
+        }
+      }
+    }
+
+    const scriptCache = new Map()
+    const cssCache = new Map()
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => {
+        if (scriptCache.has(url)) {
+          return scriptCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const script = document.createElement('script')
+
+          script.src = url
+          script.async = true
+
+          for (const key in attr) {
+            script.setAttribute(key, attr[key])
+          }
+
+          script.onload = resolve
+          script.onerror = reject
+
+          document.head.appendChild(script)
+        })
+
+        scriptCache.set(url, promise)
+
+        return promise
+      },
+      getCSS: (url, id) => {
+        if (cssCache.has(url)) {
+          return cssCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const link = document.createElement('link')
+
+          link.rel = 'stylesheet'
+          link.href = url
+
+          if (id) {
+            link.id = id
+          }
+
+          link.onload = resolve
+          link.onerror = reject
+
+          document.head.appendChild(link)
+        })
+
+        cssCache.set(url, promise)
+
+        return promise
+      },
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+      const activateDarkMode = () => {
+        document.documentElement.dataset.theme = 'dark'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.dataset.theme = 'light'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Unity Shader（4）：URP Shader 模板与 Shader Graph 入门',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">38</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">79</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">10</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Csy7749-Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Unity Shader（4）：URP Shader 模板与 Shader Graph 入门</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Unity Shader（4）：URP Shader 模板与 Shader Graph 入门</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-08-13T05:00:00.000Z" title="Created 2026-08-13 13:00:00">2026-08-13</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-08-17T10:24:18.455Z" title="Updated 2026-08-17 18:24:18">2026-08-17</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Unity/">Unity</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Unity/Shader/">Shader</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><blockquote>
+<p>上一讲拆的是 Built-in 的模板，这一讲切到 URP。URP 是当前新项目的默认管线，它的 Shader 写法和 Built-in 有本质区别：头文件变了、纹理采样变了、还多了为 SRP Batcher 服务的数据声明。本文先讲 URP 自带的几个 Shader 模板，再逐行解析 URP Unlit 模板，最后带你看 Shader Graph 的入门逻辑，以及”手写 HLSL vs 连线”该怎么选。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="一、URP-的-Shader-模板清单"><a href="#一、URP-的-Shader-模板清单" class="headerlink" title="一、URP 的 Shader 模板清单"></a>一、URP 的 Shader 模板清单</h2><p>URP 项目里 <code>Create → Shader</code> 会多出一组 URP 模板，常见的有：</p>
+<table>
+<thead>
+<tr>
+<th align="left">模板</th>
+<th align="left">作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Lit Shader</td>
+<td align="left">完整 PBR 光照，URP 的主力材质模板</td>
+</tr>
+<tr>
+<td align="left">Simple Lit Shader</td>
+<td align="left">轻量 PBR，省性能，移动端常用</td>
+</tr>
+<tr>
+<td align="left">Baked Lit Shader</td>
+<td align="left">仅烘焙光照，最省，适合静态场景</td>
+</tr>
+<tr>
+<td align="left">Unlit Shader</td>
+<td align="left">无光照，最纯粹的 vert&#x2F;frag 骨架</td>
+</tr>
+</tbody></table>
+<p>另外还有 <code>Create → Shader Graph</code> 下的可视化模板（见本文第四节）。</p>
+<p><strong>关键前提</strong>：这些 URP Shader 必须在启用了 URP 管线资源的项目里才正常。它们都带有一个 <code>RenderPipeline</code> 标签，告诉 Unity”我是 URP 的 Shader”。</p>
+<h2 id="二、URP-与-Built-in-写法的核心差异"><a href="#二、URP-与-Built-in-写法的核心差异" class="headerlink" title="二、URP 与 Built-in 写法的核心差异"></a>二、URP 与 Built-in 写法的核心差异</h2><p>先看一张对照表，再逐行看代码会更轻松：</p>
+<table>
+<thead>
+<tr>
+<th align="left">事项</th>
+<th align="left">Built-in</th>
+<th align="left">URP</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">代码块</td>
+<td align="left"><code>CGPROGRAM ... ENDCG</code></td>
+<td align="left"><code>HLSLPROGRAM ... ENDHLSL</code></td>
+</tr>
+<tr>
+<td align="left">核心头文件</td>
+<td align="left"><code>UnityCG.cginc</code></td>
+<td align="left"><code>Core.hlsl</code> 等 URP 头文件</td>
+</tr>
+<tr>
+<td align="left">顶点变换宏</td>
+<td align="left"><code>UnityObjectToClipPos</code></td>
+<td align="left"><code>TransformObjectToHClip</code></td>
+</tr>
+<tr>
+<td align="left">纹理采样</td>
+<td align="left"><code>tex2D(_Tex, uv)</code></td>
+<td align="left"><code>SAMPLE_TEXTURE2D(_Tex, sampler_Tex, uv)</code></td>
+</tr>
+<tr>
+<td align="left">纹理声明</td>
+<td align="left"><code>sampler2D _Tex</code></td>
+<td align="left"><code>TEXTURE2D(_Tex); SAMPLER(sampler_Tex);</code></td>
+</tr>
+<tr>
+<td align="left">常量缓冲</td>
+<td align="left">隐式</td>
+<td align="left"><code>CBUFFER_START/END</code>（SRP Batcher 要求）</td>
+</tr>
+<tr>
+<td align="left">管线标签</td>
+<td align="left">无</td>
+<td align="left"><code>&quot;RenderPipeline&quot;=&quot;UniversalPipeline&quot;</code></td>
+</tr>
+<tr>
+<td align="left">LightMode</td>
+<td align="left">无强制</td>
+<td align="left"><code>&quot;LightMode&quot;=&quot;UniversalForward&quot;</code> 等</td>
+</tr>
+</tbody></table>
+<p>这 7 个差异，就是”旧教程代码搬到 URP 报错”的全部原因。</p>
+<h2 id="三、逐行解析：URP-Unlit-模板"><a href="#三、逐行解析：URP-Unlit-模板" class="headerlink" title="三、逐行解析：URP Unlit 模板"></a>三、逐行解析：URP Unlit 模板</h2><p>URP Unlit 是理解现代写法的最好起点，下面是它（精简版）的完整代码：</p>
+<pre><code class="language-hlsl">Shader &quot;Universal Render Pipeline/Unlit&quot;
+&#123;
+    Properties
+    &#123;
+        _BaseMap (&quot;Texture&quot;, 2D) = &quot;white&quot; &#123;&#125;
+        _BaseColor (&quot;Color&quot;, Color) = (1, 1, 1, 1)
+    &#125;
+
+    SubShader
+    &#123;
+        Tags &#123; &quot;RenderType&quot;=&quot;Opaque&quot; &quot;RenderPipeline&quot;=&quot;UniversalPipeline&quot; &#125;
+
+        Pass
+        &#123;
+            HLSLPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+
+            #include &quot;Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl&quot;
+
+            CBUFFER_START(UnityPerMaterial)
+                float4 _BaseMap_ST;
+                float4 _BaseColor;
+            CBUFFER_END
+
+            TEXTURE2D(_BaseMap);
+            SAMPLER(sampler_BaseMap);
+
+            struct Attributes
+            &#123;
+                float4 positionOS : POSITION;
+                float2 uv         : TEXCOORD0;
+            &#125;;
+
+            struct Varyings
+            &#123;
+                float4 positionHCS : SV_POSITION;
+                float2 uv          : TEXCOORD0;
+            &#125;;
+
+            Varyings vert(Attributes IN)
+            &#123;
+                Varyings OUT;
+                OUT.positionHCS = TransformObjectToHClip(IN.positionOS.xyz);
+                OUT.uv = TRANSFORM_TEX(IN.uv, _BaseMap);
+                return OUT;
+            &#125;
+
+            half4 frag(Varyings IN) : SV_Target
+            &#123;
+                half4 color = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, IN.uv);
+                return color * _BaseColor;
+            &#125;
+            ENDHLSL
+        &#125;
+    &#125;
+&#125;
+```text
+
+### 3.1 管线标签
+
+```hlsl
+Tags &#123; &quot;RenderType&quot;=&quot;Opaque&quot; &quot;RenderPipeline&quot;=&quot;UniversalPipeline&quot; &#125;
+```text
+
+`&quot;RenderPipeline&quot;=&quot;UniversalPipeline&quot;` 是 URP Shader 的身份证。没有它，Shader 可能被当作 Built-in 处理，出现各种资源错误。
+
+### 3.2 头文件与代码块
+
+```hlsl
+HLSLPROGRAM
+...
+#include &quot;Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl&quot;
+...
+ENDHLSL
+```text
+
+URP 下改用 `HLSLPROGRAM/ENDHLSL`，核心头文件是包内的 `Core.hlsl`，里面定义了 `TransformObjectToHClip`、`TRANSFORM_TEX` 等宏。光照相关则要再引入 `Lighting.hlsl` 等（第 6 讲会用到）。
+
+### 3.3 CBUFFER：为 SRP Batcher 服务
+
+```hlsl
+CBUFFER_START(UnityPerMaterial)
+    float4 _BaseMap_ST;
+    float4 _BaseColor;
+CBUFFER_END
+```text
+
+把**每个材质都可能不同的参数**放进常量缓冲 `UnityPerMaterial`，是 SRP Batcher 能批量处理的关键前提之一。写法上它替代了 Built-in 里&quot;裸声明变量&quot;的方式。规则很简单：**材质级参数放 CBUFFER 里，全局/引擎级参数放外面**。
+
+### 3.4 纹理声明与采样宏
+
+```hlsl
+TEXTURE2D(_BaseMap);
+SAMPLER(sampler_BaseMap);
+```text
+
+不再写 `sampler2D _BaseMap;`。URP 用 `TEXTURE2D` / `SAMPLER` 宏声明纹理和采样器，配合统一的采样宏：
+
+```hlsl
+half4 color = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, IN.uv);
+```text
+
+这套宏背后兼容了多平台和纹理数组，是现代 URP 的推荐写法。
+
+### 3.5 命名约定：positionOS / positionHCS
+
+- `Attributes`（顶点输入）里 `positionOS` 的 `OS` = **Object Space**（模型空间）。
+- `Varyings`（顶点输出）里 `positionHCS` 的 `HCS` = **Homogeneous Clip Space**（齐次裁剪空间）。
+
+`TransformObjectToHClip` 就对应 Built-in 的 `UnityObjectToClipPos`，把模型空间变换到裁剪空间。
+
+### 3.6 URP Lit 模板的复杂结构
+
+URP Lit 不再是一个&quot;单 Pass 小文件&quot;，而是一个**由多个头文件拼接**的完整 PBR 实现：
+
+```text
+Shader &quot;Universal Render Pipeline/Lit&quot;
+├── Properties（大量 PBR 参数）
+└── SubShader
+    ├── Pass &quot;ForwardLit&quot;   → 引入 LitForwardPass.hlsl（主光照）
+    ├── Pass &quot;ShadowCaster&quot; → 阴影投射
+    ├── Pass &quot;DepthOnly&quot;    → 深度
+    ├── Pass &quot;DepthNormals&quot; → 深度法线
+    └── Pass &quot;MotionVectors&quot;→ 运动矢量
+```text
+
+每个 Pass 都通过 `Tags &#123; &quot;LightMode&quot; = &quot;...&quot; &#125;` 声明自己在 URP 渲染流程里的角色。普通开发很少直接改 Lit 模板，更多是从 Unlit 起步做自定义。
+
+## 四、Shader Graph 入门
+
+Shader Graph 是 Unity 的**可视化 Shader 编辑器**：用节点连线替代写代码，适合不熟悉 HLSL 的同事或快速出效果。
+
+### 4.1 常见 Shader Graph 模板
+
+`Create → Shader Graph → URP` 下有：
+
+| 模板 | 用途 |
+| :--- | :--- |
+| Lit Shader Graph | 完整 PBR 的连线起点 |
+| Unlit Shader Graph | 无光照的连线起点 |
+| Sprite Lit / Unlit | 2D 精灵 |
+| Full Screen Shader Graph | 全屏后处理（配合 Renderer Feature） |
+
+### 4.2 三个核心概念
+
+- **属性（Blackboard）**：相当于 `Properties`，定义颜色、贴图、数值参数，右侧面板可调。
+- **节点（Node）**：一个节点就是一段计算，如 `Sample Texture 2D`、`Add`、`Multiply`、`Lerp`。
+- **输出（Main Preview / Output）**：连线最终汇入一个输出节点（Lit 或 Unlit），对应&quot;最终颜色/表面属性&quot;。
+
+一个最简单的 Unlit Shader Graph 是：`Sample Texture 2D` 的输出 → 乘 `Color` → 接 `Base Color` → 输出。它背后生成的 HLSL 和上面手写的 URP Unlit 本质相同。
+
+### 4.3 手写 HLSL vs Shader Graph 怎么选
+
+| 场景 | 推荐 |
+| :--- | :--- |
+| 纯逻辑特效、需要精确控制 Pass/变体 | 手写 HLSL |
+| 团队里有人不写代码、想快速出材质 | Shader Graph |
+| 做复杂光照、后处理 | 手写 HLSL（配合 Renderer Feature） |
+| 原型验证、贴图混合、简单溶解 | Shader Graph |
+
+两者并不互斥：Shader Graph 支持**自定义函数节点（Custom Function Node）**，可以在连线里嵌入手写 HLSL。
+
+## 五、自查清单
+
+- [ ] 能说出 URP 与 Built-in 在头文件、代码块、采样、变换宏上的差异
+- [ ] 知道 `&quot;RenderPipeline&quot;=&quot;UniversalPipeline&quot;` 标签的作用
+- [ ] 知道 `CBUFFER_START(UnityPerMaterial)` 是为了什么
+- [ ] 能看懂 `TEXTURE2D / SAMPLER / SAMPLE_TEXTURE2D` 三件套
+- [ ] 能解释 `positionOS` 与 `positionHCS` 的命名含义
+- [ ] 知道 URP Lit 模板由多个带 `LightMode` 的 Pass 组成
+- [ ] 能说清 Shader Graph 的&quot;属性/节点/输出&quot;三者关系，以及它与手写 HLSL 的选择依据
+</code></pre>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://csy7749.github.io">Csy7749</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://csy7749.github.io/2026/08/13/Unity%20Shader%EF%BC%884%EF%BC%89%EF%BC%9AURP%20Shader%20%E6%A8%A1%E6%9D%BF%E4%B8%8E%20Shader%20Graph%20%E5%85%A5%E9%97%A8/">https://csy7749.github.io/2026/08/13/Unity%20Shader%EF%BC%884%EF%BC%89%EF%BC%9AURP%20Shader%20%E6%A8%A1%E6%9D%BF%E4%B8%8E%20Shader%20Graph%20%E5%85%A5%E9%97%A8/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Unity/">Unity</a><a class="post-meta__tags" href="/tags/Shader/">Shader</a><a class="post-meta__tags" href="/tags/URP/">URP</a><a class="post-meta__tags" href="/tags/HLSL/">HLSL</a><a class="post-meta__tags" href="/tags/Shader-Graph/">Shader Graph</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/08/13/Unity%20Shader%EF%BC%885%EF%BC%89%EF%BC%9A%E9%A1%B6%E7%82%B9%E4%B8%8E%E7%89%87%E5%85%83%E7%9D%80%E8%89%B2%E5%99%A8%E2%80%94%E2%80%94%E8%AF%AD%E4%B9%89%E3%80%81%E5%86%85%E7%BD%AE%E5%87%BD%E6%95%B0%E4%B8%8E%E5%AE%8F/" title="Unity Shader（5）：顶点与片元着色器——语义、内置函数与宏"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">Unity Shader（5）：顶点与片元着色器——语义、内置函数与宏</div></div><div class="info-2"><div class="info-item-1"> 前几讲我们一直在”读结构”，这一讲进入手写 Shader 的语法地基。顶点&#x2F;片元着色器的代码，本质就是几类东西：语义（Semantics）、数据类型、数学函数、采样函数，以及 Unity 提供的一堆内置宏。把这几类”词汇表”过一遍，后面写光照、纹理、特效时就不会再对着代码发懵。    一、输入输出结构体：appdata 与 v2f一个典型的顶点&#x2F;片元着色器，数据是这样流动的： 顶点数据（Mesh）→ appdata（输入）→ vert() → v2f（输出）→ 光栅化插值 → frag() ```text  两个结构体的命名只是约定（URP 里习惯叫 `Attributes` 和 `Varyings`），真正起作用的是**冒号后面的语义**。  ```hlsl struct appdata &#123;     float4 vertex : POSITION;   // 顶点位置（模型空间）     float3 normal : NORMAL;     // 顶点法线（模型空间）     float2 uv     : TEXCOORD0;  // 第一...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%20Shader%EF%BC%883%EF%BC%89%EF%BC%9ABuilt-in%20%E7%AE%A1%E7%BA%BF%20Shader%20%E6%A8%A1%E6%9D%BF%E5%85%A8%E8%A7%A3%E6%9E%90/" title="Unity Shader（3）：Built-in 管线 Shader 模板全解析"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">Unity Shader（3）：Built-in 管线 Shader 模板全解析</div></div><div class="info-2"><div class="info-item-1"> 在 Unity 编辑器里右键 Create → Shader，会看到几个现成模板。很多人就是从”改模板”开始学 Shader 的，但如果不理解每个模板在干什么，很容易改崩。本文把 Built-in 管线下最常见的四个模板——Standard Surface Shader、Unlit Shader、Image Effect Shader、Compute Shader——逐一拆开，讲清它们的用途、生成代码的每一段，以及什么时候该选哪个。    一、模板清单与各自定位不同 Unity 版本菜单略有差异，Built-in 管线下最常见的是这四种：    模板 生成入口 核心作用 适合    Standard Surface Shader Surface Shader 用”表面着色器”快速写光照材质 学光照、做普通材质   Unlit Shader Unlit Shader 最简的顶点&#x2F;片元着色器 学 vert&#x2F;frag、做无光照效果   Image Effect Shader Image Effect Shader 屏幕后处理的骨架 全屏效果、滤镜   Comput...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/08/13/Unity%20Shader%EF%BC%8810%EF%BC%89%EF%BC%9A%E5%B1%8F%E5%B9%95%E5%90%8E%E5%A4%84%E7%90%86%E4%B8%8E%20URP%20%E8%87%AA%E5%AE%9A%E4%B9%89%20Renderer%20Feature/" title="Unity Shader（10）：屏幕后处理与 URP 自定义 Renderer Feature"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity Shader（10）：屏幕后处理与 URP 自定义 Renderer Feature</div></div><div class="info-2"><div class="info-item-1"> 前面都是”改一个物体”，这一讲开始”改整个画面”。屏幕后处理（Post-Processing）的原理是：先把场景渲染到一张纹理，再拿这张纹理做全屏处理，最后输出到屏幕。本文讲清这个原理，对比 Built-in 与 URP 的做法，并手写一个 URP 自定义 Renderer Feature 的灰度滤镜作为完整示例。    一、屏幕后处理的原理普通渲染是”物体 → 帧缓冲 → 屏幕”；后处理多了一步”先渲染到纹理，再处理”： 场景渲染 → 中间纹理（颜色缓冲）→ 全屏 Shader 处理 → 屏幕 ```text  那个&quot;全屏 Shader&quot;跑在一个铺满屏幕的四边形上，输入就是中间纹理，输出是最终画面。所以后处理 Shader 的结构和上一讲 Image Effect 模板一致：`Cull Off ZWrite Off ZTest Always`。  ## 二、Built-in 的做法  Built-in 下做后处理，典型是 C# 挂脚本 + `OnRenderImage`：  ```csharp public class GrayScale : MonoBe...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%20Shader%EF%BC%881%EF%BC%89%EF%BC%9A%E6%B8%B2%E6%9F%93%E7%AE%A1%E7%BA%BF%E6%80%BB%E8%A7%88/" title="Unity Shader（1）：渲染管线总览"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity Shader（1）：渲染管线总览</div></div><div class="info-2"><div class="info-item-1"> Shader 本质上是一段跑在 GPU 上的小程序。想真正看懂它，先得搞明白”一个三角形是怎么变成屏幕上的像素的”。本文从 GPU 渲染流水线讲起，再解释 Unity 的三种渲染管线（Built-in &#x2F; URP &#x2F; HDRP）以及它们背后的 SRP 机制，最后说清 Shader 与 Material 的分工。全文不写复杂语法，只为给你一张可随时回看的”全局地图”。    一、从三角形到像素：GPU 渲染流水线你屏幕上的每一帧画面，都经历了”几何数据 → 像素颜色”的转换。这个过程被拆成若干阶段，统称为渲染流水线（Rendering Pipeline）。不同版本的图形 API（OpenGL &#x2F; Direct3D &#x2F; Vulkan &#x2F; Metal）细节略有差异，但大框架一致。 应用阶段（CPU）    │  准备顶点、纹理、材质数据，发出 Draw Call    ▼ 几何阶段（GPU）    ├── 顶点着色器（Vertex Shader）      ← 逐顶点处理，变换坐标    ├── 曲面细分（Tessellation，可...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%20Shader%EF%BC%885%EF%BC%89%EF%BC%9A%E9%A1%B6%E7%82%B9%E4%B8%8E%E7%89%87%E5%85%83%E7%9D%80%E8%89%B2%E5%99%A8%E2%80%94%E2%80%94%E8%AF%AD%E4%B9%89%E3%80%81%E5%86%85%E7%BD%AE%E5%87%BD%E6%95%B0%E4%B8%8E%E5%AE%8F/" title="Unity Shader（5）：顶点与片元着色器——语义、内置函数与宏"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity Shader（5）：顶点与片元着色器——语义、内置函数与宏</div></div><div class="info-2"><div class="info-item-1"> 前几讲我们一直在”读结构”，这一讲进入手写 Shader 的语法地基。顶点&#x2F;片元着色器的代码，本质就是几类东西：语义（Semantics）、数据类型、数学函数、采样函数，以及 Unity 提供的一堆内置宏。把这几类”词汇表”过一遍，后面写光照、纹理、特效时就不会再对着代码发懵。    一、输入输出结构体：appdata 与 v2f一个典型的顶点&#x2F;片元着色器，数据是这样流动的： 顶点数据（Mesh）→ appdata（输入）→ vert() → v2f（输出）→ 光栅化插值 → frag() ```text  两个结构体的命名只是约定（URP 里习惯叫 `Attributes` 和 `Varyings`），真正起作用的是**冒号后面的语义**。  ```hlsl struct appdata &#123;     float4 vertex : POSITION;   // 顶点位置（模型空间）     float3 normal : NORMAL;     // 顶点法线（模型空间）     float2 uv     : TEXCOORD0;  // 第一...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%20Shader%EF%BC%882%EF%BC%89%EF%BC%9AShaderLab%20%E9%AA%A8%E6%9E%B6%E4%B8%8E%E7%AC%AC%E4%B8%80%E4%B8%AA%20Unlit%20Shader/" title="Unity Shader（2）：ShaderLab 骨架与第一个 Unlit Shader"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity Shader（2）：ShaderLab 骨架与第一个 Unlit Shader</div></div><div class="info-2"><div class="info-item-1"> 上一讲我们拿到了”全局地图”，这一讲开始动手读代码。Unity 的 .shader 文件由两部分语言拼成：外层是描述结构的 ShaderLab，内层是真正跑在 GPU 上的 HLSL&#x2F;CG。本文逐层拆开 Shader / SubShader / Pass 的骨架，并把一个最简 Unlit Shader 每一行都讲清楚。学完这篇，Unity 菜单里 Create → Shader 生成的模板你就能看懂结构了。    一、ShaderLab 的三层结构打开任何一个 .shader 文件，你会看到它像一个”套娃”。最外层是 Shader，往里是 SubShader，再往里是 Pass： Shader &quot;路径/名称&quot; ├── Properties        ← 材质面板上可调的参数 ├── SubShader          ← 一组&quot;渲染方案&quot;（可写多个，按平台/能力择优） │   ├── Tags           ← 渲染队列、类型等标签 │   ├── LOD / 其他状态 │   └── Pass           ...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%20Shader%E7%B3%BB%E5%88%97-%E8%A7%84%E5%88%92/" title="Unity Shader 系列·写作规划"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity Shader 系列·写作规划</div></div><div class="info-2"><div class="info-item-1">系列定位名称：Unity Shader 入门到进阶（十一讲） 目标读者：会写 C#、用过 Unity，但没系统学过 Shader；想从零理解”画面到底是怎么画出来的”，并能够自己写出可用的 Shader。 篇幅标准：单篇 3500-6000 字，可独立阅读，合起来构成一条从渲染管线到性能优化的完整链路。   写作原则：  从问题出发：先讲”为什么需要它”，再讲”语法&#x2F;API 是什么”，最后给完整可运行的代码 代码示例完整可运行，不做伪代码；同时给 Built-in 与 URP 两套写法，标注版本差异 以 Unity 2022.3 LTS+ 为准，重点覆盖 URP，Built-in 作为理解 ShaderLab 的起点 每篇末尾附”自查清单”，方便读者对照自己的项目检查理解   篇目总览第1讲  渲染管线总览：GPU 流水线与三种渲染管线     ← 建立全局图景 第2讲  ShaderLab 骨架与第一个 Unlit Shader        ← 看懂一个 shader 文件 第3讲  Built-in 管线 Shader 模板全解析             ← Un...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%20Shader%EF%BC%883%EF%BC%89%EF%BC%9ABuilt-in%20%E7%AE%A1%E7%BA%BF%20Shader%20%E6%A8%A1%E6%9D%BF%E5%85%A8%E8%A7%A3%E6%9E%90/" title="Unity Shader（3）：Built-in 管线 Shader 模板全解析"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity Shader（3）：Built-in 管线 Shader 模板全解析</div></div><div class="info-2"><div class="info-item-1"> 在 Unity 编辑器里右键 Create → Shader，会看到几个现成模板。很多人就是从”改模板”开始学 Shader 的，但如果不理解每个模板在干什么，很容易改崩。本文把 Built-in 管线下最常见的四个模板——Standard Surface Shader、Unlit Shader、Image Effect Shader、Compute Shader——逐一拆开，讲清它们的用途、生成代码的每一段，以及什么时候该选哪个。    一、模板清单与各自定位不同 Unity 版本菜单略有差异，Built-in 管线下最常见的是这四种：    模板 生成入口 核心作用 适合    Standard Surface Shader Surface Shader 用”表面着色器”快速写光照材质 学光照、做普通材质   Unlit Shader Unlit Shader 最简的顶点&#x2F;片元着色器 学 vert&#x2F;frag、做无光照效果   Image Effect Shader Image Effect Shader 屏幕后处理的骨架 全屏效果、滤镜   Comput...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Csy7749</div><div class="author-info-description">键来！</div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">38</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">79</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">10</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/csy7749"><i class="fab fa-github"></i><span>GitHub</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">日积月累</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81URP-%E7%9A%84-Shader-%E6%A8%A1%E6%9D%BF%E6%B8%85%E5%8D%95"><span class="toc-number">1.</span> <span class="toc-text">一、URP 的 Shader 模板清单</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81URP-%E4%B8%8E-Built-in-%E5%86%99%E6%B3%95%E7%9A%84%E6%A0%B8%E5%BF%83%E5%B7%AE%E5%BC%82"><span class="toc-number">2.</span> <span class="toc-text">二、URP 与 Built-in 写法的核心差异</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E9%80%90%E8%A1%8C%E8%A7%A3%E6%9E%90%EF%BC%9AURP-Unlit-%E6%A8%A1%E6%9D%BF"><span class="toc-number">3.</span> <span class="toc-text">三、逐行解析：URP Unlit 模板</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%886%EF%BC%89%EF%BC%9AAI%E5%86%B3%E7%AD%96%E6%AF%94%E8%BE%83/" title="游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型">游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型</a><time datetime="2026-08-17T08:00:00.000Z" title="Created 2026-08-17 16:00:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%885%EF%BC%89%EF%BC%9AHTN%E5%88%86%E5%B1%82%E4%BB%BB%E5%8A%A1%E7%BD%91%E7%BB%9C/" title="游戏AI-决策架构（5）：HTN 分层任务网络">游戏AI-决策架构（5）：HTN 分层任务网络</a><time datetime="2026-08-17T07:50:00.000Z" title="Created 2026-08-17 15:50:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%884%EF%BC%89%EF%BC%9AUtilityAI%E6%95%88%E7%94%A8%E5%86%B3%E7%AD%96/" title="游戏AI-决策架构（4）：Utility AI 效用决策">游戏AI-决策架构（4）：Utility AI 效用决策</a><time datetime="2026-08-17T07:40:00.000Z" title="Created 2026-08-17 15:40:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%883%EF%BC%89%EF%BC%9A%E8%A1%8C%E4%B8%BA%E6%A0%91/" title="游戏AI-决策架构（3）：行为树">游戏AI-决策架构（3）：行为树</a><time datetime="2026-08-17T07:30:00.000Z" title="Created 2026-08-17 15:30:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%882%EF%BC%89%EF%BC%9AHFSM%E5%88%86%E5%B1%82%E6%9C%89%E9%99%90%E7%8A%B6%E6%80%81%E6%9C%BA/" title="游戏AI-决策架构（2）：HFSM 分层有限状态机">游戏AI-决策架构（2）：HFSM 分层有限状态机</a><time datetime="2026-08-17T07:20:00.000Z" title="Created 2026-08-17 15:20:00">2026-08-17</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2020 - 2026 By Csy7749</span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/koharu.model.json"},"display":{"position":"left","width":150,"height":300},"mobile":{"show":false},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/"});</script></body></html>

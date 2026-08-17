@@ -1,0 +1,386 @@
+<!DOCTYPE html><html lang="zh-cn" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Unity Shader（8）：透明、混合、剔除与渲染队列 | Csy7749-Blog</title><meta name="author" content="Csy7749"><meta name="copyright" content="Csy7749"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="半透明玻璃、粒子特效、水面，都靠四个”开关”配合：Cull（剔除哪面）、ZWrite&#x2F;ZTest（深度怎么处理）、Blend（颜色怎么混合）、Queue（什么时候画）。这四个开关组合错了，就会出现”透明物体挡住后面的东西””半透明变黑边”这类经典 bug。本文把它们一个个讲透，并给出标准透明 Shader 与镂空 Shader 的完整写法。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Unity Shader（8）：透明、混合、剔除与渲染队列">
+<meta property="og:url" content="https://csy7749.github.io/2026/08/13/Unity%20Shader%EF%BC%888%EF%BC%89%EF%BC%9A%E9%80%8F%E6%98%8E%E3%80%81%E6%B7%B7%E5%90%88%E3%80%81%E5%89%94%E9%99%A4%E4%B8%8E%E6%B8%B2%E6%9F%93%E9%98%9F%E5%88%97/index.html">
+<meta property="og:site_name" content="Csy7749-Blog">
+<meta property="og:description" content="半透明玻璃、粒子特效、水面，都靠四个”开关”配合：Cull（剔除哪面）、ZWrite&#x2F;ZTest（深度怎么处理）、Blend（颜色怎么混合）、Queue（什么时候画）。这四个开关组合错了，就会出现”透明物体挡住后面的东西””半透明变黑边”这类经典 bug。本文把它们一个个讲透，并给出标准透明 Shader 与镂空 Shader 的完整写法。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://csy7749.github.io/img/avatar.png">
+<meta property="article:published_time" content="2026-08-13T09:00:00.000Z">
+<meta property="article:modified_time" content="2026-08-17T10:24:18.463Z">
+<meta property="article:author" content="Csy7749">
+<meta property="article:tag" content="Unity">
+<meta property="article:tag" content="Shader">
+<meta property="article:tag" content="透明">
+<meta property="article:tag" content="混合">
+<meta property="article:tag" content="渲染队列">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://csy7749.github.io/img/avatar.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Unity Shader（8）：透明、混合、剔除与渲染队列",
+  "url": "https://csy7749.github.io/2026/08/13/Unity%20Shader%EF%BC%888%EF%BC%89%EF%BC%9A%E9%80%8F%E6%98%8E%E3%80%81%E6%B7%B7%E5%90%88%E3%80%81%E5%89%94%E9%99%A4%E4%B8%8E%E6%B8%B2%E6%9F%93%E9%98%9F%E5%88%97/",
+  "image": "https://csy7749.github.io/img/avatar.png",
+  "datePublished": "2026-08-13T09:00:00.000Z",
+  "dateModified": "2026-08-17T10:24:18.463Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Csy7749",
+      "url": "https://csy7749.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://csy7749.github.io/2026/08/13/Unity%20Shader%EF%BC%888%EF%BC%89%EF%BC%9A%E9%80%8F%E6%98%8E%E3%80%81%E6%B7%B7%E5%90%88%E3%80%81%E5%89%94%E9%99%A4%E4%B8%8E%E6%B8%B2%E6%9F%93%E9%98%9F%E5%88%97/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        const data = { value }
+
+        if (ttl != null) {
+          data.expiry = Date.now() + ttl * 86400000
+        }
+
+        localStorage.setItem(key, JSON.stringify(data))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return
+
+        try {
+          const data = JSON.parse(itemStr)
+
+          if (data.expiry && Date.now() > data.expiry) {
+            localStorage.removeItem(key)
+            return
+          }
+
+          return data.value
+        } catch {
+          localStorage.removeItem(key)
+        }
+      }
+    }
+
+    const scriptCache = new Map()
+    const cssCache = new Map()
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => {
+        if (scriptCache.has(url)) {
+          return scriptCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const script = document.createElement('script')
+
+          script.src = url
+          script.async = true
+
+          for (const key in attr) {
+            script.setAttribute(key, attr[key])
+          }
+
+          script.onload = resolve
+          script.onerror = reject
+
+          document.head.appendChild(script)
+        })
+
+        scriptCache.set(url, promise)
+
+        return promise
+      },
+      getCSS: (url, id) => {
+        if (cssCache.has(url)) {
+          return cssCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const link = document.createElement('link')
+
+          link.rel = 'stylesheet'
+          link.href = url
+
+          if (id) {
+            link.id = id
+          }
+
+          link.onload = resolve
+          link.onerror = reject
+
+          document.head.appendChild(link)
+        })
+
+        cssCache.set(url, promise)
+
+        return promise
+      },
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+      const activateDarkMode = () => {
+        document.documentElement.dataset.theme = 'dark'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.dataset.theme = 'light'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Unity Shader（8）：透明、混合、剔除与渲染队列',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">38</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">79</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">10</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Csy7749-Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Unity Shader（8）：透明、混合、剔除与渲染队列</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Unity Shader（8）：透明、混合、剔除与渲染队列</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-08-13T09:00:00.000Z" title="Created 2026-08-13 17:00:00">2026-08-13</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-08-17T10:24:18.463Z" title="Updated 2026-08-17 18:24:18">2026-08-17</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Unity/">Unity</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Unity/Shader/">Shader</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><blockquote>
+<p>半透明玻璃、粒子特效、水面，都靠四个”开关”配合：<code>Cull</code>（剔除哪面）、<code>ZWrite</code>&#x2F;<code>ZTest</code>（深度怎么处理）、<code>Blend</code>（颜色怎么混合）、<code>Queue</code>（什么时候画）。这四个开关组合错了，就会出现”透明物体挡住后面的东西””半透明变黑边”这类经典 bug。本文把它们一个个讲透，并给出标准透明 Shader 与镂空 Shader 的完整写法。</p>
+</blockquote>
+<span id="more"></span>
+
+<h2 id="一、Cull：剔除哪一面"><a href="#一、Cull：剔除哪一面" class="headerlink" title="一、Cull：剔除哪一面"></a>一、Cull：剔除哪一面</h2><p>GPU 默认只画”朝向相机”的面（背面剔除），以省一半工作量。<code>Cull</code> 控制剔除哪一面：</p>
+<table>
+<thead>
+<tr>
+<th align="left">值</th>
+<th align="left">含义</th>
+<th align="left">用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>Cull Back</code></td>
+<td align="left">剔除背面（默认）</td>
+<td align="left">普通闭合网格</td>
+</tr>
+<tr>
+<td align="left"><code>Cull Front</code></td>
+<td align="left">剔除正面</td>
+<td align="left">特殊效果、内部视角</td>
+</tr>
+<tr>
+<td align="left"><code>Cull Off</code></td>
+<td align="left">不剔除，双面渲染</td>
+<td align="left">树叶、布料、水面、描边壳</td>
+</tr>
+</tbody></table>
+<p>透明物体经常要 <code>Cull Off</code>，因为你会看到它的”背面”（比如玻璃瓶的内壁、纸张的另一面）。</p>
+<h2 id="二、ZWrite-ZTest：深度写入与深度测试"><a href="#二、ZWrite-ZTest：深度写入与深度测试" class="headerlink" title="二、ZWrite &#x2F; ZTest：深度写入与深度测试"></a>二、ZWrite &#x2F; ZTest：深度写入与深度测试</h2><p>深度缓冲记录”离相机最近的点有多远”，用来决定谁挡住谁。</p>
+<ul>
+<li><strong>ZTest</strong>：拿当前片元的深度和深度缓冲比较，通过才继续。默认 <code>LEqual</code>（小于等于则通过，即”更近或相等就画”）。</li>
+<li><strong>ZWrite</strong>：这个片元通过后，要不要把自己的深度写进深度缓冲。默认 <code>On</code>。</li>
+</ul>
+<p>为什么半透明物体要 <code>ZWrite Off</code>？因为它不能挡住后面的东西——后面物体的颜色要”透”出来。但它自己又需要被前面的不透明物体遮挡，所以 <code>ZTest</code> 保持 <code>LEqual</code>。</p>
+<blockquote>
+<p>这是半透明最经典的一对设置：<strong><code>ZWrite Off</code>（不写深度，避免挡住别人）+ <code>ZTest LEqual</code>（仍被不透明物体正确遮挡）</strong>。</p>
+</blockquote>
+<h2 id="三、Blend：颜色怎么混合"><a href="#三、Blend：颜色怎么混合" class="headerlink" title="三、Blend：颜色怎么混合"></a>三、Blend：颜色怎么混合</h2><p><code>Blend</code> 定义新片元颜色（Src）和帧缓冲已有颜色（Dst）如何相加：</p>
+<pre><code class="language-text">最终颜色 = Src * SrcFactor + Dst * DstFactor
+```text
+
+常见写法：
+
+| 写法 | 公式 | 效果 |
+| :--- | :--- | :--- |
+| `Blend SrcAlpha OneMinusSrcAlpha` | Src×α + Dst×(1−α) | 标准 Alpha 混合（半透明） |
+| `Blend One One` | Src + Dst | 加法混合（光效、火、能量） |
+| `Blend One Zero` | Src | 完全不透明（默认） |
+| `Blend Zero SrcColor` | Dst×Src | 乘法混合（变暗、阴影） |
+
+其中 `SrcAlpha OneMinusSrcAlpha` 是最常用的：α=1 完全覆盖，α=0.5 各占一半，α=0 完全透明。
+
+## 四、渲染队列 Queue：决定绘制顺序
+
+不透明物体无所谓顺序（深度缓冲会兜底），但**半透明物体必须从远到近绘制**，否则混合结果错误。Unity 用 `Queue` 控制先后：
+
+| 队列 | 数值 | 内容 |
+| :--- | :--- | :--- |
+| `Background` | 1000 | 天空盒、背景 |
+| `Geometry` | 2000 | 不透明物体（默认） |
+| `AlphaTest` | 2450 | 镂空（Clip）物体 |
+| `Transparent` | 3000 | 半透明物体（从远到近） |
+| `Overlay` | 4000 | 最后绘制（镜头光晕等） |
+
+半透明 Shader 必须写：
+
+```hlsl
+Tags &#123; &quot;RenderType&quot;=&quot;Transparent&quot; &quot;Queue&quot;=&quot;Transparent&quot; &#125;
+```text
+
+数值越大越晚画。半透明物体内部仍按&quot;距离相机由远到近&quot;排序，这是 GPU 层面保证的。
+
+## 五、标准透明 Shader（Built-in）
+
+```hlsl
+Shader &quot;Tutorial/Transparent&quot;
+&#123;
+    Properties
+    &#123;
+        _MainTex (&quot;Texture&quot;, 2D) = &quot;white&quot; &#123;&#125;
+        _Color   (&quot;Tint&quot;, Color) = (1,1,1,1)
+    &#125;
+
+    SubShader
+    &#123;
+        Tags &#123; &quot;RenderType&quot;=&quot;Transparent&quot; &quot;Queue&quot;=&quot;Transparent&quot; &quot;IgnoreProjector&quot;=&quot;True&quot; &#125;
+        LOD 100
+
+        Pass
+        &#123;
+            Blend SrcAlpha OneMinusSrcAlpha
+            ZWrite Off
+            Cull Off
+
+            CGPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+            #include &quot;UnityCG.cginc&quot;
+
+            sampler2D _MainTex;
+            float4 _MainTex_ST;
+            fixed4 _Color;
+
+            struct appdata &#123; float4 vertex : POSITION; float2 uv : TEXCOORD0; &#125;;
+            struct v2f     &#123; float4 vertex : SV_POSITION; float2 uv : TEXCOORD0; &#125;;
+
+            v2f vert (appdata v)
+            &#123;
+                v2f o;
+                o.vertex = UnityObjectToClipPos(v.vertex);
+                o.uv = TRANSFORM_TEX(v.uv, _MainTex);
+                return o;
+            &#125;
+
+            fixed4 frag (v2f i) : SV_Target
+            &#123;
+                fixed4 col = tex2D(_MainTex, i.uv) * _Color;
+                return col;
+            &#125;
+            ENDCG
+        &#125;
+    &#125;
+&#125;
+```text
+
+三个开关各司其职：`Blend` 决定半透明混合，`ZWrite Off` 保证不挡住背后物体，`Cull Off` 让两面都可见。
+
+## 六、镂空 Shader：透明与不透明的折中
+
+镂空（Cutout）不搞&quot;半透明混合&quot;，而是**直接丢弃某些像素**。它保留深度写入，所以排序简单、渲染便宜：
+
+```hlsl
+Properties
+&#123;
+    _Cutoff (&quot;Cutoff&quot;, Range(0,1)) = 0.5
+&#125;
+SubShader
+&#123;
+    Tags &#123; &quot;RenderType&quot;=&quot;TransparentCutout&quot; &quot;Queue&quot;=&quot;AlphaTest&quot; &#125;
+    Pass
+    &#123;
+        CGPROGRAM
+        ...
+        fixed4 frag (v2f i) : SV_Target
+        &#123;
+            fixed4 col = tex2D(_MainTex, i.uv);
+            clip(col.a - _Cutoff);  // alpha 小于阈值的像素被丢弃
+            return col;
+        &#125;
+        ENDCG
+    &#125;
+&#125;
+```text
+
+`clip(x)` 在 `x &lt; 0` 时丢弃该片元。镂空常用于树叶、栅栏、镂空贴纸——边缘是&quot;硬&quot;的，没有半透明过渡，但性能更好、不会排序错乱。
+
+## 七、URP 下的对应关系
+
+URP 手写 HLSL 时，透明相关写法基本一致（`Blend` / `ZWrite` / `Cull` 是 ShaderLab 层，不随管线变）。用 Shader Graph 则直接在属性里切：
+
+- **Surface Type** 选 `Transparent` → 自动生成 `Blend SrcAlpha OneMinusSrcAlpha` + `ZWrite Off`。
+- 勾选 `Alpha Clipping` → 生成 `clip`，对应镂空。
+
+也就是说，URP 只是把这些底层开关&quot;封装成了面板选项&quot;，底层还是本讲讲的这四样。
+
+## 八、自查清单
+
+- [ ] 能说出 `Cull Back / Front / Off` 的差异与使用场景
+- [ ] 知道半透明为什么要 `ZWrite Off` 但保留 `ZTest LEqual`
+- [ ] 能默写标准 Alpha 混合 `Blend SrcAlpha OneMinusSrcAlpha` 的公式
+- [ ] 知道加法混合 `Blend One One` 的用途
+- [ ] 能按数值排出 Background/Geometry/AlphaTest/Transparent/Overlay 的顺序
+- [ ] 知道半透明物体的绘制顺序要求，以及镂空的优势
+- [ ] 能写出 `clip(col.a - _Cutoff)` 并解释其作用
+</code></pre>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://csy7749.github.io">Csy7749</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://csy7749.github.io/2026/08/13/Unity%20Shader%EF%BC%888%EF%BC%89%EF%BC%9A%E9%80%8F%E6%98%8E%E3%80%81%E6%B7%B7%E5%90%88%E3%80%81%E5%89%94%E9%99%A4%E4%B8%8E%E6%B8%B2%E6%9F%93%E9%98%9F%E5%88%97/">https://csy7749.github.io/2026/08/13/Unity%20Shader%EF%BC%888%EF%BC%89%EF%BC%9A%E9%80%8F%E6%98%8E%E3%80%81%E6%B7%B7%E5%90%88%E3%80%81%E5%89%94%E9%99%A4%E4%B8%8E%E6%B8%B2%E6%9F%93%E9%98%9F%E5%88%97/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Unity/">Unity</a><a class="post-meta__tags" href="/tags/Shader/">Shader</a><a class="post-meta__tags" href="/tags/%E9%80%8F%E6%98%8E/">透明</a><a class="post-meta__tags" href="/tags/%E6%B7%B7%E5%90%88/">混合</a><a class="post-meta__tags" href="/tags/%E6%B8%B2%E6%9F%93%E9%98%9F%E5%88%97/">渲染队列</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/08/13/Unity%20Shader%EF%BC%889%EF%BC%89%EF%BC%9A%E5%B8%B8%E7%94%A8%E6%95%88%E6%9E%9C%E5%AE%9E%E6%88%98%E2%80%94%E2%80%94%E9%A1%B6%E7%82%B9%E5%8A%A8%E7%94%BB%E3%80%81%E6%BA%B6%E8%A7%A3%E4%B8%8E%E6%8F%8F%E8%BE%B9/" title="Unity Shader（9）：常用效果实战——顶点动画、溶解与描边"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">Unity Shader（9）：常用效果实战——顶点动画、溶解与描边</div></div><div class="info-2"><div class="info-item-1"> 前面的语法学得差不多了，这一讲把它们串起来，动手做三个立刻能用的效果：顶点动画（波浪）、溶解（噪声裁剪）、描边（法线外扩壳）。每个效果都给出完整代码和参数说明，并点出常见坑。做完这三个，你就具备了自己写”特效型 Shader”的基本手感。    一、顶点动画：让模型”活”起来1.1 原理顶点动画的关键在于：在 vert 里移动顶点的位置。因为 vert 每帧、每个顶点都会执行，所以只要把位置写成时间的函数，模型就会动起来。 最常见的是正弦波浪——用顶点的某个坐标做相位，用 _Time.y 做时间驱动： float wave = sin(v.vertex.x * _Frequency + _Time.y * _Speed) * _Amplitude; v.vertex.y += wave; ```text  ### 1.2 完整代码  ```hlsl Shader &quot;Tutorial/VertexWave&quot; &#123;     Properties     &#123;         _MainTex (&quot;Texture&quot;, 2D) =...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%20Shader%EF%BC%887%EF%BC%89%EF%BC%9A%E7%BA%B9%E7%90%86%E9%87%87%E6%A0%B7%E3%80%81UV%20%E5%8F%98%E6%8D%A2%E4%B8%8E%E6%B3%95%E7%BA%BF%E8%B4%B4%E5%9B%BE/" title="Unity Shader（7）：纹理采样、UV 变换与法线贴图"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">Unity Shader（7）：纹理采样、UV 变换与法线贴图</div></div><div class="info-2"><div class="info-item-1"> 真实感的一半来自贴图。这一讲深入纹理的三个层面：怎么按 UV 采样、怎么自由变换 UV 做出各种图案效果、以及最常用的法线贴图——它为什么是蓝紫色的、切线空间 TBN 是什么。文末给一个完整的法线贴图 Shader。学完这篇，你能读懂绝大多数”贴图+凹凸”类代码。    一、UV 坐标与采样器 UV 坐标：把 3D 表面展平到 2D 纹理上的坐标，范围通常是 [0,1]，(0,0) 在纹理左下角。 采样（Sampling）：按 UV 去纹理里取对应像素的颜色。内置管线用 tex2D，URP 用 SAMPLE_TEXTURE2D。  // Built-in fixed4 col = tex2D(_MainTex, i.uv); // URP half4 col = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv); ```text  ## 二、Tiling / Offset 是怎么实现的  材质面板上的 Tiling（平铺）和 Offset（偏移），底层就是一个 UV 线性变换。Unity 自动生成 `_MainTex_ST`（S...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/08/13/Unity%20Shader%EF%BC%886%EF%BC%89%EF%BC%9A%E5%85%89%E7%85%A7%E6%A8%A1%E5%9E%8B%E5%9F%BA%E7%A1%80%E2%80%94%E2%80%94%E4%BB%8E%20Lambert%20%E5%88%B0%20Blinn-Phong/" title="Unity Shader（6）：光照模型基础——从 Lambert 到 Blinn-Phong"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity Shader（6）：光照模型基础——从 Lambert 到 Blinn-Phong</div></div><div class="info-2"><div class="info-item-1"> 物体”看起来像 3D”，靠的是明暗变化。这一讲进入 Shader 最核心的部分：光照。我们从光的三要素（环境光、漫反射、高光）讲起，推导 Lambert 与 Half-Lambert 漫反射、Blinn-Phong 高光，最后给一个完整可运行的 Shader，并说明 URP 下光照写法如何变化。看完这篇，你会理解那句贯穿 Shader 的代码——saturate(dot(N, L)) 到底在算什么。    一、光照的三大组成一个像素的最终颜色，通常由三部分拼起来： 最终颜色 = 环境光 + 漫反射 + 高光 ```text  | 组成 | 特点 | 与视角有关 | | :--- | :--- | :--- | | 环境光（Ambient） | 各处均匀，物体阴影里也有光 | 否 | | 漫反射（Diffuse） | 光打到粗糙表面均匀散射，明暗随角度变化 | 否 | | 高光（Specular） | 光滑表面的镜面亮点 | 是 |  后面所有光照 Shader，本质上都是把这三项算出来再加起来。  ## 二、漫反射：Lambert 模型  Lambert 定律：**表面接收的光...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%20Shader%EF%BC%884%EF%BC%89%EF%BC%9AURP%20Shader%20%E6%A8%A1%E6%9D%BF%E4%B8%8E%20Shader%20Graph%20%E5%85%A5%E9%97%A8/" title="Unity Shader（4）：URP Shader 模板与 Shader Graph 入门"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity Shader（4）：URP Shader 模板与 Shader Graph 入门</div></div><div class="info-2"><div class="info-item-1"> 上一讲拆的是 Built-in 的模板，这一讲切到 URP。URP 是当前新项目的默认管线，它的 Shader 写法和 Built-in 有本质区别：头文件变了、纹理采样变了、还多了为 SRP Batcher 服务的数据声明。本文先讲 URP 自带的几个 Shader 模板，再逐行解析 URP Unlit 模板，最后带你看 Shader Graph 的入门逻辑，以及”手写 HLSL vs 连线”该怎么选。    一、URP 的 Shader 模板清单URP 项目里 Create → Shader 会多出一组 URP 模板，常见的有：    模板 作用    Lit Shader 完整 PBR 光照，URP 的主力材质模板   Simple Lit Shader 轻量 PBR，省性能，移动端常用   Baked Lit Shader 仅烘焙光照，最省，适合静态场景   Unlit Shader 无光照，最纯粹的 vert&#x2F;frag 骨架   另外还有 Create → Shader Graph 下的可视化模板（见本文第四节）。 关键前提：这些 URP Shader 必须...</div></div></div></a><a class="pagination-related" href="/2026/08/14/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%882%EF%BC%89%EF%BC%9AGPU%E4%B8%8E%E6%B8%B2%E6%9F%93%E4%BC%98%E5%8C%96/" title="Unity性能优化（2）：GPU 与渲染优化"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-14</div><div class="info-item-2">Unity性能优化（2）：GPU 与渲染优化</div></div><div class="info-2"><div class="info-item-1"> 解决了 CPU，就该看 GPU 了。很多项目 CPU 主线程并不忙，帧率却上不去——瓶颈在渲染端：DrawCall 太多、Shader 太重、Overdraw 太凶。本文从渲染管线讲起，教你判断 GPU 瓶颈，再重点拆解四种合批方案（静态&#x2F;动态 Batching、SRP Batcher、GPU Instancing）的适用边界，最后覆盖 Shader、LOD、光照与后处理，配一个大世界 DrawCall 从 3000 降到 200 的实战案例。    一、渲染管线速览与 GPU 瓶颈判断1.1 一条帧的渲染路径CPU 侧                           GPU 侧 ──────                           ────── 准备渲染状态（材质/纹理/参数）     顶点着色器（变换顶点）   ↓                                ↓ 提交 DrawCall                    光栅化（生成片元）   ↓                                ↓ （等待 GPU...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%20Shader%EF%BC%883%EF%BC%89%EF%BC%9ABuilt-in%20%E7%AE%A1%E7%BA%BF%20Shader%20%E6%A8%A1%E6%9D%BF%E5%85%A8%E8%A7%A3%E6%9E%90/" title="Unity Shader（3）：Built-in 管线 Shader 模板全解析"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity Shader（3）：Built-in 管线 Shader 模板全解析</div></div><div class="info-2"><div class="info-item-1"> 在 Unity 编辑器里右键 Create → Shader，会看到几个现成模板。很多人就是从”改模板”开始学 Shader 的，但如果不理解每个模板在干什么，很容易改崩。本文把 Built-in 管线下最常见的四个模板——Standard Surface Shader、Unlit Shader、Image Effect Shader、Compute Shader——逐一拆开，讲清它们的用途、生成代码的每一段，以及什么时候该选哪个。    一、模板清单与各自定位不同 Unity 版本菜单略有差异，Built-in 管线下最常见的是这四种：    模板 生成入口 核心作用 适合    Standard Surface Shader Surface Shader 用”表面着色器”快速写光照材质 学光照、做普通材质   Unlit Shader Unlit Shader 最简的顶点&#x2F;片元着色器 学 vert&#x2F;frag、做无光照效果   Image Effect Shader Image Effect Shader 屏幕后处理的骨架 全屏效果、滤镜   Comput...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%20Shader%EF%BC%887%EF%BC%89%EF%BC%9A%E7%BA%B9%E7%90%86%E9%87%87%E6%A0%B7%E3%80%81UV%20%E5%8F%98%E6%8D%A2%E4%B8%8E%E6%B3%95%E7%BA%BF%E8%B4%B4%E5%9B%BE/" title="Unity Shader（7）：纹理采样、UV 变换与法线贴图"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity Shader（7）：纹理采样、UV 变换与法线贴图</div></div><div class="info-2"><div class="info-item-1"> 真实感的一半来自贴图。这一讲深入纹理的三个层面：怎么按 UV 采样、怎么自由变换 UV 做出各种图案效果、以及最常用的法线贴图——它为什么是蓝紫色的、切线空间 TBN 是什么。文末给一个完整的法线贴图 Shader。学完这篇，你能读懂绝大多数”贴图+凹凸”类代码。    一、UV 坐标与采样器 UV 坐标：把 3D 表面展平到 2D 纹理上的坐标，范围通常是 [0,1]，(0,0) 在纹理左下角。 采样（Sampling）：按 UV 去纹理里取对应像素的颜色。内置管线用 tex2D，URP 用 SAMPLE_TEXTURE2D。  // Built-in fixed4 col = tex2D(_MainTex, i.uv); // URP half4 col = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv); ```text  ## 二、Tiling / Offset 是怎么实现的  材质面板上的 Tiling（平铺）和 Offset（偏移），底层就是一个 UV 线性变换。Unity 自动生成 `_MainTex_ST`（S...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%20Shader%EF%BC%881%EF%BC%89%EF%BC%9A%E6%B8%B2%E6%9F%93%E7%AE%A1%E7%BA%BF%E6%80%BB%E8%A7%88/" title="Unity Shader（1）：渲染管线总览"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity Shader（1）：渲染管线总览</div></div><div class="info-2"><div class="info-item-1"> Shader 本质上是一段跑在 GPU 上的小程序。想真正看懂它，先得搞明白”一个三角形是怎么变成屏幕上的像素的”。本文从 GPU 渲染流水线讲起，再解释 Unity 的三种渲染管线（Built-in &#x2F; URP &#x2F; HDRP）以及它们背后的 SRP 机制，最后说清 Shader 与 Material 的分工。全文不写复杂语法，只为给你一张可随时回看的”全局地图”。    一、从三角形到像素：GPU 渲染流水线你屏幕上的每一帧画面，都经历了”几何数据 → 像素颜色”的转换。这个过程被拆成若干阶段，统称为渲染流水线（Rendering Pipeline）。不同版本的图形 API（OpenGL &#x2F; Direct3D &#x2F; Vulkan &#x2F; Metal）细节略有差异，但大框架一致。 应用阶段（CPU）    │  准备顶点、纹理、材质数据，发出 Draw Call    ▼ 几何阶段（GPU）    ├── 顶点着色器（Vertex Shader）      ← 逐顶点处理，变换坐标    ├── 曲面细分（Tessellation，可...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Csy7749</div><div class="author-info-description">键来！</div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">38</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">79</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">10</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/csy7749"><i class="fab fa-github"></i><span>GitHub</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">日积月累</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81Cull%EF%BC%9A%E5%89%94%E9%99%A4%E5%93%AA%E4%B8%80%E9%9D%A2"><span class="toc-number">1.</span> <span class="toc-text">一、Cull：剔除哪一面</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81ZWrite-ZTest%EF%BC%9A%E6%B7%B1%E5%BA%A6%E5%86%99%E5%85%A5%E4%B8%8E%E6%B7%B1%E5%BA%A6%E6%B5%8B%E8%AF%95"><span class="toc-number">2.</span> <span class="toc-text">二、ZWrite &#x2F; ZTest：深度写入与深度测试</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81Blend%EF%BC%9A%E9%A2%9C%E8%89%B2%E6%80%8E%E4%B9%88%E6%B7%B7%E5%90%88"><span class="toc-number">3.</span> <span class="toc-text">三、Blend：颜色怎么混合</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%886%EF%BC%89%EF%BC%9AAI%E5%86%B3%E7%AD%96%E6%AF%94%E8%BE%83/" title="游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型">游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型</a><time datetime="2026-08-17T08:00:00.000Z" title="Created 2026-08-17 16:00:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%885%EF%BC%89%EF%BC%9AHTN%E5%88%86%E5%B1%82%E4%BB%BB%E5%8A%A1%E7%BD%91%E7%BB%9C/" title="游戏AI-决策架构（5）：HTN 分层任务网络">游戏AI-决策架构（5）：HTN 分层任务网络</a><time datetime="2026-08-17T07:50:00.000Z" title="Created 2026-08-17 15:50:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%884%EF%BC%89%EF%BC%9AUtilityAI%E6%95%88%E7%94%A8%E5%86%B3%E7%AD%96/" title="游戏AI-决策架构（4）：Utility AI 效用决策">游戏AI-决策架构（4）：Utility AI 效用决策</a><time datetime="2026-08-17T07:40:00.000Z" title="Created 2026-08-17 15:40:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%883%EF%BC%89%EF%BC%9A%E8%A1%8C%E4%B8%BA%E6%A0%91/" title="游戏AI-决策架构（3）：行为树">游戏AI-决策架构（3）：行为树</a><time datetime="2026-08-17T07:30:00.000Z" title="Created 2026-08-17 15:30:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%882%EF%BC%89%EF%BC%9AHFSM%E5%88%86%E5%B1%82%E6%9C%89%E9%99%90%E7%8A%B6%E6%80%81%E6%9C%BA/" title="游戏AI-决策架构（2）：HFSM 分层有限状态机">游戏AI-决策架构（2）：HFSM 分层有限状态机</a><time datetime="2026-08-17T07:20:00.000Z" title="Created 2026-08-17 15:20:00">2026-08-17</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2020 - 2026 By Csy7749</span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/koharu.model.json"},"display":{"position":"left","width":150,"height":300},"mobile":{"show":false},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/"});</script></body></html>

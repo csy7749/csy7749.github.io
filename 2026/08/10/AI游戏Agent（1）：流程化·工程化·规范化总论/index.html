@@ -1,0 +1,341 @@
+<!DOCTYPE html><html lang="zh-cn" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>AI游戏Agent（1）：流程化·工程化·规范化总论 | Csy7749-Blog</title><meta name="author" content="Csy7749"><meta name="copyright" content="Csy7749"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="这是”AI游戏Agent”系列的开篇总论。本系列从顶层框架到底层实战，系统梳理 AI Agent 在游戏行业规模化落地的完整路径：先在总论篇建立认知地图，再分别深入流程化、工程化、规范化三大支柱，最后用三篇实战手把手搭建可用的游戏 Agent。  规模化落地 AI Agent 的核心，是从”聪明助手”升级为”可靠同事”。这需要建立流程化、工程化、规范化三位一体的系统工程，让 AI 深度融入游戏开">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AI游戏Agent（1）：流程化·工程化·规范化总论">
+<meta property="og:url" content="https://csy7749.github.io/2026/08/10/AI%E6%B8%B8%E6%88%8FAgent%EF%BC%881%EF%BC%89%EF%BC%9A%E6%B5%81%E7%A8%8B%E5%8C%96%C2%B7%E5%B7%A5%E7%A8%8B%E5%8C%96%C2%B7%E8%A7%84%E8%8C%83%E5%8C%96%E6%80%BB%E8%AE%BA/index.html">
+<meta property="og:site_name" content="Csy7749-Blog">
+<meta property="og:description" content="这是”AI游戏Agent”系列的开篇总论。本系列从顶层框架到底层实战，系统梳理 AI Agent 在游戏行业规模化落地的完整路径：先在总论篇建立认知地图，再分别深入流程化、工程化、规范化三大支柱，最后用三篇实战手把手搭建可用的游戏 Agent。  规模化落地 AI Agent 的核心，是从”聪明助手”升级为”可靠同事”。这需要建立流程化、工程化、规范化三位一体的系统工程，让 AI 深度融入游戏开">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://csy7749.github.io/img/avatar.png">
+<meta property="article:published_time" content="2026-08-10T14:00:00.000Z">
+<meta property="article:modified_time" content="2026-08-13T08:44:41.262Z">
+<meta property="article:author" content="Csy7749">
+<meta property="article:tag" content="AI Agent">
+<meta property="article:tag" content="游戏AI">
+<meta property="article:tag" content="工程化">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://csy7749.github.io/img/avatar.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "AI游戏Agent（1）：流程化·工程化·规范化总论",
+  "url": "https://csy7749.github.io/2026/08/10/AI%E6%B8%B8%E6%88%8FAgent%EF%BC%881%EF%BC%89%EF%BC%9A%E6%B5%81%E7%A8%8B%E5%8C%96%C2%B7%E5%B7%A5%E7%A8%8B%E5%8C%96%C2%B7%E8%A7%84%E8%8C%83%E5%8C%96%E6%80%BB%E8%AE%BA/",
+  "image": "https://csy7749.github.io/img/avatar.png",
+  "datePublished": "2026-08-10T14:00:00.000Z",
+  "dateModified": "2026-08-13T08:44:41.262Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Csy7749",
+      "url": "https://csy7749.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://csy7749.github.io/2026/08/10/AI%E6%B8%B8%E6%88%8FAgent%EF%BC%881%EF%BC%89%EF%BC%9A%E6%B5%81%E7%A8%8B%E5%8C%96%C2%B7%E5%B7%A5%E7%A8%8B%E5%8C%96%C2%B7%E8%A7%84%E8%8C%83%E5%8C%96%E6%80%BB%E8%AE%BA/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        const data = { value }
+
+        if (ttl != null) {
+          data.expiry = Date.now() + ttl * 86400000
+        }
+
+        localStorage.setItem(key, JSON.stringify(data))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return
+
+        try {
+          const data = JSON.parse(itemStr)
+
+          if (data.expiry && Date.now() > data.expiry) {
+            localStorage.removeItem(key)
+            return
+          }
+
+          return data.value
+        } catch {
+          localStorage.removeItem(key)
+        }
+      }
+    }
+
+    const scriptCache = new Map()
+    const cssCache = new Map()
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => {
+        if (scriptCache.has(url)) {
+          return scriptCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const script = document.createElement('script')
+
+          script.src = url
+          script.async = true
+
+          for (const key in attr) {
+            script.setAttribute(key, attr[key])
+          }
+
+          script.onload = resolve
+          script.onerror = reject
+
+          document.head.appendChild(script)
+        })
+
+        scriptCache.set(url, promise)
+
+        return promise
+      },
+      getCSS: (url, id) => {
+        if (cssCache.has(url)) {
+          return cssCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const link = document.createElement('link')
+
+          link.rel = 'stylesheet'
+          link.href = url
+
+          if (id) {
+            link.id = id
+          }
+
+          link.onload = resolve
+          link.onerror = reject
+
+          document.head.appendChild(link)
+        })
+
+        cssCache.set(url, promise)
+
+        return promise
+      },
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+      const activateDarkMode = () => {
+        document.documentElement.dataset.theme = 'dark'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.dataset.theme = 'light'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'AI游戏Agent（1）：流程化·工程化·规范化总论',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">38</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">79</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">10</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Csy7749-Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">AI游戏Agent（1）：流程化·工程化·规范化总论</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">AI游戏Agent（1）：流程化·工程化·规范化总论</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-08-10T14:00:00.000Z" title="Created 2026-08-10 22:00:00">2026-08-10</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-08-13T08:44:41.262Z" title="Updated 2026-08-13 16:44:41">2026-08-13</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%B8%B8%E6%88%8FAI/">游戏AI</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%B8%B8%E6%88%8FAI/AI-Agent/">AI Agent</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><blockquote>
+<p>这是”AI游戏Agent”系列的开篇总论。本系列从顶层框架到底层实战，系统梳理 AI Agent 在游戏行业规模化落地的完整路径：先在总论篇建立认知地图，再分别深入流程化、工程化、规范化三大支柱，最后用三篇实战手把手搭建可用的游戏 Agent。</p>
+</blockquote>
+<p>规模化落地 AI Agent 的核心，是从”聪明助手”升级为”可靠同事”。这需要建立<strong>流程化、工程化、规范化</strong>三位一体的系统工程，让 AI 深度融入游戏开发全链路。</p>
+<span id="more"></span>
+
+<h2 id="一、流程化（Pipeline）：将创意固化为可复用工作流"><a href="#一、流程化（Pipeline）：将创意固化为可复用工作流" class="headerlink" title="一、流程化（Pipeline）：将创意固化为可复用工作流"></a>一、流程化（Pipeline）：将创意固化为可复用工作流</h2><p><strong>目标</strong>：将 AI 能力嵌入各开发环节，形成标准、高效的工作流，改变单点、零散的尝试。</p>
+<table>
+<thead>
+<tr>
+<th align="left">关键举措</th>
+<th align="left">具体说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>贯通全链路</strong></td>
+<td align="left">构建”需求分析 → 方案设计 → 代码生成 → 自动评审 → 一键部署”的完整链条，让 AI 参与游戏开发各阶段。</td>
+</tr>
+<tr>
+<td align="left"><strong>角色专业化</strong></td>
+<td align="left">设立<strong>策划 Agent</strong>、<strong>程序 Agent</strong>、<strong>美术 Agent</strong>、<strong>QA Agent</strong> 等，各司其职，协同工作。</td>
+</tr>
+<tr>
+<td align="left"><strong>前置验证</strong></td>
+<td align="left">利用 AI 快速生成可玩原型，将”创意到原型”周期从<strong>数周缩短至数小时</strong>，大幅降低试错成本。</td>
+</tr>
+<tr>
+<td align="left"><strong>打通数据孤岛</strong></td>
+<td align="left">通过 MCP（模型上下文协议）等标准化接口，让 AI Agent 无缝连接 TAPD、监控、日志等内部系统。</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="二、工程化（Engineering）：为创造力套上”缰绳”"><a href="#二、工程化（Engineering）：为创造力套上”缰绳”" class="headerlink" title="二、工程化（Engineering）：为创造力套上”缰绳”"></a>二、工程化（Engineering）：为创造力套上”缰绳”</h2><p><strong>目标</strong>：解决 AI 在复杂游戏工程中的”水土不服”，确保输出可靠、可控、可维护。</p>
+<h3 id="2-1-引入-Harness-工程范式"><a href="#2-1-引入-Harness-工程范式" class="headerlink" title="2.1 引入 Harness 工程范式"></a>2.1 引入 Harness 工程范式</h3><p>从”提示词工程”升级为”将 AI 放入可控流程”：</p>
+<ul>
+<li><strong>Plan（计划）</strong>：AI 先拆解任务，评估影响范围。</li>
+<li><strong>Rules（规则）</strong>：执行前读取并遵守预设的开发规范与禁忌。</li>
+<li><strong>Execute（执行）</strong>：在规则约束下执行代码或资产修改。</li>
+<li><strong>Review（审查）</strong>：通过 Diff、日志、截图等证据验证修改结果。</li>
+</ul>
+<h3 id="2-2-构建技术基础设施"><a href="#2-2-构建技术基础设施" class="headerlink" title="2.2 构建技术基础设施"></a>2.2 构建技术基础设施</h3><table>
+<thead>
+<tr>
+<th align="left">基础设施</th>
+<th align="left">作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>MCP 协议</strong></td>
+<td align="left">作为 AI 的”万能 USB 接口”，安全、标准化操作 UE&#x2F;Unity 等复杂工具。</td>
+</tr>
+<tr>
+<td align="left"><strong>版本控制（SVN&#x2F;Git）</strong></td>
+<td align="left">底层安全机制，确保所有修改可追踪、可审查、可回滚。</td>
+</tr>
+<tr>
+<td align="left"><strong>记忆与知识库（Memory MCP）</strong></td>
+<td align="left">用结构化文档沉淀项目规则、决策和错误摘要，实现知识版本化和可复用。</td>
+</tr>
+</tbody></table>
+<h3 id="2-3-量化-ROI"><a href="#2-3-量化-ROI" class="headerlink" title="2.3 量化 ROI"></a>2.3 量化 ROI</h3><p>建立可量化指标评估 AI 价值，例如：</p>
+<ul>
+<li>P0 级告警响应时间从 <strong>30 分钟缩短至 5 分钟</strong></li>
+<li>测试覆盖率显著提升</li>
+</ul>
+<hr>
+<h2 id="三、规范化（Standardization）：为协作订立”契约”"><a href="#三、规范化（Standardization）：为协作订立”契约”" class="headerlink" title="三、规范化（Standardization）：为协作订立”契约”"></a>三、规范化（Standardization）：为协作订立”契约”</h2><p><strong>目标</strong>：解决多 Agent 协作时的”对齐”问题，确保所有 Agent 和人类团队在同一”合同”下工作。</p>
+<table>
+<thead>
+<tr>
+<th align="left">关键举措</th>
+<th align="left">具体说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>确立”单一真相来源”</strong></td>
+<td align="left">将游戏设计文档（GDD）升级为 <strong>“Open GDD”</strong> ——结构化、可版本管理、可被 AI 直接”消费”的规格资产，定义了核心玩法、数据口径、验收标准等，是约束所有 Agent 的”执行合同”。</td>
+</tr>
+<tr>
+<td align="left"><strong>沉淀”组织级技能”（Skills Distillation）</strong></td>
+<td align="left">1. <strong>经验萃取</strong>：梳理专家工作流和决策点。<br>2. <strong>技能编码</strong>：将经验转化为 <code>SKILL.md</code> 等标准格式。<br>3. <strong>应用进化</strong>：让 Agent 自主调用并持续优化这些技能。</td>
+</tr>
+<tr>
+<td align="left"><strong>建立”质量门禁”</strong></td>
+<td align="left">为 AI Agent 设置明确的职责、上报路径和质量门控，例如在代码提交、资源变更时自动触发规则检查，确保输出符合规范。</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="四、总结与系列预告"><a href="#四、总结与系列预告" class="headerlink" title="四、总结与系列预告"></a>四、总结与系列预告</h2><p>在游戏行业规模化应用 AI Agent，本质上是<strong>一场生产关系的变革</strong>。成功的关键不在于技术本身有多前沿，而在于能否建立起一套<strong>流程化、工程化、规范化</strong>的体系，将 AI 的强大能力与人类游戏开发的复杂需求真正耦合起来。</p>
+<p>这套体系让团队从”亲力亲为每个步骤”转变为”定义目标与约束、激活 Skill 执行、审核 AI 产出”的新模式。最终目标不是用 AI 替代人，而是<strong>拉平团队效率差距，将专家经验沉淀为可复用的系统能力</strong>，让开发者专注于最核心的创意与决策。</p>
+<hr>
+<h2 id="本系列导航"><a href="#本系列导航" class="headerlink" title="本系列导航"></a>本系列导航</h2><table>
+<thead>
+<tr>
+<th align="center">篇目</th>
+<th>标题</th>
+<th>定位</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">1</td>
+<td><strong>总论：流程化·工程化·规范化</strong></td>
+<td>建立认知地图（本篇）</td>
+</tr>
+<tr>
+<td align="center">2</td>
+<td>流程化篇：角色专业化与工作流设计</td>
+<td>深入 Pipeline 设计</td>
+</tr>
+<tr>
+<td align="center">3</td>
+<td>工程化篇：Harness 范式与技术栈</td>
+<td>MCP、记忆系统、版本控制</td>
+</tr>
+<tr>
+<td align="center">4</td>
+<td>规范化篇：Open GDD 与技能沉淀</td>
+<td>多 Agent 协作契约</td>
+</tr>
+<tr>
+<td align="center">5</td>
+<td>实战篇（上）：搭建第一个 Agent</td>
+<td>环境搭建与 MCP 接入</td>
+</tr>
+<tr>
+<td align="center">6</td>
+<td>实战篇（中）：Agent 角色定制</td>
+<td>Prompt、Skill、Memory</td>
+</tr>
+<tr>
+<td align="center">7</td>
+<td>实战篇（下）：多 Agent 协作与 CI&#x2F;CD</td>
+<td>编排、自动化、部署</td>
+</tr>
+</tbody></table>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://csy7749.github.io">Csy7749</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://csy7749.github.io/2026/08/10/AI%E6%B8%B8%E6%88%8FAgent%EF%BC%881%EF%BC%89%EF%BC%9A%E6%B5%81%E7%A8%8B%E5%8C%96%C2%B7%E5%B7%A5%E7%A8%8B%E5%8C%96%C2%B7%E8%A7%84%E8%8C%83%E5%8C%96%E6%80%BB%E8%AE%BA/">https://csy7749.github.io/2026/08/10/AI%E6%B8%B8%E6%88%8FAgent%EF%BC%881%EF%BC%89%EF%BC%9A%E6%B5%81%E7%A8%8B%E5%8C%96%C2%B7%E5%B7%A5%E7%A8%8B%E5%8C%96%C2%B7%E8%A7%84%E8%8C%83%E5%8C%96%E6%80%BB%E8%AE%BA/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/AI-Agent/">AI Agent</a><a class="post-meta__tags" href="/tags/%E6%B8%B8%E6%88%8FAI/">游戏AI</a><a class="post-meta__tags" href="/tags/%E5%B7%A5%E7%A8%8B%E5%8C%96/">工程化</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/08/13/Unity%20Shader%E7%B3%BB%E5%88%97-%E8%A7%84%E5%88%92/" title="Unity Shader 系列·写作规划"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">Unity Shader 系列·写作规划</div></div><div class="info-2"><div class="info-item-1">系列定位名称：Unity Shader 入门到进阶（十一讲） 目标读者：会写 C#、用过 Unity，但没系统学过 Shader；想从零理解”画面到底是怎么画出来的”，并能够自己写出可用的 Shader。 篇幅标准：单篇 3500-6000 字，可独立阅读，合起来构成一条从渲染管线到性能优化的完整链路。   写作原则：  从问题出发：先讲”为什么需要它”，再讲”语法&#x2F;API 是什么”，最后给完整可运行的代码 代码示例完整可运行，不做伪代码；同时给 Built-in 与 URP 两套写法，标注版本差异 以 Unity 2022.3 LTS+ 为准，重点覆盖 URP，Built-in 作为理解 ShaderLab 的起点 每篇末尾附”自查清单”，方便读者对照自己的项目检查理解   篇目总览第1讲  渲染管线总览：GPU 流水线与三种渲染管线     ← 建立全局图景 第2讲  ShaderLab 骨架与第一个 Unlit Shader        ← 看懂一个 shader 文件 第3讲  Built-in 管线 Shader 模板全解析             ← Un...</div></div></div></a><a class="pagination-related" href="/2026/08/10/%E6%B8%B8%E6%88%8FAI-GOAP%EF%BC%885%EF%BC%89%EF%BC%9AGOAP+GAS%20%E8%9E%8D%E5%90%88%E6%9E%B6%E6%9E%84%E4%B8%8E%E8%AE%BE%E8%AE%A1%E6%96%B9%E5%90%91/" title="游戏AI-GOAP（5）：GOAP+GAS 融合架构与设计方向"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">游戏AI-GOAP（5）：GOAP+GAS 融合架构与设计方向</div></div><div class="info-2"><div class="info-item-1">GOAP+GAS 整合系列走到了最后一篇。第 4 篇讨论了”为什么整合”和”怎么共享基础设施”——用 Attribute 替代 WorldKey、用 GAS Ability 替代 GOAP 的 Effect 和 Sensor、用监听能力替代 Goal。这篇是面向落地的：把两套框架的组件摊开做对照，理清融合后的职责边界，然后给出一个可执行的设计方向和架构总览。  GOAP 组件回顾在讨论融合之前，先快速回顾 GOAP 的核心组件在 crashkonijn 框架中的形态[^1]。如果你读过第 1、2 篇，这一节可以当速查表用。 Goal（目标）Goal 代表 Agent 期望达成的结果，是 Planner 的出发点。    属性 说明    Conditions 基于 WorldKey 的一组标准，全部满足即视为目标达成。例如”保命”目标的条件可能是 IsHealthHigh + IsInSafeZone   BaseCost 目标的基础代价，用于多目标优先级排序   Goal 类无状态——它只向 Planner 提供”什么算达成”的标准，Planner 用它来决定最合适的 Acti...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%885%EF%BC%89%EF%BC%9AHTN%E5%88%86%E5%B1%82%E4%BB%BB%E5%8A%A1%E7%BD%91%E7%BB%9C/" title="游戏AI-决策架构（5）：HTN 分层任务网络"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构（5）：HTN 分层任务网络</div></div><div class="info-2"><div class="info-item-1">HTN（Hierarchical Task Network，分层任务网络）从高层任务出发，根据当前世界状态选择 Method，逐层拆解 Compound Task，最终生成可执行的 Primitive Task 序列。它适合步骤较长、领域套路明确，同时又需要根据局势选择不同执行方案的游戏 AI。   本文假设读者熟悉 C# 继承、委托、不可变记录和集合。示例使用 .NET 8，实现一个支持 Method 回溯、规划期状态效果和完整展开轨迹的总序 HTN Planner，可以直接放进控制台项目运行。 一、HTN 解决什么问题守卫 NPC 接到 DefendArea 任务后，可能面对不同情况： 低血量且有药品 -&gt; 治疗 -&gt; 接敌 低血量且没有药品 -&gt; 移动到掩体 发现敌人且距离较远 -&gt; 接近 -&gt; 攻击 发现敌人且已在射程 -&gt; 直接攻击 没有威胁 -&gt; 巡逻 ```text  FSM 可以为每一步建立状态，行为树可以把所有分支画出来，GOAP 可以在动作状态空间中搜索。HTN 采用另一种思路：把设计者已经知道的领域套路写成任务分解规...</div></div></div></a><a class="pagination-related" href="/2026/08/08/%E6%B8%B8%E6%88%8FAI-GOAP%EF%BC%883%EF%BC%89%EF%BC%9A%E5%8F%AF%E8%A7%86%E5%8C%96%E4%B8%8E%E5%A4%9A%E7%9B%AE%E6%A0%87/" title="游戏AI-GOAP（3）：可视化与多目标"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-08</div><div class="info-item-2">游戏AI-GOAP（3）：可视化与多目标</div></div><div class="info-2"><div class="info-item-1">GOAP 的决策过程是一个黑盒——Agent 在 Idle 状态下跑 A* 搜索，吐出计划然后执行。当行为不符合预期时，你只能靠日志和直觉猜 Planner 是怎么想的。这篇文章讨论两件事：如何把 GOAP 的规划过程可视化出来辅助调试，以及如何处理”多个目标同时存在”这个 GOAP 的经典难题。  为什么要可视化GOAP 的行为链条是”从目标反向推理”的产物，不像行为树那样有明确的 if-else 分支让你逐行调试。当 NPC 做出了意料之外的行为（比如饿着肚子去巡逻而不是找食物），你很难一眼看出是传感器数据不对、Action 代价配错了、还是 Planner 根本没找到可行路径。 可视化要回答三个问题：  Agent 现在看到了什么？（自身状态 + 相关世界状态） Agent 想要什么？（当前激活的 Goal） 为什么是这个计划？（Planner 找到了哪些候选路径、选了哪一条）  可视化什么根据规划流程，可以分为四个视图[^1]： 1. 状态视图把 Agent 的当前状态和它感知到的世界状态摊开。 Agent: Soldier_03   ── 自身状态 ──   Healt...</div></div></div></a><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%883%EF%BC%89%EF%BC%9A%E8%A1%8C%E4%B8%BA%E6%A0%91/" title="游戏AI-决策架构（3）：行为树"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构（3）：行为树</div></div><div class="info-2"><div class="info-item-1">行为树（Behavior Tree）把 AI 行为组织成可组合节点，并用 Success、Failure、Running 三种结果驱动控制流。它特别适合持续重新评估威胁、按优先级选择分支，以及把复杂战斗逻辑拆成可复用子树。   本文假设读者理解基本的树结构和 C# 接口。示例使用 .NET 8，实现一棵响应式守卫行为树；重点不是可视化编辑器，而是编辑器背后必须稳定成立的 Tick、中断和状态语义。 一、行为树和状态机看问题的角度不同FSM 首先问： 我当前处于哪个状态？什么条件会让我切到另一个状态？ ```text  行为树首先问：  ```text 从根节点开始，这一帧哪条分支能够执行？执行到哪里还没结束？ ```text  同一个守卫逻辑可以写成：  ```text Priority Selector ├── Sequence: 撤退 │   ├── Condition: 低血量 │   └── Action: 逃离 ├── Sequence: 战斗 │   ├── Condition: 看见敌人 │   └── Selector │       ├── Sequence: ...</div></div></div></a><a class="pagination-related" href="/2026/08/10/%E6%B8%B8%E6%88%8FAI-GOAP%EF%BC%885%EF%BC%89%EF%BC%9AGOAP+GAS%20%E8%9E%8D%E5%90%88%E6%9E%B6%E6%9E%84%E4%B8%8E%E8%AE%BE%E8%AE%A1%E6%96%B9%E5%90%91/" title="游戏AI-GOAP（5）：GOAP+GAS 融合架构与设计方向"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-10</div><div class="info-item-2">游戏AI-GOAP（5）：GOAP+GAS 融合架构与设计方向</div></div><div class="info-2"><div class="info-item-1">GOAP+GAS 整合系列走到了最后一篇。第 4 篇讨论了”为什么整合”和”怎么共享基础设施”——用 Attribute 替代 WorldKey、用 GAS Ability 替代 GOAP 的 Effect 和 Sensor、用监听能力替代 Goal。这篇是面向落地的：把两套框架的组件摊开做对照，理清融合后的职责边界，然后给出一个可执行的设计方向和架构总览。  GOAP 组件回顾在讨论融合之前，先快速回顾 GOAP 的核心组件在 crashkonijn 框架中的形态[^1]。如果你读过第 1、2 篇，这一节可以当速查表用。 Goal（目标）Goal 代表 Agent 期望达成的结果，是 Planner 的出发点。    属性 说明    Conditions 基于 WorldKey 的一组标准，全部满足即视为目标达成。例如”保命”目标的条件可能是 IsHealthHigh + IsInSafeZone   BaseCost 目标的基础代价，用于多目标优先级排序   Goal 类无状态——它只向 Planner 提供”什么算达成”的标准，Planner 用它来决定最合适的 Acti...</div></div></div></a><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%886%EF%BC%89%EF%BC%9AAI%E5%86%B3%E7%AD%96%E6%AF%94%E8%BE%83/" title="游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型</div></div><div class="info-2"><div class="info-item-1">FSM、HFSM、行为树、Utility AI、GOAP、HTN 经常被放在一起比较，但它们并不完全处于同一层。本文按“解决什么问题、输出什么结果、适合什么场景”重新对齐六种方案，并给出面向实际项目的选型与组合方式。   本文假设读者已经了解游戏 AI 中的感知、移动和动作执行概念。重点不是重复每种算法的完整实现，而是建立一套能用于项目判断的比较坐标。 一、先区分：执行控制、即时选择与多步规划很多选型争论没有结果，是因为大家比较的并不是同一个问题。 感知层   收集血量、距离、目标、危险度、资源等事实         |         v 决策与规划层   Utility AI：当前哪个候选行为最值得做   GOAP：哪些动作可以组成一条达成目标的路径   HTN：高层任务应该按哪种方法逐层拆解         |         v 执行控制层   FSM：当前处于哪个明确状态   HFSM：当前处于哪条层级状态路径   行为树：当前哪条优先级分支可以继续执行         |         v 动作能力层   寻路、技能、动画、交互、Smart Object ```te...</div></div></div></a><a class="pagination-related" href="/2026/08/08/%E6%B8%B8%E6%88%8FAI-GOAP%EF%BC%882%EF%BC%89%EF%BC%9A%E6%A1%86%E6%9E%B6%E6%B7%B1%E5%85%A5/" title="游戏AI-GOAP（2）：框架深入"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-08</div><div class="info-item-2">游戏AI-GOAP（2）：框架深入</div></div><div class="info-2"><div class="info-item-1">crashkonijn&#x2F;GOAP 是目前 Unity 生态中最成熟的 GOAP 开源框架。这篇文章深入剖析它的架构设计——强类型的 Key 系统、Capability 配置模式、Local&#x2F;Global 双层传感器、GraphBuilder+Resolver 的两阶段规划，以及多线程架构——看看一个工程化的 GOAP 实现是怎么把第一篇里的理论落到代码里的。  为什么选 crashkonijn&#x2F;GOAPUnity 生态中有好几个 GOAP 实现：adammyhre&#x2F;Unity-GOAP 是教学向的最小实现，AkiKurisu&#x2F;AkiGOAP 侧重可视化编辑器，mountain-goap 追求极简通用。而 crashkonijn&#x2F;GOAP（以下简称 crashkonijn）是生产级的选择——多线程、强类型、Capability 模式配置，在性能和可维护性之间取得了很好的平衡[^1]。 它的设计哲学很明确：不是”给你一个 AI 模板拿去改”，而是”给你一套类型安全的 GOAP 基础设施，用它搭建你自己的 AI”。 整体架构c...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Csy7749</div><div class="author-info-description">键来！</div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">38</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">79</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">10</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/csy7749"><i class="fab fa-github"></i><span>GitHub</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">日积月累</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%B5%81%E7%A8%8B%E5%8C%96%EF%BC%88Pipeline%EF%BC%89%EF%BC%9A%E5%B0%86%E5%88%9B%E6%84%8F%E5%9B%BA%E5%8C%96%E4%B8%BA%E5%8F%AF%E5%A4%8D%E7%94%A8%E5%B7%A5%E4%BD%9C%E6%B5%81"><span class="toc-number">1.</span> <span class="toc-text">一、流程化（Pipeline）：将创意固化为可复用工作流</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E5%B7%A5%E7%A8%8B%E5%8C%96%EF%BC%88Engineering%EF%BC%89%EF%BC%9A%E4%B8%BA%E5%88%9B%E9%80%A0%E5%8A%9B%E5%A5%97%E4%B8%8A%E2%80%9D%E7%BC%B0%E7%BB%B3%E2%80%9D"><span class="toc-number">2.</span> <span class="toc-text">二、工程化（Engineering）：为创造力套上”缰绳”</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E5%BC%95%E5%85%A5-Harness-%E5%B7%A5%E7%A8%8B%E8%8C%83%E5%BC%8F"><span class="toc-number">2.1.</span> <span class="toc-text">2.1 引入 Harness 工程范式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E6%9E%84%E5%BB%BA%E6%8A%80%E6%9C%AF%E5%9F%BA%E7%A1%80%E8%AE%BE%E6%96%BD"><span class="toc-number">2.2.</span> <span class="toc-text">2.2 构建技术基础设施</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E9%87%8F%E5%8C%96-ROI"><span class="toc-number">2.3.</span> <span class="toc-text">2.3 量化 ROI</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E8%A7%84%E8%8C%83%E5%8C%96%EF%BC%88Standardization%EF%BC%89%EF%BC%9A%E4%B8%BA%E5%8D%8F%E4%BD%9C%E8%AE%A2%E7%AB%8B%E2%80%9D%E5%A5%91%E7%BA%A6%E2%80%9D"><span class="toc-number">3.</span> <span class="toc-text">三、规范化（Standardization）：为协作订立”契约”</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E6%80%BB%E7%BB%93%E4%B8%8E%E7%B3%BB%E5%88%97%E9%A2%84%E5%91%8A"><span class="toc-number">4.</span> <span class="toc-text">四、总结与系列预告</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%AC%E7%B3%BB%E5%88%97%E5%AF%BC%E8%88%AA"><span class="toc-number">5.</span> <span class="toc-text">本系列导航</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%886%EF%BC%89%EF%BC%9AAI%E5%86%B3%E7%AD%96%E6%AF%94%E8%BE%83/" title="游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型">游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型</a><time datetime="2026-08-17T08:00:00.000Z" title="Created 2026-08-17 16:00:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%885%EF%BC%89%EF%BC%9AHTN%E5%88%86%E5%B1%82%E4%BB%BB%E5%8A%A1%E7%BD%91%E7%BB%9C/" title="游戏AI-决策架构（5）：HTN 分层任务网络">游戏AI-决策架构（5）：HTN 分层任务网络</a><time datetime="2026-08-17T07:50:00.000Z" title="Created 2026-08-17 15:50:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%884%EF%BC%89%EF%BC%9AUtilityAI%E6%95%88%E7%94%A8%E5%86%B3%E7%AD%96/" title="游戏AI-决策架构（4）：Utility AI 效用决策">游戏AI-决策架构（4）：Utility AI 效用决策</a><time datetime="2026-08-17T07:40:00.000Z" title="Created 2026-08-17 15:40:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%883%EF%BC%89%EF%BC%9A%E8%A1%8C%E4%B8%BA%E6%A0%91/" title="游戏AI-决策架构（3）：行为树">游戏AI-决策架构（3）：行为树</a><time datetime="2026-08-17T07:30:00.000Z" title="Created 2026-08-17 15:30:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%882%EF%BC%89%EF%BC%9AHFSM%E5%88%86%E5%B1%82%E6%9C%89%E9%99%90%E7%8A%B6%E6%80%81%E6%9C%BA/" title="游戏AI-决策架构（2）：HFSM 分层有限状态机">游戏AI-决策架构（2）：HFSM 分层有限状态机</a><time datetime="2026-08-17T07:20:00.000Z" title="Created 2026-08-17 15:20:00">2026-08-17</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2020 - 2026 By Csy7749</span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/koharu.model.json"},"display":{"position":"left","width":150,"height":300},"mobile":{"show":false},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/"});</script></body></html>

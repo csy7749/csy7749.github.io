@@ -1,0 +1,215 @@
+<!DOCTYPE html><html lang="zh-cn" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Csy7749-Blog - 来呀，快活呀！</title><meta name="author" content="Csy7749"><meta name="copyright" content="Csy7749"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="键来！">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Csy7749-Blog">
+<meta property="og:url" content="https://csy7749.github.io/page/4/index.html">
+<meta property="og:site_name" content="Csy7749-Blog">
+<meta property="og:description" content="键来！">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://csy7749.github.io/img/avatar.png">
+<meta property="article:author" content="Csy7749">
+<meta property="article:tag" content="Unity">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://csy7749.github.io/img/avatar.png"><script type="application/ld+json"></script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://csy7749.github.io/page/4/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        const data = { value }
+
+        if (ttl != null) {
+          data.expiry = Date.now() + ttl * 86400000
+        }
+
+        localStorage.setItem(key, JSON.stringify(data))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return
+
+        try {
+          const data = JSON.parse(itemStr)
+
+          if (data.expiry && Date.now() > data.expiry) {
+            localStorage.removeItem(key)
+            return
+          }
+
+          return data.value
+        } catch {
+          localStorage.removeItem(key)
+        }
+      }
+    }
+
+    const scriptCache = new Map()
+    const cssCache = new Map()
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => {
+        if (scriptCache.has(url)) {
+          return scriptCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const script = document.createElement('script')
+
+          script.src = url
+          script.async = true
+
+          for (const key in attr) {
+            script.setAttribute(key, attr[key])
+          }
+
+          script.onload = resolve
+          script.onerror = reject
+
+          document.head.appendChild(script)
+        })
+
+        scriptCache.set(url, promise)
+
+        return promise
+      },
+      getCSS: (url, id) => {
+        if (cssCache.has(url)) {
+          return cssCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const link = document.createElement('link')
+
+          link.rel = 'stylesheet'
+          link.href = url
+
+          if (id) {
+            link.id = id
+          }
+
+          link.onload = resolve
+          link.onerror = reject
+
+          document.head.appendChild(link)
+        })
+
+        cssCache.set(url, promise)
+
+        return promise
+      },
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+      const activateDarkMode = () => {
+        document.documentElement.dataset.theme = 'dark'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.dataset.theme = 'light'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Csy7749-Blog',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'home'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">38</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">79</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">10</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="full_page" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Csy7749-Blog</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="site-info"><h1 id="site-title">Csy7749-Blog</h1></div><div id="scroll-down"><i class="fas fa-angle-down scroll-down-effects"></i></div></header><main class="layout" id="content-inner"><div class="recent-posts nc" id="recent-posts"><div class="recent-post-items"><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/2026/08/10/AI%E6%B8%B8%E6%88%8FAgent%EF%BC%881%EF%BC%89%EF%BC%9A%E6%B5%81%E7%A8%8B%E5%8C%96%C2%B7%E5%B7%A5%E7%A8%8B%E5%8C%96%C2%B7%E8%A7%84%E8%8C%83%E5%8C%96%E6%80%BB%E8%AE%BA/" title="AI游戏Agent（1）：流程化·工程化·规范化总论">AI游戏Agent（1）：流程化·工程化·规范化总论</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">Created</span><time datetime="2026-08-10T14:00:00.000Z" title="Created 2026-08-10 22:00:00">2026-08-10</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%B8%B8%E6%88%8FAI/">游戏AI</a><i class="fas fa-angle-right article-meta-link"></i><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%B8%B8%E6%88%8FAI/AI-Agent/">AI Agent</a></span></div><div class="content"> 这是”AI游戏Agent”系列的开篇总论。本系列从顶层框架到底层实战，系统梳理 AI Agent 在游戏行业规模化落地的完整路径：先在总论篇建立认知地图，再分别深入流程化、工程化、规范化三大支柱，最后用三篇实战手把手搭建可用的游戏 Agent。  规模化落地 AI Agent 的核心，是从”聪明助手”升级为”可靠同事”。这需要建立流程化、工程化、规范化三位一体的系统工程，让 AI 深度融入游戏开发全链路。   一、流程化（Pipeline）：将创意固化为可复用工作流目标：将 AI 能力嵌入各开发环节，形成标准、高效的工作流，改变单点、零散的尝试。    关键举措 具体说明    贯通全链路 构建”需求分析 → 方案设计 → 代码生成 → 自动评审 → 一键部署”的完整链条，让 AI 参与游戏开发各阶段。   角色专业化 设立策划 Agent、程序 Agent、美术 Agent、QA Agent 等，各司其职，协同工作。   前置验证 利用 AI 快速生成可玩原型，将”创意到原型”周期从数周缩短至数小时，大幅降低试错成本。   打通数据孤岛 通过 MCP（模型上下文协议）等标准化...</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/2026/08/10/%E6%B8%B8%E6%88%8FAI-GOAP%EF%BC%885%EF%BC%89%EF%BC%9AGOAP+GAS%20%E8%9E%8D%E5%90%88%E6%9E%B6%E6%9E%84%E4%B8%8E%E8%AE%BE%E8%AE%A1%E6%96%B9%E5%90%91/" title="游戏AI-GOAP（5）：GOAP+GAS 融合架构与设计方向">游戏AI-GOAP（5）：GOAP+GAS 融合架构与设计方向</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">Created</span><time datetime="2026-08-10T05:00:00.000Z" title="Created 2026-08-10 13:00:00">2026-08-10</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%B8%B8%E6%88%8FAI/">游戏AI</a><i class="fas fa-angle-right article-meta-link"></i><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%B8%B8%E6%88%8FAI/GOAP/">GOAP</a></span></div><div class="content">GOAP+GAS 整合系列走到了最后一篇。第 4 篇讨论了”为什么整合”和”怎么共享基础设施”——用 Attribute 替代 WorldKey、用 GAS Ability 替代 GOAP 的 Effect 和 Sensor、用监听能力替代 Goal。这篇是面向落地的：把两套框架的组件摊开做对照，理清融合后的职责边界，然后给出一个可执行的设计方向和架构总览。  GOAP 组件回顾在讨论融合之前，先快速回顾 GOAP 的核心组件在 crashkonijn 框架中的形态[^1]。如果你读过第 1、2 篇，这一节可以当速查表用。 Goal（目标）Goal 代表 Agent 期望达成的结果，是 Planner 的出发点。    属性 说明    Conditions 基于 WorldKey 的一组标准，全部满足即视为目标达成。例如”保命”目标的条件可能是 IsHealthHigh + IsInSafeZone   BaseCost 目标的基础代价，用于多目标优先级排序   Goal 类无状态——它只向 Planner 提供”什么算达成”的标准，Planner 用它来决定最合适的 Acti...</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/2026/08/10/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E7%B3%BB%E5%88%97-%E8%A7%84%E5%88%92/" title="Unity 性能优化系列·写作规划">Unity 性能优化系列·写作规划</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">Created</span><time datetime="2026-08-09T16:00:00.000Z" title="Created 2026-08-10 00:00:00">2026-08-10</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%86%99%E4%BD%9C%E8%A7%84%E5%88%92/">写作规划</a></span></div><div class="content">系列定位名称：Unity 性能优化七讲 目标读者：有 1-3 年 Unity 经验的开发者，能读代码、有基本 Profiler 概念，但缺乏系统性优化方法论。 篇幅标准：单篇 3000-5000 字，可独立阅读，合起来构成完整体系。   写作原则：  每篇必须有”从问题到修复”的完整链路（建数据 → 定位 → 改 → 验证） 代码示例完整可运行，不做伪代码 优先使用 Unity 2022.3 LTS+ API，标注版本差异 每篇末尾附 checklist，方便读者自查项目   篇目总览第1讲 CPU 与脚本优化        ← 开发者最常触碰的层（✅ 已完成） 第2讲 GPU 与渲染优化        ← 画面瓶颈（✅ 已完成） 第3讲 内存管理与 GC         ← 卡顿根源（✅ 已完成） 第4讲 UGUI 专题（3篇）      ← UI 是重灾区（✅ 已完成） 第5讲 资源与资产管理        ← 导入→加载→卸载全生命周期（✅ 已完成） 第6讲 C# 语言层优化         ← 从语言特性要性能（✅ 已完成） 第7讲 工具链与工作流        ← 授人...</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/2026/08/08/%E6%B8%B8%E6%88%8FAI-GOAP%EF%BC%884%EF%BC%89%EF%BC%9AGOAP+GAS%E6%95%B4%E5%90%88/" title="游戏AI-GOAP（4）：GOAP + GAS 整合设计">游戏AI-GOAP（4）：GOAP + GAS 整合设计</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">Created</span><time datetime="2026-08-08T15:59:00.000Z" title="Created 2026-08-08 23:59:00">2026-08-08</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%B8%B8%E6%88%8FAI/">游戏AI</a><i class="fas fa-angle-right article-meta-link"></i><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%B8%B8%E6%88%8FAI/GOAP/">GOAP</a></span></div><div class="content">GOAP 负责”做什么”，GAS（Gameplay Ability System）负责”怎么做”——前者是目标驱动的决策引擎，后者是能力驱动的执行框架。这篇文章探讨如何把两者整合成一个统一的 AI 架构：用 GAS 的属性和标签作为 GOAP 的世界状态，用 GAS 的能力作为 GOAP 的可执行 Action，让 AI 在”知道自己要什么”和”知道自己能做什么”之间建立闭环。  为什么整合单独的 GOAP 有一个明显的短板：它只知道”要做这件事”，不知道”怎么做这件事”。GOAP 规划出 EatFood 这个 Action 之后，执行层怎么处理冷却时间？怎么管理资源消耗？怎么触发动画和音效？怎么处理 buff&#x2F;debuff？这些全得自己写。 GAS 天然处理这些问题——能力（Ability）自带冷却、消耗、标签（Tag）、效果（GameplayEffect）和表现（Cue）[^1]。把 GOAP 的 Action 映射到 GAS 的 Ability，执行层的工作量大幅减少。 反过来，GAS 单独用也有局限：它只是一个”能力仓库”，没有规划能力。需要外部系统告诉它”现在...</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/2026/08/08/%E6%B8%B8%E6%88%8FAI-GOAP%EF%BC%883%EF%BC%89%EF%BC%9A%E5%8F%AF%E8%A7%86%E5%8C%96%E4%B8%8E%E5%A4%9A%E7%9B%AE%E6%A0%87/" title="游戏AI-GOAP（3）：可视化与多目标">游戏AI-GOAP（3）：可视化与多目标</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">Created</span><time datetime="2026-08-08T15:30:00.000Z" title="Created 2026-08-08 23:30:00">2026-08-08</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%B8%B8%E6%88%8FAI/">游戏AI</a><i class="fas fa-angle-right article-meta-link"></i><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%B8%B8%E6%88%8FAI/GOAP/">GOAP</a></span></div><div class="content">GOAP 的决策过程是一个黑盒——Agent 在 Idle 状态下跑 A* 搜索，吐出计划然后执行。当行为不符合预期时，你只能靠日志和直觉猜 Planner 是怎么想的。这篇文章讨论两件事：如何把 GOAP 的规划过程可视化出来辅助调试，以及如何处理”多个目标同时存在”这个 GOAP 的经典难题。  为什么要可视化GOAP 的行为链条是”从目标反向推理”的产物，不像行为树那样有明确的 if-else 分支让你逐行调试。当 NPC 做出了意料之外的行为（比如饿着肚子去巡逻而不是找食物），你很难一眼看出是传感器数据不对、Action 代价配错了、还是 Planner 根本没找到可行路径。 可视化要回答三个问题：  Agent 现在看到了什么？（自身状态 + 相关世界状态） Agent 想要什么？（当前激活的 Goal） 为什么是这个计划？（Planner 找到了哪些候选路径、选了哪一条）  可视化什么根据规划流程，可以分为四个视图[^1]： 1. 状态视图把 Agent 的当前状态和它感知到的世界状态摊开。 Agent: Soldier_03   ── 自身状态 ──   Healt...</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/2026/08/08/%E6%B8%B8%E6%88%8FAI-GOAP%EF%BC%882%EF%BC%89%EF%BC%9A%E6%A1%86%E6%9E%B6%E6%B7%B1%E5%85%A5/" title="游戏AI-GOAP（2）：框架深入">游戏AI-GOAP（2）：框架深入</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">Created</span><time datetime="2026-08-08T15:00:00.000Z" title="Created 2026-08-08 23:00:00">2026-08-08</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%B8%B8%E6%88%8FAI/">游戏AI</a><i class="fas fa-angle-right article-meta-link"></i><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%B8%B8%E6%88%8FAI/GOAP/">GOAP</a></span></div><div class="content">crashkonijn&#x2F;GOAP 是目前 Unity 生态中最成熟的 GOAP 开源框架。这篇文章深入剖析它的架构设计——强类型的 Key 系统、Capability 配置模式、Local&#x2F;Global 双层传感器、GraphBuilder+Resolver 的两阶段规划，以及多线程架构——看看一个工程化的 GOAP 实现是怎么把第一篇里的理论落到代码里的。  为什么选 crashkonijn&#x2F;GOAPUnity 生态中有好几个 GOAP 实现：adammyhre&#x2F;Unity-GOAP 是教学向的最小实现，AkiKurisu&#x2F;AkiGOAP 侧重可视化编辑器，mountain-goap 追求极简通用。而 crashkonijn&#x2F;GOAP（以下简称 crashkonijn）是生产级的选择——多线程、强类型、Capability 模式配置，在性能和可维护性之间取得了很好的平衡[^1]。 它的设计哲学很明确：不是”给你一个 AI 模板拿去改”，而是”给你一套类型安全的 GOAP 基础设施，用它搭建你自己的 AI”。 整体架构c...</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/2026/08/08/%E6%B8%B8%E6%88%8FAI-GOAP%EF%BC%881%EF%BC%89%EF%BC%9A%E5%85%A5%E9%97%A8/" title="游戏AI-GOAP（1）：入门">游戏AI-GOAP（1）：入门</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">Created</span><time datetime="2026-08-08T14:30:00.000Z" title="Created 2026-08-08 22:30:00">2026-08-08</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%B8%B8%E6%88%8FAI/">游戏AI</a><i class="fas fa-angle-right article-meta-link"></i><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%B8%B8%E6%88%8FAI/GOAP/">GOAP</a></span></div><div class="content">GOAP（Goal-Oriented Action Planning）是游戏 AI 中一种经典的决策架构——不靠手写状态机或行为树，而是让 NPC 自己组合动作来达成目标。这篇文章从 STRIPS 的起源聊起，梳理 GOAP 的核心组件、Planner 的 A* 搜索原理，以及 F.E.A.R. 里的实际应用和踩过的坑，作为这个系列的入门笔记。  GOAP 的来历GOAP（Goal-Oriented Action Planning，目标导向型行动计划）的根在 1971 年——斯坦福研究院的 STRIPS（STanford Research Institute Problem Solver）规划系统[^1]。STRIPS 的核心思想很简单：把世界描述为一组状态，把动作描述为”前提条件 + 效果”的对，然后用反向搜索找出从当前状态到目标状态的动作序列。 2005 年，Monolith Productions 在 F.E.A.R. 中首次把 STRIPS 的思路搬进游戏[^2]。结果令人震惊——敌方士兵会主动找掩体、盲射、破窗、投掷手雷逼玩家走位、队友之间互相通信配合。这些行为不是脚本...</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/2023/01/30/%E6%88%91%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2%E6%96%87%E7%AB%A0/" title="我的第一篇博客文章">我的第一篇博客文章</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">Created</span><time datetime="2023-01-30T13:57:09.000Z" title="Created 2023-01-30 21:57:09">2023-01-30</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E8%AE%B0%E5%BD%95/">记录</a></span></div><div class="content"> 第一篇博客记录下 </div></div></div></div><nav id="pagination"><div class="pagination"><a class="extend prev" rel="prev" href="/page/3/#content-inner"><i class="fas fa-chevron-left fa-fw"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/3/#content-inner">3</a><span class="page-number current">4</span></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Csy7749</div><div class="author-info-description">键来！</div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">38</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">79</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">10</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/csy7749"><i class="fab fa-github"></i><span>GitHub</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">日积月累</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%886%EF%BC%89%EF%BC%9AAI%E5%86%B3%E7%AD%96%E6%AF%94%E8%BE%83/" title="游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型">游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型</a><time datetime="2026-08-17T08:00:00.000Z" title="Created 2026-08-17 16:00:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%885%EF%BC%89%EF%BC%9AHTN%E5%88%86%E5%B1%82%E4%BB%BB%E5%8A%A1%E7%BD%91%E7%BB%9C/" title="游戏AI-决策架构（5）：HTN 分层任务网络">游戏AI-决策架构（5）：HTN 分层任务网络</a><time datetime="2026-08-17T07:50:00.000Z" title="Created 2026-08-17 15:50:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%884%EF%BC%89%EF%BC%9AUtilityAI%E6%95%88%E7%94%A8%E5%86%B3%E7%AD%96/" title="游戏AI-决策架构（4）：Utility AI 效用决策">游戏AI-决策架构（4）：Utility AI 效用决策</a><time datetime="2026-08-17T07:40:00.000Z" title="Created 2026-08-17 15:40:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%883%EF%BC%89%EF%BC%9A%E8%A1%8C%E4%B8%BA%E6%A0%91/" title="游戏AI-决策架构（3）：行为树">游戏AI-决策架构（3）：行为树</a><time datetime="2026-08-17T07:30:00.000Z" title="Created 2026-08-17 15:30:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%882%EF%BC%89%EF%BC%9AHFSM%E5%88%86%E5%B1%82%E6%9C%89%E9%99%90%E7%8A%B6%E6%80%81%E6%9C%BA/" title="游戏AI-决策架构（2）：HFSM 分层有限状态机">游戏AI-决策架构（2）：HFSM 分层有限状态机</a><time datetime="2026-08-17T07:20:00.000Z" title="Created 2026-08-17 15:20:00">2026-08-17</time></div></div></div></div><div class="card-widget card-categories"><div class="item-headline"><i class="fas fa-folder-open"></i><span>Categories</span><a class="card-more-btn" href="/categories/" title="View More">
+      <i class="fas fa-angle-right"></i></a></div>
+          <ul class="card-category-list" id="aside-cat-list">
+            <li class="card-category-list-item "><a class="card-category-list-link" href="/categories/Unity/"><span class="card-category-list-name">Unity</span><span class="card-category-list-count">20</span></a><ul class="card-category-list child"><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/Unity/Shader/"><span class="card-category-list-name">Shader</span><span class="card-category-list-count">11</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/Unity/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/"><span class="card-category-list-name">性能优化</span><span class="card-category-list-count">9</span></a></li></ul></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E5%86%99%E4%BD%9C%E8%A7%84%E5%88%92/"><span class="card-category-list-name">写作规划</span><span class="card-category-list-count">4</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E6%B8%B8%E6%88%8FAI/"><span class="card-category-list-name">游戏AI</span><span class="card-category-list-count">13</span></a><ul class="card-category-list child"><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E6%B8%B8%E6%88%8FAI/AI-Agent/"><span class="card-category-list-name">AI Agent</span><span class="card-category-list-count">1</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E6%B8%B8%E6%88%8FAI/GOAP/"><span class="card-category-list-name">GOAP</span><span class="card-category-list-count">5</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E6%B8%B8%E6%88%8FAI/%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84/"><span class="card-category-list-name">决策架构</span><span class="card-category-list-count">6</span></a></li></ul></li>
+          </ul></div><div class="card-widget card-tags"><div class="item-headline"><i class="fas fa-tags"></i><span>Tags</span></div><div class="card-tag-cloud"><a href="/tags/%E6%9E%B6%E6%9E%84/" style="font-size: 1.1em; color: #999">架构</a> <a href="/tags/Memory-Profiler/" style="font-size: 1.1em; color: #999">Memory Profiler</a> <a href="/tags/Job-System/" style="font-size: 1.1em; color: #999">Job System</a> <a href="/tags/URP/" style="font-size: 1.23em; color: #999ea6">URP</a> <a href="/tags/%E8%84%9A%E6%9C%AC%E4%BC%98%E5%8C%96/" style="font-size: 1.1em; color: #999">脚本优化</a> <a href="/tags/HFSM/" style="font-size: 1.1em; color: #999">HFSM</a> <a href="/tags/TextMeshPro/" style="font-size: 1.1em; color: #999">TextMeshPro</a> <a href="/tags/HLSL/" style="font-size: 1.23em; color: #999ea6">HLSL</a> <a href="/tags/SRP-Batcher/" style="font-size: 1.17em; color: #999c9f">SRP Batcher</a> <a href="/tags/%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84/" style="font-size: 1.37em; color: #99a4b2">决策架构</a> <a href="/tags/GOAP/" style="font-size: 1.3em; color: #99a1ac">GOAP</a> <a href="/tags/Surface-Shader/" style="font-size: 1.1em; color: #999">Surface Shader</a> <a href="/tags/Rebuild/" style="font-size: 1.1em; color: #999">Rebuild</a> <a href="/tags/UtilityAI/" style="font-size: 1.1em; color: #999">UtilityAI</a> <a href="/tags/%E6%BA%B6%E8%A7%A3/" style="font-size: 1.1em; color: #999">溶解</a> <a href="/tags/Compute-Shader/" style="font-size: 1.1em; color: #999">Compute Shader</a> <a href="/tags/Addressables/" style="font-size: 1.1em; color: #999">Addressables</a> <a href="/tags/%E8%A1%8C%E4%B8%BA%E6%A0%91/" style="font-size: 1.1em; color: #999">行为树</a> <a href="/tags/Built-in/" style="font-size: 1.1em; color: #999">Built-in</a> <a href="/tags/UGUI/" style="font-size: 1.23em; color: #999ea6">UGUI</a> <a href="/tags/%E5%AD%97%E7%AC%A6%E4%B8%B2/" style="font-size: 1.1em; color: #999">字符串</a> <a href="/tags/Blinn-Phong/" style="font-size: 1.1em; color: #999">Blinn-Phong</a> <a href="/tags/CI/" style="font-size: 1.1em; color: #999">CI</a> <a href="/tags/%E7%89%87%E5%85%83%E7%9D%80%E8%89%B2%E5%99%A8/" style="font-size: 1.1em; color: #999">片元着色器</a> <a href="/tags/%E5%AF%B9%E8%B1%A1%E6%B1%A0/" style="font-size: 1.17em; color: #999c9f">对象池</a> <a href="/tags/%E6%B8%B2%E6%9F%93/" style="font-size: 1.1em; color: #999">渲染</a> <a href="/tags/%E6%B8%B8%E6%88%8FAI/" style="font-size: 1.5em; color: #99a9bf">游戏AI</a> <a href="/tags/Frame-Debugger/" style="font-size: 1.17em; color: #999c9f">Frame Debugger</a> <a href="/tags/DrawCall/" style="font-size: 1.17em; color: #999c9f">DrawCall</a> <a href="/tags/AI-Agent/" style="font-size: 1.1em; color: #999">AI Agent</a> <a href="/tags/A-Star/" style="font-size: 1.1em; color: #999">A Star</a> <a href="/tags/%E8%B5%84%E6%BA%90%E7%AE%A1%E7%90%86/" style="font-size: 1.1em; color: #999">资源管理</a> <a href="/tags/%E9%A1%B6%E7%82%B9%E7%9D%80%E8%89%B2%E5%99%A8/" style="font-size: 1.1em; color: #999">顶点着色器</a> <a href="/tags/%E6%8F%8F%E8%BE%B9/" style="font-size: 1.1em; color: #999">描边</a> <a href="/tags/Burst/" style="font-size: 1.1em; color: #999">Burst</a> <a href="/tags/Renderer-Feature/" style="font-size: 1.1em; color: #999">Renderer Feature</a> <a href="/tags/%E6%B3%95%E7%BA%BF%E8%B4%B4%E5%9B%BE/" style="font-size: 1.1em; color: #999">法线贴图</a> <a href="/tags/GPU/" style="font-size: 1.1em; color: #999">GPU</a> <a href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" style="font-size: 1.43em; color: #99a6b9">性能优化</a> <a href="/tags/HTN/" style="font-size: 1.1em; color: #999">HTN</a></div></div><div class="card-widget card-archives">
+    <div class="item-headline"><i class="fas fa-archive"></i><span>Archives</span></div>
+  
+    <ul class="card-archive-list">
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2026/08/">
+            <span class="card-archive-list-date">
+              八月 2026
+            </span>
+            <span class="card-archive-list-count">37</span>
+          </a>
+        </li>
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2023/01/">
+            <span class="card-archive-list-date">
+              一月 2023
+            </span>
+            <span class="card-archive-list-count">1</span>
+          </a>
+        </li>
+      
+    </ul>
+  </div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>Website Info</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">Article Count :</div><div class="item-count">38</div></div><div class="webinfo-item"><div class="item-name">Unique Visitors :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">Page Views :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">Last Update :</div><div class="item-count" id="last-push-date" data-lastPushDate="2026-08-17T10:24:42.420Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2020 - 2026 By Csy7749</span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/koharu.model.json"},"display":{"position":"left","width":150,"height":300},"mobile":{"show":false},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/"});</script></body></html>
