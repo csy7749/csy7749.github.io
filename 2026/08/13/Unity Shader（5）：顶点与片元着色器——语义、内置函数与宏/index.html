@@ -7,7 +7,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://csy7749.github.io/img/avatar.png">
 <meta property="article:published_time" content="2026-08-13T06:00:00.000Z">
-<meta property="article:modified_time" content="2026-08-17T10:24:18.457Z">
+<meta property="article:modified_time" content="2026-08-18T04:42:28.440Z">
 <meta property="article:author" content="Csy7749">
 <meta property="article:tag" content="Unity">
 <meta property="article:tag" content="Shader">
@@ -22,7 +22,7 @@
   "url": "https://csy7749.github.io/2026/08/13/Unity%20Shader%EF%BC%885%EF%BC%89%EF%BC%9A%E9%A1%B6%E7%82%B9%E4%B8%8E%E7%89%87%E5%85%83%E7%9D%80%E8%89%B2%E5%99%A8%E2%80%94%E2%80%94%E8%AF%AD%E4%B9%89%E3%80%81%E5%86%85%E7%BD%AE%E5%87%BD%E6%95%B0%E4%B8%8E%E5%AE%8F/",
   "image": "https://csy7749.github.io/img/avatar.png",
   "datePublished": "2026-08-13T06:00:00.000Z",
-  "dateModified": "2026-08-17T10:24:18.457Z",
+  "dateModified": "2026-08-18T04:42:28.440Z",
   "author": [
     {
       "@type": "Person",
@@ -205,180 +205,242 @@
   isHighlightShrink: false,
   isToc: true,
   pageType: 'post'
-}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">38</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">79</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">10</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Csy7749-Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Unity Shader（5）：顶点与片元着色器——语义、内置函数与宏</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Unity Shader（5）：顶点与片元着色器——语义、内置函数与宏</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-08-13T06:00:00.000Z" title="Created 2026-08-13 14:00:00">2026-08-13</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-08-17T10:24:18.457Z" title="Updated 2026-08-17 18:24:18">2026-08-17</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Unity/">Unity</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Unity/Shader/">Shader</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><blockquote>
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">42</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">87</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">12</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Csy7749-Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Unity Shader（5）：顶点与片元着色器——语义、内置函数与宏</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Unity Shader（5）：顶点与片元着色器——语义、内置函数与宏</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-08-13T06:00:00.000Z" title="Created 2026-08-13 14:00:00">2026-08-13</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-08-18T04:42:28.440Z" title="Updated 2026-08-18 12:42:28">2026-08-18</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Unity/">Unity</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Unity/Shader/">Shader</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><blockquote>
 <p>前几讲我们一直在”读结构”，这一讲进入手写 Shader 的语法地基。顶点&#x2F;片元着色器的代码，本质就是几类东西：语义（Semantics）、数据类型、数学函数、采样函数，以及 Unity 提供的一堆内置宏。把这几类”词汇表”过一遍，后面写光照、纹理、特效时就不会再对着代码发懵。</p>
 </blockquote>
 <span id="more"></span>
 
 <h2 id="一、输入输出结构体：appdata-与-v2f"><a href="#一、输入输出结构体：appdata-与-v2f" class="headerlink" title="一、输入输出结构体：appdata 与 v2f"></a>一、输入输出结构体：appdata 与 v2f</h2><p>一个典型的顶点&#x2F;片元着色器，数据是这样流动的：</p>
-<pre><code class="language-text">顶点数据（Mesh）→ appdata（输入）→ vert() → v2f（输出）→ 光栅化插值 → frag()
-```text
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">顶点数据（Mesh）→ appdata（输入）→ vert() → v2f（输出）→ 光栅化插值 → frag()</span><br></pre></td></tr></table></figure>
 
-两个结构体的命名只是约定（URP 里习惯叫 `Attributes` 和 `Varyings`），真正起作用的是**冒号后面的语义**。
+<p>两个结构体的命名只是约定（URP 里习惯叫 <code>Attributes</code> 和 <code>Varyings</code>），真正起作用的是<strong>冒号后面的语义</strong>。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">struct appdata</span><br><span class="line">&#123;</span><br><span class="line">    float4 vertex : POSITION;   // 顶点位置（模型空间）</span><br><span class="line">    float3 normal : NORMAL;     // 顶点法线（模型空间）</span><br><span class="line">    float2 uv     : TEXCOORD0;  // 第一套 UV</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">struct v2f</span><br><span class="line">&#123;</span><br><span class="line">    float4 pos : SV_POSITION;   // 裁剪空间位置（必须）</span><br><span class="line">    float2 uv  : TEXCOORD0;     // 传给片元的 UV</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
 
-```hlsl
-struct appdata
-&#123;
-    float4 vertex : POSITION;   // 顶点位置（模型空间）
-    float3 normal : NORMAL;     // 顶点法线（模型空间）
-    float2 uv     : TEXCOORD0;  // 第一套 UV
-&#125;;
+<h2 id="二、语义：GPU-认”标签”不认”名字”"><a href="#二、语义：GPU-认”标签”不认”名字”" class="headerlink" title="二、语义：GPU 认”标签”不认”名字”"></a>二、语义：GPU 认”标签”不认”名字”</h2><p>语义（Semantics）是 HLSL 里告诉 GPU”这个字段装的是什么数据”的标记。字段名可以随便起，语义不能乱用。</p>
+<h3 id="2-1-输入语义（顶点着色器读取）"><a href="#2-1-输入语义（顶点着色器读取）" class="headerlink" title="2.1 输入语义（顶点着色器读取）"></a>2.1 输入语义（顶点着色器读取）</h3><table>
+<thead>
+<tr>
+<th align="left">语义</th>
+<th align="left">含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>POSITION</code></td>
+<td align="left">顶点位置（模型空间）</td>
+</tr>
+<tr>
+<td align="left"><code>NORMAL</code></td>
+<td align="left">顶点法线（模型空间）</td>
+</tr>
+<tr>
+<td align="left"><code>TANGENT</code></td>
+<td align="left">顶点切线（模型空间，float4，最后一位是手性）</td>
+</tr>
+<tr>
+<td align="left"><code>TEXCOORD0 ~ TEXCOORD3</code></td>
+<td align="left">UV 坐标 &#x2F; 自定义数据通道</td>
+</tr>
+<tr>
+<td align="left"><code>COLOR</code></td>
+<td align="left">顶点颜色</td>
+</tr>
+</tbody></table>
+<h3 id="2-2-输出-系统语义"><a href="#2-2-输出-系统语义" class="headerlink" title="2.2 输出&#x2F;系统语义"></a>2.2 输出&#x2F;系统语义</h3><table>
+<thead>
+<tr>
+<th align="left">语义</th>
+<th align="left">含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>SV_POSITION</code></td>
+<td align="left">顶点着色器必须输出的裁剪空间坐标</td>
+</tr>
+<tr>
+<td align="left"><code>SV_Target</code></td>
+<td align="left">片元着色器输出的最终颜色</td>
+</tr>
+<tr>
+<td align="left"><code>SV_DispatchThreadID</code></td>
+<td align="left">Compute Shader 的全局线程编号</td>
+</tr>
+<tr>
+<td align="left"><code>SV_VertexID</code></td>
+<td align="left">顶点索引（高级用法）</td>
+</tr>
+</tbody></table>
+<p>带 <code>SV_</code> 前缀的是<strong>系统语义（System-Value）</strong>，由硬件直接消费，不能随便挪作他用。例如 <code>v2f</code> 里必须有一个字段用 <code>SV_POSITION</code> 承载裁剪空间位置，否则光栅化无法进行。</p>
+<h2 id="三、数据类型与精度"><a href="#三、数据类型与精度" class="headerlink" title="三、数据类型与精度"></a>三、数据类型与精度</h2><h3 id="3-1-标量与向量"><a href="#3-1-标量与向量" class="headerlink" title="3.1 标量与向量"></a>3.1 标量与向量</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">float  a;      // 32 位浮点</span><br><span class="line">half   b;      // 16 位浮点（精度低、速度快）</span><br><span class="line">fixed  c;      // 11 位固定点（最低精度，移动端友好）</span><br><span class="line"></span><br><span class="line">float2 v2;     // (x, y)</span><br><span class="line">float3 v3;     // (x, y, z)</span><br><span class="line">float4 v4;     // (x, y, z, w)</span><br></pre></td></tr></table></figure>
 
-struct v2f
-&#123;
-    float4 pos : SV_POSITION;   // 裁剪空间位置（必须）
-    float2 uv  : TEXCOORD0;     // 传给片元的 UV
-&#125;;
-```text
+<p>访问分量用 <code>.xyzw</code>（空间含义）或 <code>.rgba</code>（颜色含义）混用都行，如 <code>v4.rgb</code>、<code>v4.xy</code>。</p>
+<h3 id="3-2-精度怎么选"><a href="#3-2-精度怎么选" class="headerlink" title="3.2 精度怎么选"></a>3.2 精度怎么选</h3><ul>
+<li>颜色、低精度插值：用 <code>half</code> &#x2F; <code>fixed</code>，移动端省带宽。</li>
+<li>位置、世界坐标、法线方向等需要精度的量：用 <code>float</code>。</li>
+<li>经验法则：<strong>能省则省，位置相关别省</strong>。移动端把”颜色”用 float 计算是常见浪费。</li>
+</ul>
+<h3 id="3-3-矩阵"><a href="#3-3-矩阵" class="headerlink" title="3.3 矩阵"></a>3.3 矩阵</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">float4x4 m;          // 4x4 矩阵</span><br><span class="line">float4 world = mul(m, local); // 矩阵乘向量（注意 mul 的参数顺序）</span><br></pre></td></tr></table></figure>
 
-## 二、语义：GPU 认&quot;标签&quot;不认&quot;名字&quot;
+<p>HLSL 的 <code>mul(m, v)</code> 会把 <code>v</code> 当列向量处理；写错顺序会导致结果错误，这是新手高频坑。</p>
+<h2 id="四、常用数学函数"><a href="#四、常用数学函数" class="headerlink" title="四、常用数学函数"></a>四、常用数学函数</h2><p>Shader 里几乎所有效果都是这些函数的组合：</p>
+<table>
+<thead>
+<tr>
+<th align="left">函数</th>
+<th align="left">作用</th>
+<th align="left">示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>normalize(v)</code></td>
+<td align="left">归一化（长度变 1）</td>
+<td align="left">法线必须归一化</td>
+</tr>
+<tr>
+<td align="left"><code>dot(a, b)</code></td>
+<td align="left">点积（两向量夹角余弦 × 长度积）</td>
+<td align="left">光照、投影</td>
+</tr>
+<tr>
+<td align="left"><code>cross(a, b)</code></td>
+<td align="left">叉积（求垂直向量）</td>
+<td align="left">求切线&#x2F;副切线</td>
+</tr>
+<tr>
+<td align="left"><code>length(v)</code></td>
+<td align="left">向量长度</td>
+<td align="left">距离判断</td>
+</tr>
+<tr>
+<td align="left"><code>lerp(a, b, t)</code></td>
+<td align="left">线性插值</td>
+<td align="left">颜色&#x2F;数值过渡</td>
+</tr>
+<tr>
+<td align="left"><code>saturate(x)</code></td>
+<td align="left">夹到 [0,1]</td>
+<td align="left">防止越界</td>
+</tr>
+<tr>
+<td align="left"><code>clamp(x, a, b)</code></td>
+<td align="left">夹到 [a,b]</td>
+<td align="left">范围限制</td>
+</tr>
+<tr>
+<td align="left"><code>step(edge, x)</code></td>
+<td align="left">x≥edge 返回 1，否则 0</td>
+<td align="left">硬边缘</td>
+</tr>
+<tr>
+<td align="left"><code>smoothstep(a, b, x)</code></td>
+<td align="left">平滑过渡</td>
+<td align="left">软边缘、抗锯齿</td>
+</tr>
+<tr>
+<td align="left"><code>pow(x, y)</code></td>
+<td align="left">幂运算</td>
+<td align="left">高光指数</td>
+</tr>
+<tr>
+<td align="left"><code>floor(x) / frac(x)</code></td>
+<td align="left">取整 &#x2F; 取小数</td>
+<td align="left">网格、噪声</td>
+</tr>
+<tr>
+<td align="left"><code>reflect(i, n) / refract(i, n, eta)</code></td>
+<td align="left">反射 &#x2F; 折射方向</td>
+<td align="left">水面、玻璃</td>
+</tr>
+<tr>
+<td align="left"><code>distance(a, b)</code></td>
+<td align="left">两点距离</td>
+<td align="left">距离场</td>
+</tr>
+</tbody></table>
+<p>其中 <code>dot</code> 是光照的灵魂：两个单位向量的点积，正好等于它们夹角的余弦，从 1（同向）到 -1（反向）。第 6 讲的光照就是靠 <code>saturate(dot(N, L))</code> 算出来的。</p>
+<h2 id="五、采样函数"><a href="#五、采样函数" class="headerlink" title="五、采样函数"></a>五、采样函数</h2><ul>
+<li>Built-in：<code>tex2D(_MainTex, uv)</code>，返回该 UV 处采样出的 <code>fixed4</code> 颜色。</li>
+<li>URP：<code>SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv)</code>（配合 <code>TEXTURE2D/SAMPLER</code> 声明）。</li>
+</ul>
+<p>采样前 UV 通常是 <code>float2</code>，采样后得到 RGBA 颜色，再接 <code>* _Color</code> 或 <code>lerp</code> 做混合。</p>
+<h2 id="六、Unity-内置宏与变量"><a href="#六、Unity-内置宏与变量" class="headerlink" title="六、Unity 内置宏与变量"></a>六、Unity 内置宏与变量</h2><p>Unity 把大量常用操作封装成了宏，不同管线名字略有差别：</p>
+<h3 id="6-1-坐标与方向变换"><a href="#6-1-坐标与方向变换" class="headerlink" title="6.1 坐标与方向变换"></a>6.1 坐标与方向变换</h3><table>
+<thead>
+<tr>
+<th align="left">Built-in</th>
+<th align="left">URP</th>
+<th align="left">作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>UnityObjectToClipPos(v)</code></td>
+<td align="left"><code>TransformObjectToHClip(v)</code></td>
+<td align="left">模型空间 → 裁剪空间</td>
+</tr>
+<tr>
+<td align="left"><code>UnityObjectToWorldDir(d)</code></td>
+<td align="left"><code>TransformObjectToWorldDir(d)</code></td>
+<td align="left">模型方向 → 世界方向</td>
+</tr>
+<tr>
+<td align="left"><code>UnityObjectToWorldNormal(n)</code></td>
+<td align="left"><code>TransformObjectToWorldNormal(n)</code></td>
+<td align="left">模型法线 → 世界法线</td>
+</tr>
+<tr>
+<td align="left"><code>UnityWorldSpaceViewDir(pos)</code></td>
+<td align="left"><code>GetWorldSpaceViewDir(pos)</code></td>
+<td align="left">求视线方向</td>
+</tr>
+<tr>
+<td align="left"><code>UnityWorldSpaceLightDir(pos)</code></td>
+<td align="left"><code>GetMainLight().direction</code> 等</td>
+<td align="left">求光照方向（URP 差异大）</td>
+</tr>
+</tbody></table>
+<h3 id="6-2-内置矩阵"><a href="#6-2-内置矩阵" class="headerlink" title="6.2 内置矩阵"></a>6.2 内置矩阵</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">UNITY_MATRIX_MVP;       // 模型→裁剪（老写法，等价 UnityObjectToClipPos）</span><br><span class="line">UNITY_MATRIX_M;         // 模型→世界</span><br><span class="line">UNITY_MATRIX_V;         // 世界→观察</span><br><span class="line">UNITY_MATRIX_P;         // 观察→裁剪</span><br><span class="line">unity_ObjectToWorld;    // 模型→世界（推荐用这个）</span><br><span class="line">unity_WorldToObject;    // 世界→模型</span><br></pre></td></tr></table></figure>
 
-语义（Semantics）是 HLSL 里告诉 GPU&quot;这个字段装的是什么数据&quot;的标记。字段名可以随便起，语义不能乱用。
+<p>现代写法推荐用 <code>unity_ObjectToWorld</code> 和 <code>UnityObjectToClipPos</code>，<code>UNITY_MATRIX_MVP</code> 是老代码常见写法，看到要认识。</p>
+<h3 id="6-3-时间与参数"><a href="#6-3-时间与参数" class="headerlink" title="6.3 时间与参数"></a>6.3 时间与参数</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">_Time;      // (t/20, t, t*2, t*3)，t 为秒</span><br><span class="line">_SinTime;   // (sin(t/8), sin(t/4), sin(t/2), sin(t))</span><br><span class="line">_CosTime;   // (cos(t/8), cos(t/4), cos(t/2), cos(t))</span><br></pre></td></tr></table></figure>
 
-### 2.1 输入语义（顶点着色器读取）
+<p>顶点动画、溶解、流光等效果，基本都用 <code>_Time.y</code>（当前秒数）驱动。</p>
+<h2 id="七、头文件体系"><a href="#七、头文件体系" class="headerlink" title="七、头文件体系"></a>七、头文件体系</h2><ul>
+<li><strong>Built-in</strong>：<code>#include &quot;UnityCG.cginc&quot;</code> 一个文件几乎包罗万象。</li>
+<li><strong>URP</strong>：拆成多个模块化头文件，按需引入：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="left">URP 头文件</th>
+<th align="left">提供内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>Core.hlsl</code></td>
+<td align="left">坐标变换、基础宏</td>
+</tr>
+<tr>
+<td align="left"><code>Lighting.hlsl</code></td>
+<td align="left">光照计算相关</td>
+</tr>
+<tr>
+<td align="left"><code>Shadows.hlsl</code></td>
+<td align="left">阴影</td>
+</tr>
+<tr>
+<td align="left"><code>Input.hlsl</code></td>
+<td align="left">输入与相机参数</td>
+</tr>
+</tbody></table>
+<p>引入方式写全包路径，例如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#include &quot;Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl&quot;</span><br></pre></td></tr></table></figure>
 
-| 语义 | 含义 |
-| :--- | :--- |
-| `POSITION` | 顶点位置（模型空间） |
-| `NORMAL` | 顶点法线（模型空间） |
-| `TANGENT` | 顶点切线（模型空间，float4，最后一位是手性） |
-| `TEXCOORD0 ~ TEXCOORD3` | UV 坐标 / 自定义数据通道 |
-| `COLOR` | 顶点颜色 |
-
-### 2.2 输出/系统语义
-
-| 语义 | 含义 |
-| :--- | :--- |
-| `SV_POSITION` | 顶点着色器必须输出的裁剪空间坐标 |
-| `SV_Target` | 片元着色器输出的最终颜色 |
-| `SV_DispatchThreadID` | Compute Shader 的全局线程编号 |
-| `SV_VertexID` | 顶点索引（高级用法） |
-
-带 `SV_` 前缀的是**系统语义（System-Value）**，由硬件直接消费，不能随便挪作他用。例如 `v2f` 里必须有一个字段用 `SV_POSITION` 承载裁剪空间位置，否则光栅化无法进行。
-
-## 三、数据类型与精度
-
-### 3.1 标量与向量
-
-```hlsl
-float  a;      // 32 位浮点
-half   b;      // 16 位浮点（精度低、速度快）
-fixed  c;      // 11 位固定点（最低精度，移动端友好）
-
-float2 v2;     // (x, y)
-float3 v3;     // (x, y, z)
-float4 v4;     // (x, y, z, w)
-```text
-
-访问分量用 `.xyzw`（空间含义）或 `.rgba`（颜色含义）混用都行，如 `v4.rgb`、`v4.xy`。
-
-### 3.2 精度怎么选
-
-- 颜色、低精度插值：用 `half` / `fixed`，移动端省带宽。
-- 位置、世界坐标、法线方向等需要精度的量：用 `float`。
-- 经验法则：**能省则省，位置相关别省**。移动端把&quot;颜色&quot;用 float 计算是常见浪费。
-
-### 3.3 矩阵
-
-```hlsl
-float4x4 m;          // 4x4 矩阵
-float4 world = mul(m, local); // 矩阵乘向量（注意 mul 的参数顺序）
-```text
-
-HLSL 的 `mul(m, v)` 会把 `v` 当列向量处理；写错顺序会导致结果错误，这是新手高频坑。
-
-## 四、常用数学函数
-
-Shader 里几乎所有效果都是这些函数的组合：
-
-| 函数 | 作用 | 示例 |
-| :--- | :--- | :--- |
-| `normalize(v)` | 归一化（长度变 1） | 法线必须归一化 |
-| `dot(a, b)` | 点积（两向量夹角余弦 × 长度积） | 光照、投影 |
-| `cross(a, b)` | 叉积（求垂直向量） | 求切线/副切线 |
-| `length(v)` | 向量长度 | 距离判断 |
-| `lerp(a, b, t)` | 线性插值 | 颜色/数值过渡 |
-| `saturate(x)` | 夹到 [0,1] | 防止越界 |
-| `clamp(x, a, b)` | 夹到 [a,b] | 范围限制 |
-| `step(edge, x)` | x≥edge 返回 1，否则 0 | 硬边缘 |
-| `smoothstep(a, b, x)` | 平滑过渡 | 软边缘、抗锯齿 |
-| `pow(x, y)` | 幂运算 | 高光指数 |
-| `floor(x) / frac(x)` | 取整 / 取小数 | 网格、噪声 |
-| `reflect(i, n) / refract(i, n, eta)` | 反射 / 折射方向 | 水面、玻璃 |
-| `distance(a, b)` | 两点距离 | 距离场 |
-
-其中 `dot` 是光照的灵魂：两个单位向量的点积，正好等于它们夹角的余弦，从 1（同向）到 -1（反向）。第 6 讲的光照就是靠 `saturate(dot(N, L))` 算出来的。
-
-## 五、采样函数
-
-- Built-in：`tex2D(_MainTex, uv)`，返回该 UV 处采样出的 `fixed4` 颜色。
-- URP：`SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv)`（配合 `TEXTURE2D/SAMPLER` 声明）。
-
-采样前 UV 通常是 `float2`，采样后得到 RGBA 颜色，再接 `* _Color` 或 `lerp` 做混合。
-
-## 六、Unity 内置宏与变量
-
-Unity 把大量常用操作封装成了宏，不同管线名字略有差别：
-
-### 6.1 坐标与方向变换
-
-| Built-in | URP | 作用 |
-| :--- | :--- | :--- |
-| `UnityObjectToClipPos(v)` | `TransformObjectToHClip(v)` | 模型空间 → 裁剪空间 |
-| `UnityObjectToWorldDir(d)` | `TransformObjectToWorldDir(d)` | 模型方向 → 世界方向 |
-| `UnityObjectToWorldNormal(n)` | `TransformObjectToWorldNormal(n)` | 模型法线 → 世界法线 |
-| `UnityWorldSpaceViewDir(pos)` | `GetWorldSpaceViewDir(pos)` | 求视线方向 |
-| `UnityWorldSpaceLightDir(pos)` | `GetMainLight().direction` 等 | 求光照方向（URP 差异大） |
-
-### 6.2 内置矩阵
-
-```hlsl
-UNITY_MATRIX_MVP;       // 模型→裁剪（老写法，等价 UnityObjectToClipPos）
-UNITY_MATRIX_M;         // 模型→世界
-UNITY_MATRIX_V;         // 世界→观察
-UNITY_MATRIX_P;         // 观察→裁剪
-unity_ObjectToWorld;    // 模型→世界（推荐用这个）
-unity_WorldToObject;    // 世界→模型
-```text
-
-现代写法推荐用 `unity_ObjectToWorld` 和 `UnityObjectToClipPos`，`UNITY_MATRIX_MVP` 是老代码常见写法，看到要认识。
-
-### 6.3 时间与参数
-
-```hlsl
-_Time;      // (t/20, t, t*2, t*3)，t 为秒
-_SinTime;   // (sin(t/8), sin(t/4), sin(t/2), sin(t))
-_CosTime;   // (cos(t/8), cos(t/4), cos(t/2), cos(t))
-```text
-
-顶点动画、溶解、流光等效果，基本都用 `_Time.y`（当前秒数）驱动。
-
-## 七、头文件体系
-
-- **Built-in**：`#include &quot;UnityCG.cginc&quot;` 一个文件几乎包罗万象。
-- **URP**：拆成多个模块化头文件，按需引入：
-
-| URP 头文件 | 提供内容 |
-| :--- | :--- |
-| `Core.hlsl` | 坐标变换、基础宏 |
-| `Lighting.hlsl` | 光照计算相关 |
-| `Shadows.hlsl` | 阴影 |
-| `Input.hlsl` | 输入与相机参数 |
-
-引入方式写全包路径，例如：
-
-```hlsl
-#include &quot;Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl&quot;
-```text
-
-## 八、自查清单
-
-- [ ] 能解释&quot;字段名随意、语义不能乱用&quot;
-- [ ] 能说出 `POSITION / NORMAL / TEXCOORD0 / TANGENT / SV_POSITION / SV_Target` 的含义
-- [ ] 知道 `float / half / fixed` 的精度差异与选择原则
-- [ ] 能写出 `saturate(dot(N, L))` 并说出它算的是什么
-- [ ] 能说出 `normalize / dot / cross / lerp / smoothstep` 的用途
-- [ ] 知道 Built-in 与 URP 的坐标变换宏对应关系
-- [ ] 知道 `_Time.y` 常用于驱动动画
-</code></pre>
-</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://csy7749.github.io">Csy7749</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://csy7749.github.io/2026/08/13/Unity%20Shader%EF%BC%885%EF%BC%89%EF%BC%9A%E9%A1%B6%E7%82%B9%E4%B8%8E%E7%89%87%E5%85%83%E7%9D%80%E8%89%B2%E5%99%A8%E2%80%94%E2%80%94%E8%AF%AD%E4%B9%89%E3%80%81%E5%86%85%E7%BD%AE%E5%87%BD%E6%95%B0%E4%B8%8E%E5%AE%8F/">https://csy7749.github.io/2026/08/13/Unity%20Shader%EF%BC%885%EF%BC%89%EF%BC%9A%E9%A1%B6%E7%82%B9%E4%B8%8E%E7%89%87%E5%85%83%E7%9D%80%E8%89%B2%E5%99%A8%E2%80%94%E2%80%94%E8%AF%AD%E4%B9%89%E3%80%81%E5%86%85%E7%BD%AE%E5%87%BD%E6%95%B0%E4%B8%8E%E5%AE%8F/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Unity/">Unity</a><a class="post-meta__tags" href="/tags/Shader/">Shader</a><a class="post-meta__tags" href="/tags/HLSL/">HLSL</a><a class="post-meta__tags" href="/tags/%E9%A1%B6%E7%82%B9%E7%9D%80%E8%89%B2%E5%99%A8/">顶点着色器</a><a class="post-meta__tags" href="/tags/%E7%89%87%E5%85%83%E7%9D%80%E8%89%B2%E5%99%A8/">片元着色器</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/08/13/Unity%20Shader%EF%BC%886%EF%BC%89%EF%BC%9A%E5%85%89%E7%85%A7%E6%A8%A1%E5%9E%8B%E5%9F%BA%E7%A1%80%E2%80%94%E2%80%94%E4%BB%8E%20Lambert%20%E5%88%B0%20Blinn-Phong/" title="Unity Shader（6）：光照模型基础——从 Lambert 到 Blinn-Phong"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">Unity Shader（6）：光照模型基础——从 Lambert 到 Blinn-Phong</div></div><div class="info-2"><div class="info-item-1"> 物体”看起来像 3D”，靠的是明暗变化。这一讲进入 Shader 最核心的部分：光照。我们从光的三要素（环境光、漫反射、高光）讲起，推导 Lambert 与 Half-Lambert 漫反射、Blinn-Phong 高光，最后给一个完整可运行的 Shader，并说明 URP 下光照写法如何变化。看完这篇，你会理解那句贯穿 Shader 的代码——saturate(dot(N, L)) 到底在算什么。    一、光照的三大组成一个像素的最终颜色，通常由三部分拼起来： 最终颜色 = 环境光 + 漫反射 + 高光 ```text  | 组成 | 特点 | 与视角有关 | | :--- | :--- | :--- | | 环境光（Ambient） | 各处均匀，物体阴影里也有光 | 否 | | 漫反射（Diffuse） | 光打到粗糙表面均匀散射，明暗随角度变化 | 否 | | 高光（Specular） | 光滑表面的镜面亮点 | 是 |  后面所有光照 Shader，本质上都是把这三项算出来再加起来。  ## 二、漫反射：Lambert 模型  Lambert 定律：**表面接收的光...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%20Shader%EF%BC%884%EF%BC%89%EF%BC%9AURP%20Shader%20%E6%A8%A1%E6%9D%BF%E4%B8%8E%20Shader%20Graph%20%E5%85%A5%E9%97%A8/" title="Unity Shader（4）：URP Shader 模板与 Shader Graph 入门"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">Unity Shader（4）：URP Shader 模板与 Shader Graph 入门</div></div><div class="info-2"><div class="info-item-1"> 上一讲拆的是 Built-in 的模板，这一讲切到 URP。URP 是当前新项目的默认管线，它的 Shader 写法和 Built-in 有本质区别：头文件变了、纹理采样变了、还多了为 SRP Batcher 服务的数据声明。本文先讲 URP 自带的几个 Shader 模板，再逐行解析 URP Unlit 模板，最后带你看 Shader Graph 的入门逻辑，以及”手写 HLSL vs 连线”该怎么选。    一、URP 的 Shader 模板清单URP 项目里 Create → Shader 会多出一组 URP 模板，常见的有：    模板 作用    Lit Shader 完整 PBR 光照，URP 的主力材质模板   Simple Lit Shader 轻量 PBR，省性能，移动端常用   Baked Lit Shader 仅烘焙光照，最省，适合静态场景   Unlit Shader 无光照，最纯粹的 vert&#x2F;frag 骨架   另外还有 Create → Shader Graph 下的可视化模板（见本文第四节）。 关键前提：这些 URP Shader 必须...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/08/13/Unity%20Shader%EF%BC%882%EF%BC%89%EF%BC%9AShaderLab%20%E9%AA%A8%E6%9E%B6%E4%B8%8E%E7%AC%AC%E4%B8%80%E4%B8%AA%20Unlit%20Shader/" title="Unity Shader（2）：ShaderLab 骨架与第一个 Unlit Shader"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity Shader（2）：ShaderLab 骨架与第一个 Unlit Shader</div></div><div class="info-2"><div class="info-item-1"> 上一讲我们拿到了”全局地图”，这一讲开始动手读代码。Unity 的 .shader 文件由两部分语言拼成：外层是描述结构的 ShaderLab，内层是真正跑在 GPU 上的 HLSL&#x2F;CG。本文逐层拆开 Shader / SubShader / Pass 的骨架，并把一个最简 Unlit Shader 每一行都讲清楚。学完这篇，Unity 菜单里 Create → Shader 生成的模板你就能看懂结构了。    一、ShaderLab 的三层结构打开任何一个 .shader 文件，你会看到它像一个”套娃”。最外层是 Shader，往里是 SubShader，再往里是 Pass： Shader &quot;路径/名称&quot; ├── Properties        ← 材质面板上可调的参数 ├── SubShader          ← 一组&quot;渲染方案&quot;（可写多个，按平台/能力择优） │   ├── Tags           ← 渲染队列、类型等标签 │   ├── LOD / 其他状态 │   └── Pass           ...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%20Shader%EF%BC%884%EF%BC%89%EF%BC%9AURP%20Shader%20%E6%A8%A1%E6%9D%BF%E4%B8%8E%20Shader%20Graph%20%E5%85%A5%E9%97%A8/" title="Unity Shader（4）：URP Shader 模板与 Shader Graph 入门"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity Shader（4）：URP Shader 模板与 Shader Graph 入门</div></div><div class="info-2"><div class="info-item-1"> 上一讲拆的是 Built-in 的模板，这一讲切到 URP。URP 是当前新项目的默认管线，它的 Shader 写法和 Built-in 有本质区别：头文件变了、纹理采样变了、还多了为 SRP Batcher 服务的数据声明。本文先讲 URP 自带的几个 Shader 模板，再逐行解析 URP Unlit 模板，最后带你看 Shader Graph 的入门逻辑，以及”手写 HLSL vs 连线”该怎么选。    一、URP 的 Shader 模板清单URP 项目里 Create → Shader 会多出一组 URP 模板，常见的有：    模板 作用    Lit Shader 完整 PBR 光照，URP 的主力材质模板   Simple Lit Shader 轻量 PBR，省性能，移动端常用   Baked Lit Shader 仅烘焙光照，最省，适合静态场景   Unlit Shader 无光照，最纯粹的 vert&#x2F;frag 骨架   另外还有 Create → Shader Graph 下的可视化模板（见本文第四节）。 关键前提：这些 URP Shader 必须...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%20Shader%EF%BC%8810%EF%BC%89%EF%BC%9A%E5%B1%8F%E5%B9%95%E5%90%8E%E5%A4%84%E7%90%86%E4%B8%8E%20URP%20%E8%87%AA%E5%AE%9A%E4%B9%89%20Renderer%20Feature/" title="Unity Shader（10）：屏幕后处理与 URP 自定义 Renderer Feature"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity Shader（10）：屏幕后处理与 URP 自定义 Renderer Feature</div></div><div class="info-2"><div class="info-item-1"> 前面都是”改一个物体”，这一讲开始”改整个画面”。屏幕后处理（Post-Processing）的原理是：先把场景渲染到一张纹理，再拿这张纹理做全屏处理，最后输出到屏幕。本文讲清这个原理，对比 Built-in 与 URP 的做法，并手写一个 URP 自定义 Renderer Feature 的灰度滤镜作为完整示例。    一、屏幕后处理的原理普通渲染是”物体 → 帧缓冲 → 屏幕”；后处理多了一步”先渲染到纹理，再处理”： 场景渲染 → 中间纹理（颜色缓冲）→ 全屏 Shader 处理 → 屏幕 ```text  那个&quot;全屏 Shader&quot;跑在一个铺满屏幕的四边形上，输入就是中间纹理，输出是最终画面。所以后处理 Shader 的结构和上一讲 Image Effect 模板一致：`Cull Off ZWrite Off ZTest Always`。  ## 二、Built-in 的做法  Built-in 下做后处理，典型是 C# 挂脚本 + `OnRenderImage`：  ```csharp public class GrayScale : MonoBe...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%20Shader%E7%B3%BB%E5%88%97-%E8%A7%84%E5%88%92/" title="Unity Shader 系列·写作规划"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity Shader 系列·写作规划</div></div><div class="info-2"><div class="info-item-1">系列定位名称：Unity Shader 入门到进阶（十一讲） 目标读者：会写 C#、用过 Unity，但没系统学过 Shader；想从零理解”画面到底是怎么画出来的”，并能够自己写出可用的 Shader。 篇幅标准：单篇 3500-6000 字，可独立阅读，合起来构成一条从渲染管线到性能优化的完整链路。   写作原则：  从问题出发：先讲”为什么需要它”，再讲”语法&#x2F;API 是什么”，最后给完整可运行的代码 代码示例完整可运行，不做伪代码；同时给 Built-in 与 URP 两套写法，标注版本差异 以 Unity 2022.3 LTS+ 为准，重点覆盖 URP，Built-in 作为理解 ShaderLab 的起点 每篇末尾附”自查清单”，方便读者对照自己的项目检查理解   篇目总览第1讲  渲染管线总览：GPU 流水线与三种渲染管线     ← 建立全局图景 第2讲  ShaderLab 骨架与第一个 Unlit Shader        ← 看懂一个 shader 文件 第3讲  Built-in 管线 Shader 模板全解析             ← Un...</div></div></div></a><a class="pagination-related" href="/2026/08/14/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%882%EF%BC%89%EF%BC%9AGPU%E4%B8%8E%E6%B8%B2%E6%9F%93%E4%BC%98%E5%8C%96/" title="Unity性能优化（2）：GPU 与渲染优化"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-14</div><div class="info-item-2">Unity性能优化（2）：GPU 与渲染优化</div></div><div class="info-2"><div class="info-item-1"> 解决了 CPU，就该看 GPU 了。很多项目 CPU 主线程并不忙，帧率却上不去——瓶颈在渲染端：DrawCall 太多、Shader 太重、Overdraw 太凶。本文从渲染管线讲起，教你判断 GPU 瓶颈，再重点拆解四种合批方案（静态&#x2F;动态 Batching、SRP Batcher、GPU Instancing）的适用边界，最后覆盖 Shader、LOD、光照与后处理，配一个大世界 DrawCall 从 3000 降到 200 的实战案例。    一、渲染管线速览与 GPU 瓶颈判断1.1 一条帧的渲染路径CPU 侧                           GPU 侧 ──────                           ────── 准备渲染状态（材质/纹理/参数）     顶点着色器（变换顶点）   ↓                                ↓ 提交 DrawCall                    光栅化（生成片元）   ↓                                ↓ （等待 GPU...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%20Shader%EF%BC%889%EF%BC%89%EF%BC%9A%E5%B8%B8%E7%94%A8%E6%95%88%E6%9E%9C%E5%AE%9E%E6%88%98%E2%80%94%E2%80%94%E9%A1%B6%E7%82%B9%E5%8A%A8%E7%94%BB%E3%80%81%E6%BA%B6%E8%A7%A3%E4%B8%8E%E6%8F%8F%E8%BE%B9/" title="Unity Shader（9）：常用效果实战——顶点动画、溶解与描边"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity Shader（9）：常用效果实战——顶点动画、溶解与描边</div></div><div class="info-2"><div class="info-item-1"> 前面的语法学得差不多了，这一讲把它们串起来，动手做三个立刻能用的效果：顶点动画（波浪）、溶解（噪声裁剪）、描边（法线外扩壳）。每个效果都给出完整代码和参数说明，并点出常见坑。做完这三个，你就具备了自己写”特效型 Shader”的基本手感。    一、顶点动画：让模型”活”起来1.1 原理顶点动画的关键在于：在 vert 里移动顶点的位置。因为 vert 每帧、每个顶点都会执行，所以只要把位置写成时间的函数，模型就会动起来。 最常见的是正弦波浪——用顶点的某个坐标做相位，用 _Time.y 做时间驱动： float wave = sin(v.vertex.x * _Frequency + _Time.y * _Speed) * _Amplitude; v.vertex.y += wave; ```text  ### 1.2 完整代码  ```hlsl Shader &quot;Tutorial/VertexWave&quot; &#123;     Properties     &#123;         _MainTex (&quot;Texture&quot;, 2D) =...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Csy7749</div><div class="author-info-description">键来！</div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">38</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">79</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">10</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/csy7749"><i class="fab fa-github"></i><span>GitHub</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">日积月累</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%BB%93%E6%9E%84%E4%BD%93%EF%BC%9Aappdata-%E4%B8%8E-v2f"><span class="toc-number">1.</span> <span class="toc-text">一、输入输出结构体：appdata 与 v2f</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%886%EF%BC%89%EF%BC%9AAI%E5%86%B3%E7%AD%96%E6%AF%94%E8%BE%83/" title="游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型">游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型</a><time datetime="2026-08-17T08:00:00.000Z" title="Created 2026-08-17 16:00:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%885%EF%BC%89%EF%BC%9AHTN%E5%88%86%E5%B1%82%E4%BB%BB%E5%8A%A1%E7%BD%91%E7%BB%9C/" title="游戏AI-决策架构（5）：HTN 分层任务网络">游戏AI-决策架构（5）：HTN 分层任务网络</a><time datetime="2026-08-17T07:50:00.000Z" title="Created 2026-08-17 15:50:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%884%EF%BC%89%EF%BC%9AUtilityAI%E6%95%88%E7%94%A8%E5%86%B3%E7%AD%96/" title="游戏AI-决策架构（4）：Utility AI 效用决策">游戏AI-决策架构（4）：Utility AI 效用决策</a><time datetime="2026-08-17T07:40:00.000Z" title="Created 2026-08-17 15:40:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%883%EF%BC%89%EF%BC%9A%E8%A1%8C%E4%B8%BA%E6%A0%91/" title="游戏AI-决策架构（3）：行为树">游戏AI-决策架构（3）：行为树</a><time datetime="2026-08-17T07:30:00.000Z" title="Created 2026-08-17 15:30:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%882%EF%BC%89%EF%BC%9AHFSM%E5%88%86%E5%B1%82%E6%9C%89%E9%99%90%E7%8A%B6%E6%80%81%E6%9C%BA/" title="游戏AI-决策架构（2）：HFSM 分层有限状态机">游戏AI-决策架构（2）：HFSM 分层有限状态机</a><time datetime="2026-08-17T07:20:00.000Z" title="Created 2026-08-17 15:20:00">2026-08-17</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2020 - 2026 By Csy7749</span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/koharu.model.json"},"display":{"position":"left","width":150,"height":300},"mobile":{"show":false},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/"});</script></body></html>
+<h2 id="八、自查清单"><a href="#八、自查清单" class="headerlink" title="八、自查清单"></a>八、自查清单</h2><ul>
+<li><input disabled="" type="checkbox"> 能解释”字段名随意、语义不能乱用”</li>
+<li><input disabled="" type="checkbox"> 能说出 <code>POSITION / NORMAL / TEXCOORD0 / TANGENT / SV_POSITION / SV_Target</code> 的含义</li>
+<li><input disabled="" type="checkbox"> 知道 <code>float / half / fixed</code> 的精度差异与选择原则</li>
+<li><input disabled="" type="checkbox"> 能写出 <code>saturate(dot(N, L))</code> 并说出它算的是什么</li>
+<li><input disabled="" type="checkbox"> 能说出 <code>normalize / dot / cross / lerp / smoothstep</code> 的用途</li>
+<li><input disabled="" type="checkbox"> 知道 Built-in 与 URP 的坐标变换宏对应关系</li>
+<li><input disabled="" type="checkbox"> 知道 <code>_Time.y</code> 常用于驱动动画</li>
+</ul>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://csy7749.github.io">Csy7749</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://csy7749.github.io/2026/08/13/Unity%20Shader%EF%BC%885%EF%BC%89%EF%BC%9A%E9%A1%B6%E7%82%B9%E4%B8%8E%E7%89%87%E5%85%83%E7%9D%80%E8%89%B2%E5%99%A8%E2%80%94%E2%80%94%E8%AF%AD%E4%B9%89%E3%80%81%E5%86%85%E7%BD%AE%E5%87%BD%E6%95%B0%E4%B8%8E%E5%AE%8F/">https://csy7749.github.io/2026/08/13/Unity%20Shader%EF%BC%885%EF%BC%89%EF%BC%9A%E9%A1%B6%E7%82%B9%E4%B8%8E%E7%89%87%E5%85%83%E7%9D%80%E8%89%B2%E5%99%A8%E2%80%94%E2%80%94%E8%AF%AD%E4%B9%89%E3%80%81%E5%86%85%E7%BD%AE%E5%87%BD%E6%95%B0%E4%B8%8E%E5%AE%8F/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Unity/">Unity</a><a class="post-meta__tags" href="/tags/Shader/">Shader</a><a class="post-meta__tags" href="/tags/HLSL/">HLSL</a><a class="post-meta__tags" href="/tags/%E9%A1%B6%E7%82%B9%E7%9D%80%E8%89%B2%E5%99%A8/">顶点着色器</a><a class="post-meta__tags" href="/tags/%E7%89%87%E5%85%83%E7%9D%80%E8%89%B2%E5%99%A8/">片元着色器</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/08/13/Unity%20Shader%EF%BC%886%EF%BC%89%EF%BC%9A%E5%85%89%E7%85%A7%E6%A8%A1%E5%9E%8B%E5%9F%BA%E7%A1%80%E2%80%94%E2%80%94%E4%BB%8E%20Lambert%20%E5%88%B0%20Blinn-Phong/" title="Unity Shader（6）：光照模型基础——从 Lambert 到 Blinn-Phong"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">Unity Shader（6）：光照模型基础——从 Lambert 到 Blinn-Phong</div></div><div class="info-2"><div class="info-item-1"> 物体”看起来像 3D”，靠的是明暗变化。这一讲进入 Shader 最核心的部分：光照。我们从光的三要素（环境光、漫反射、高光）讲起，推导 Lambert 与 Half-Lambert 漫反射、Blinn-Phong 高光，最后给一个完整可运行的 Shader，并说明 URP 下光照写法如何变化。看完这篇，你会理解那句贯穿 Shader 的代码——saturate(dot(N, L)) 到底在算什么。    一、光照的三大组成一个像素的最终颜色，通常由三部分拼起来： 1最终颜色 = 环境光 + 漫反射 + 高光     组成 特点 与视角有关    环境光（Ambient） 各处均匀，物体阴影里也有光 否   漫反射（Diffuse） 光打到粗糙表面均匀散射，明暗随角度变化 否   高光（Specular） 光滑表面的镜面亮点 是   后面所有光照 Shader，本质上都是把这三项算出来再加起来。 二、漫反射：Lambert 模型Lambert 定律：表面接收的光能，正比于光照方向与表面法线的夹角余弦。 123L = 指向光源的方向（单位向量）N = 表面法线（单位向量）diff...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%20Shader%EF%BC%884%EF%BC%89%EF%BC%9AURP%20Shader%20%E6%A8%A1%E6%9D%BF%E4%B8%8E%20Shader%20Graph%20%E5%85%A5%E9%97%A8/" title="Unity Shader（4）：URP Shader 模板与 Shader Graph 入门"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">Unity Shader（4）：URP Shader 模板与 Shader Graph 入门</div></div><div class="info-2"><div class="info-item-1"> 上一讲拆的是 Built-in 的模板，这一讲切到 URP。URP 是当前新项目的默认管线，它的 Shader 写法和 Built-in 有本质区别：头文件变了、纹理采样变了、还多了为 SRP Batcher 服务的数据声明。本文先讲 URP 自带的几个 Shader 模板，再逐行解析 URP Unlit 模板，最后带你看 Shader Graph 的入门逻辑，以及”手写 HLSL vs 连线”该怎么选。    一、URP 的 Shader 模板清单URP 项目里 Create → Shader 会多出一组 URP 模板，常见的有：    模板 作用    Lit Shader 完整 PBR 光照，URP 的主力材质模板   Simple Lit Shader 轻量 PBR，省性能，移动端常用   Baked Lit Shader 仅烘焙光照，最省，适合静态场景   Unlit Shader 无光照，最纯粹的 vert&#x2F;frag 骨架   另外还有 Create → Shader Graph 下的可视化模板（见本文第四节）。 关键前提：这些 URP Shader 必须...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/08/13/Unity%20Shader%EF%BC%884%EF%BC%89%EF%BC%9AURP%20Shader%20%E6%A8%A1%E6%9D%BF%E4%B8%8E%20Shader%20Graph%20%E5%85%A5%E9%97%A8/" title="Unity Shader（4）：URP Shader 模板与 Shader Graph 入门"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity Shader（4）：URP Shader 模板与 Shader Graph 入门</div></div><div class="info-2"><div class="info-item-1"> 上一讲拆的是 Built-in 的模板，这一讲切到 URP。URP 是当前新项目的默认管线，它的 Shader 写法和 Built-in 有本质区别：头文件变了、纹理采样变了、还多了为 SRP Batcher 服务的数据声明。本文先讲 URP 自带的几个 Shader 模板，再逐行解析 URP Unlit 模板，最后带你看 Shader Graph 的入门逻辑，以及”手写 HLSL vs 连线”该怎么选。    一、URP 的 Shader 模板清单URP 项目里 Create → Shader 会多出一组 URP 模板，常见的有：    模板 作用    Lit Shader 完整 PBR 光照，URP 的主力材质模板   Simple Lit Shader 轻量 PBR，省性能，移动端常用   Baked Lit Shader 仅烘焙光照，最省，适合静态场景   Unlit Shader 无光照，最纯粹的 vert&#x2F;frag 骨架   另外还有 Create → Shader Graph 下的可视化模板（见本文第四节）。 关键前提：这些 URP Shader 必须...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%20Shader%EF%BC%882%EF%BC%89%EF%BC%9AShaderLab%20%E9%AA%A8%E6%9E%B6%E4%B8%8E%E7%AC%AC%E4%B8%80%E4%B8%AA%20Unlit%20Shader/" title="Unity Shader（2）：ShaderLab 骨架与第一个 Unlit Shader"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity Shader（2）：ShaderLab 骨架与第一个 Unlit Shader</div></div><div class="info-2"><div class="info-item-1"> 上一讲我们拿到了”全局地图”，这一讲开始动手读代码。Unity 的 .shader 文件由两部分语言拼成：外层是描述结构的 ShaderLab，内层是真正跑在 GPU 上的 HLSL&#x2F;CG。本文逐层拆开 Shader / SubShader / Pass 的骨架，并把一个最简 Unlit Shader 每一行都讲清楚。学完这篇，Unity 菜单里 Create → Shader 生成的模板你就能看懂结构了。    一、ShaderLab 的三层结构打开任何一个 .shader 文件，你会看到它像一个”套娃”。最外层是 Shader，往里是 SubShader，再往里是 Pass： 123456789Shader &quot;路径/名称&quot;├── Properties        ← 材质面板上可调的参数├── SubShader          ← 一组&quot;渲染方案&quot;（可写多个，按平台/能力择优）│   ├── Tags           ← 渲染队列、类型等标签│   ├── LOD / 其他状态│   └── Pass       ...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%20Shader%EF%BC%8811%EF%BC%89%EF%BC%9AShader%20%E5%8F%98%E4%BD%93%E3%80%81SRP%20Batcher%20%E4%B8%8E%E6%80%A7%E8%83%BD%E8%B0%83%E8%AF%95/" title="Unity Shader（11）：Shader 变体、SRP Batcher 与性能调试"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity Shader（11）：Shader 变体、SRP Batcher 与性能调试</div></div><div class="info-2"><div class="info-item-1"> 写完 Shader 只是第一步。能不能跑得快、包体不大、出了问题能定位，才是把 Shader 用好的关键。这一讲收官，讲三件事：Shader 变体（keyword 如何膨胀包体）、SRP Batcher（现代 Unity 的批量渲染优化）、以及 Frame Debugger 和常见报错排查。学完这篇，整个系列就闭环了。    一、Shader 变体与 keyword1.1 什么是变体同一个 Shader，经常需要”开关某些功能”。比如”要不要自发光””要不要法线贴图”。Unity 用 keyword 实现，每个 keyword 组合编译出一份独立的 GPU 程序，这就是变体（Variant）。 12#pragma multi_compile _ ENABLE_EMISSION#pragma multi_compile _ RED GREEN BLUE   第一行：1 个开关，2 种可能（无 &#x2F; ENABLE_EMISSION）。 第二行：4 种可能（无 &#x2F; RED &#x2F; GREEN &#x2F; BLUE）。  两行叠加就是 2 × 4 = 8 个变...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%20Shader%EF%BC%881%EF%BC%89%EF%BC%9A%E6%B8%B2%E6%9F%93%E7%AE%A1%E7%BA%BF%E6%80%BB%E8%A7%88/" title="Unity Shader（1）：渲染管线总览"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity Shader（1）：渲染管线总览</div></div><div class="info-2"><div class="info-item-1"> Shader 本质上是一段跑在 GPU 上的小程序。想真正看懂它，先得搞明白”一个三角形是怎么变成屏幕上的像素的”。本文从 GPU 渲染流水线讲起，再解释 Unity 的三种渲染管线（Built-in &#x2F; URP &#x2F; HDRP）以及它们背后的 SRP 机制，最后说清 Shader 与 Material 的分工。全文不写复杂语法，只为给你一张可随时回看的”全局地图”。    一、从三角形到像素：GPU 渲染流水线你屏幕上的每一帧画面，都经历了”几何数据 → 像素颜色”的转换。这个过程被拆成若干阶段，统称为渲染流水线（Rendering Pipeline）。不同版本的图形 API（OpenGL &#x2F; Direct3D &#x2F; Vulkan &#x2F; Metal）细节略有差异，但大框架一致。 1234567891011121314应用阶段（CPU）   │  准备顶点、纹理、材质数据，发出 Draw Call   ▼几何阶段（GPU）   ├── 顶点着色器（Vertex Shader）      ← 逐顶点处理，变换坐标   ├── 曲面细分（...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%20Shader%EF%BC%8810%EF%BC%89%EF%BC%9A%E5%B1%8F%E5%B9%95%E5%90%8E%E5%A4%84%E7%90%86%E4%B8%8E%20URP%20%E8%87%AA%E5%AE%9A%E4%B9%89%20Renderer%20Feature/" title="Unity Shader（10）：屏幕后处理与 URP 自定义 Renderer Feature"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity Shader（10）：屏幕后处理与 URP 自定义 Renderer Feature</div></div><div class="info-2"><div class="info-item-1"> 前面都是”改一个物体”，这一讲开始”改整个画面”。屏幕后处理（Post-Processing）的原理是：先把场景渲染到一张纹理，再拿这张纹理做全屏处理，最后输出到屏幕。本文讲清这个原理，对比 Built-in 与 URP 的做法，并手写一个 URP 自定义 Renderer Feature 的灰度滤镜作为完整示例。    一、屏幕后处理的原理普通渲染是”物体 → 帧缓冲 → 屏幕”；后处理多了一步”先渲染到纹理，再处理”： 1场景渲染 → 中间纹理（颜色缓冲）→ 全屏 Shader 处理 → 屏幕  那个”全屏 Shader”跑在一个铺满屏幕的四边形上，输入就是中间纹理，输出是最终画面。所以后处理 Shader 的结构和上一讲 Image Effect 模板一致：Cull Off ZWrite Off ZTest Always。 二、Built-in 的做法Built-in 下做后处理，典型是 C# 挂脚本 + OnRenderImage： 123456789public class GrayScale : MonoBehaviour&#123;    public Mater...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%20Shader%EF%BC%887%EF%BC%89%EF%BC%9A%E7%BA%B9%E7%90%86%E9%87%87%E6%A0%B7%E3%80%81UV%20%E5%8F%98%E6%8D%A2%E4%B8%8E%E6%B3%95%E7%BA%BF%E8%B4%B4%E5%9B%BE/" title="Unity Shader（7）：纹理采样、UV 变换与法线贴图"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity Shader（7）：纹理采样、UV 变换与法线贴图</div></div><div class="info-2"><div class="info-item-1"> 真实感的一半来自贴图。这一讲深入纹理的三个层面：怎么按 UV 采样、怎么自由变换 UV 做出各种图案效果、以及最常用的法线贴图——它为什么是蓝紫色的、切线空间 TBN 是什么。文末给一个完整的法线贴图 Shader。学完这篇，你能读懂绝大多数”贴图+凹凸”类代码。    一、UV 坐标与采样器 UV 坐标：把 3D 表面展平到 2D 纹理上的坐标，范围通常是 [0,1]，(0,0) 在纹理左下角。 采样（Sampling）：按 UV 去纹理里取对应像素的颜色。内置管线用 tex2D，URP 用 SAMPLE_TEXTURE2D。  1234// Built-infixed4 col = tex2D(_MainTex, i.uv);// URPhalf4 col = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);  二、Tiling &#x2F; Offset 是怎么实现的材质面板上的 Tiling（平铺）和 Offset（偏移），底层就是一个 UV 线性变换。Unity 自动生成 _MainTex_ST（ST &#x3D; ...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Csy7749</div><div class="author-info-description">键来！</div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">42</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">87</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">12</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/csy7749"><i class="fab fa-github"></i><span>GitHub</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">日积月累</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E7%BB%93%E6%9E%84%E4%BD%93%EF%BC%9Aappdata-%E4%B8%8E-v2f"><span class="toc-number">1.</span> <span class="toc-text">一、输入输出结构体：appdata 与 v2f</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E8%AF%AD%E4%B9%89%EF%BC%9AGPU-%E8%AE%A4%E2%80%9D%E6%A0%87%E7%AD%BE%E2%80%9D%E4%B8%8D%E8%AE%A4%E2%80%9D%E5%90%8D%E5%AD%97%E2%80%9D"><span class="toc-number">2.</span> <span class="toc-text">二、语义：GPU 认”标签”不认”名字”</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E8%BE%93%E5%85%A5%E8%AF%AD%E4%B9%89%EF%BC%88%E9%A1%B6%E7%82%B9%E7%9D%80%E8%89%B2%E5%99%A8%E8%AF%BB%E5%8F%96%EF%BC%89"><span class="toc-number">2.1.</span> <span class="toc-text">2.1 输入语义（顶点着色器读取）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E8%BE%93%E5%87%BA-%E7%B3%BB%E7%BB%9F%E8%AF%AD%E4%B9%89"><span class="toc-number">2.2.</span> <span class="toc-text">2.2 输出&#x2F;系统语义</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E4%B8%8E%E7%B2%BE%E5%BA%A6"><span class="toc-number">3.</span> <span class="toc-text">三、数据类型与精度</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E6%A0%87%E9%87%8F%E4%B8%8E%E5%90%91%E9%87%8F"><span class="toc-number">3.1.</span> <span class="toc-text">3.1 标量与向量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E7%B2%BE%E5%BA%A6%E6%80%8E%E4%B9%88%E9%80%89"><span class="toc-number">3.2.</span> <span class="toc-text">3.2 精度怎么选</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E7%9F%A9%E9%98%B5"><span class="toc-number">3.3.</span> <span class="toc-text">3.3 矩阵</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E5%B8%B8%E7%94%A8%E6%95%B0%E5%AD%A6%E5%87%BD%E6%95%B0"><span class="toc-number">4.</span> <span class="toc-text">四、常用数学函数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E9%87%87%E6%A0%B7%E5%87%BD%E6%95%B0"><span class="toc-number">5.</span> <span class="toc-text">五、采样函数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81Unity-%E5%86%85%E7%BD%AE%E5%AE%8F%E4%B8%8E%E5%8F%98%E9%87%8F"><span class="toc-number">6.</span> <span class="toc-text">六、Unity 内置宏与变量</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E5%9D%90%E6%A0%87%E4%B8%8E%E6%96%B9%E5%90%91%E5%8F%98%E6%8D%A2"><span class="toc-number">6.1.</span> <span class="toc-text">6.1 坐标与方向变换</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E5%86%85%E7%BD%AE%E7%9F%A9%E9%98%B5"><span class="toc-number">6.2.</span> <span class="toc-text">6.2 内置矩阵</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3-%E6%97%B6%E9%97%B4%E4%B8%8E%E5%8F%82%E6%95%B0"><span class="toc-number">6.3.</span> <span class="toc-text">6.3 时间与参数</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E5%A4%B4%E6%96%87%E4%BB%B6%E4%BD%93%E7%B3%BB"><span class="toc-number">7.</span> <span class="toc-text">七、头文件体系</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E8%87%AA%E6%9F%A5%E6%B8%85%E5%8D%95"><span class="toc-number">8.</span> <span class="toc-text">八、自查清单</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/18/Unity-AssetBundle%E5%8A%A0%E8%BD%BD%E6%A1%86%E6%9E%B6%EF%BC%9A%E4%BB%8E%E7%89%88%E6%9C%AC%E6%B8%85%E5%8D%95%E5%88%B0%E5%BC%95%E7%94%A8%E5%8D%B8%E8%BD%BD/" title="Unity AssetBundle加载框架：从版本清单到引用卸载">Unity AssetBundle加载框架：从版本清单到引用卸载</a><time datetime="2026-08-18T02:00:00.000Z" title="Created 2026-08-18 10:00:00">2026-08-18</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/Unity-UGUI%E6%9E%B6%E6%9E%84%EF%BC%883%EF%BC%89%EF%BC%9AMVC%E4%B8%8EMVVM%E5%AF%B9%E6%AF%94/" title="Unity UGUI架构（3）：MVC与MVVM对比">Unity UGUI架构（3）：MVC与MVVM对比</a><time datetime="2026-08-17T10:20:00.000Z" title="Created 2026-08-17 18:20:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/Unity-UGUI%E6%9E%B6%E6%9E%84%EF%BC%882%EF%BC%89%EF%BC%9AMVVM%E6%A8%A1%E5%BC%8F/" title="Unity UGUI架构（2）：MVVM模式">Unity UGUI架构（2）：MVVM模式</a><time datetime="2026-08-17T10:10:00.000Z" title="Created 2026-08-17 18:10:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/Unity-UGUI%E6%9E%B6%E6%9E%84%EF%BC%881%EF%BC%89%EF%BC%9AMVC%E6%A8%A1%E5%BC%8F/" title="Unity UGUI架构（1）：MVC模式">Unity UGUI架构（1）：MVC模式</a><time datetime="2026-08-17T10:00:00.000Z" title="Created 2026-08-17 18:00:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%886%EF%BC%89%EF%BC%9AAI%E5%86%B3%E7%AD%96%E6%AF%94%E8%BE%83/" title="游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型">游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型</a><time datetime="2026-08-17T08:00:00.000Z" title="Created 2026-08-17 16:00:00">2026-08-17</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2020 - 2026 By Csy7749</span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/koharu.model.json"},"display":{"position":"left","width":150,"height":300},"mobile":{"show":false},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/"});</script></body></html>

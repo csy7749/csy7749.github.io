@@ -7,7 +7,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://csy7749.github.io/img/avatar.png">
 <meta property="article:published_time" content="2026-08-17T07:20:00.000Z">
-<meta property="article:modified_time" content="2026-08-17T10:24:18.508Z">
+<meta property="article:modified_time" content="2026-08-18T04:42:28.416Z">
 <meta property="article:author" content="Csy7749">
 <meta property="article:tag" content="游戏AI">
 <meta property="article:tag" content="决策架构">
@@ -20,7 +20,7 @@
   "url": "https://csy7749.github.io/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%882%EF%BC%89%EF%BC%9AHFSM%E5%88%86%E5%B1%82%E6%9C%89%E9%99%90%E7%8A%B6%E6%80%81%E6%9C%BA/",
   "image": "https://csy7749.github.io/img/avatar.png",
   "datePublished": "2026-08-17T07:20:00.000Z",
-  "dateModified": "2026-08-17T10:24:18.508Z",
+  "dateModified": "2026-08-18T04:42:28.416Z",
   "author": [
     {
       "@type": "Person",
@@ -203,7 +203,7 @@
   isHighlightShrink: false,
   isToc: true,
   pageType: 'post'
-}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">38</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">79</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">10</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Csy7749-Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">游戏AI-决策架构（2）：HFSM 分层有限状态机</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">游戏AI-决策架构（2）：HFSM 分层有限状态机</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-08-17T07:20:00.000Z" title="Created 2026-08-17 15:20:00">2026-08-17</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-08-17T10:24:18.508Z" title="Updated 2026-08-17 18:24:18">2026-08-17</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%B8%B8%E6%88%8FAI/">游戏AI</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%B8%B8%E6%88%8FAI/%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84/">决策架构</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>HFSM（Hierarchical Finite State Machine，分层有限状态机）在 FSM 之上增加父子层级，让一组相关状态共享生命周期、更新逻辑和迁移规则。它解决的不是“如何让状态更多”，而是“如何把重复关系提升到共同父状态，同时保留明确的执行边界”。</p>
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">42</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">87</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">12</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Csy7749-Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">游戏AI-决策架构（2）：HFSM 分层有限状态机</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">游戏AI-决策架构（2）：HFSM 分层有限状态机</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-08-17T07:20:00.000Z" title="Created 2026-08-17 15:20:00">2026-08-17</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-08-18T04:42:28.416Z" title="Updated 2026-08-18 12:42:28">2026-08-18</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%B8%B8%E6%88%8FAI/">游戏AI</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%B8%B8%E6%88%8FAI/%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84/">决策架构</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>HFSM（Hierarchical Finite State Machine，分层有限状态机）在 FSM 之上增加父子层级，让一组相关状态共享生命周期、更新逻辑和迁移规则。它解决的不是“如何让状态更多”，而是“如何把重复关系提升到共同父状态，同时保留明确的执行边界”。</p>
 <span id="more"></span>
 
 <p>本文假设已经理解 FSM 的状态、迁移和 <code>Enter / Update / Exit</code>。示例使用 .NET 8 与 C#，重点实现 HFSM 最容易出错的部分：激活路径、父层迁移，以及跨层切换时的退出和进入顺序。</p>
@@ -215,391 +215,95 @@
 </ul>
 <p>它们通常共享一组规则：进入战斗时锁定目标、持续刷新威胁、离开战斗时清理目标；低血量时都要撤退，目标彻底丢失时都要回到巡逻。</p>
 <p>平铺 FSM 只能把这些规则复制到每个状态：</p>
-<pre><code class="language-text">Chase  --低血量--&gt; Flee
-Attack --低血量--&gt; Flee
-Search --低血量--&gt; Flee
-
-Chase  --目标丢失--&gt; Patrol
-Attack --目标丢失--&gt; Patrol
-Search --目标丢失--&gt; Patrol
-```text
-
-增加一个 `TakeCover` 状态后，还要再补两条迁移。HFSM 把共同关系提升到 `Combat`：
-
-```text
-Root
-├── Peace
-│   └── Patrol
-├── Combat
-│   ├── Chase
-│   └── Attack
-└── Flee
-
-Combat --目标丢失--&gt; Patrol
-Root   --低血量----&gt; Flee
-```text
-
-这样 `Combat` 不是一个只用来分组的文件夹，而是一个真正的父状态：它有进入、更新、退出行为，也能声明对子状态共同生效的迁移。这种层级状态思想来自 Harel 对 Statecharts 的形式化扩展：用层级、并发和通信缓解传统状态图的状态爆炸问题[^1]。
-
-## 二、当前状态变成一条激活路径
-
-普通 FSM 的当前状态是一个值：
-
-```text
-Current = Attack
-```text
-
-HFSM 的当前配置是一条从根到叶子的路径：
-
-```text
-ActivePath = Root -&gt; Combat -&gt; Attack
-```text
-
-一次 Tick 通常会让激活路径上的状态按父到子顺序更新：
-
-```text
-Root.Update()
-Combat.Update()
-Attack.Update()
-```text
-
-父状态适合处理共享上下文，叶状态负责具体动作。若父状态直接操纵攻击动画、叶状态又控制同一动画，两层就会争夺执行权；分层只消除真正共同的职责，不应该把所有逻辑都向父层搬。
-
-## 三、跨层迁移的核心：最近公共祖先
-
-假设当前路径为：
-
-```text
-Root -&gt; Combat -&gt; Attack
-```text
-
-目标路径为：
-
-```text
-Root -&gt; Peace -&gt; Patrol
-```text
-
-两条路径的最近公共祖先是 `Root`。正确切换顺序是：
-
-```text
-Exit Attack
-Exit Combat
-Enter Peace
-Enter Patrol
-```text
-
-这里的 `Root` 没有离开再进入，因为它仍然处于激活路径上。若从 `Attack` 切到同父级的 `Chase`，最近公共祖先变成 `Combat`，只需要：
-
-```text
-Exit Attack
-Enter Chase
-```text
-
-这套算法让跨层迁移不必硬编码“退出几层、进入几层”。只要父子关系正确，状态机就能统一计算生命周期路径。
-
-《Game Programming Patterns》也把分层状态机作为减少状态行为重复的直接扩展：子状态处理差异，父状态保留共同实现[^2]。
-
-## 四、一个可运行的 HFSM
-
-下面的实现用叶状态保存当前执行位置。迁移的源可以是任意祖先：`Combat -&gt; Patrol` 会同时作用于 `Chase` 和 `Attack`，`Root -&gt; Flee` 则是全局迁移。
-
-```csharp
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
-public sealed record GuardContext(
-    bool EnemyVisible,
-    float DistanceToEnemy,
-    bool LowHealth);
-
-public class HState
-&#123;
-    public string Name &#123; get; &#125;
-    public HState? Parent &#123; get; &#125;
-
-    public HState(string name, HState? parent = null)
-    &#123;
-        Name = name;
-        Parent = parent;
-    &#125;
-
-    public virtual void Enter() =&gt; Console.WriteLine($&quot;Enter &#123;Name&#125;&quot;);
-
-    public virtual void Update(GuardContext context)
-    &#123;
-        Console.WriteLine($&quot;Update &#123;Name&#125;&quot;);
-    &#125;
-
-    public virtual void Exit() =&gt; Console.WriteLine($&quot;Exit &#123;Name&#125;&quot;);
-
-    public bool Contains(HState state)
-    &#123;
-        for (var cursor = state; cursor is not null; cursor = cursor.Parent)
-        &#123;
-            if (ReferenceEquals(cursor, this))
-            &#123;
-                return true;
-            &#125;
-        &#125;
-
-        return false;
-    &#125;
-&#125;
-
-public sealed record HTransition(
-    HState Source,
-    HState Target,
-    Func&lt;GuardContext, bool&gt; Condition)
-&#123;
-    public bool Applies(HState activeLeaf, GuardContext context)
-    &#123;
-        return Source.Contains(activeLeaf) &amp;&amp; Condition(context);
-    &#125;
-&#125;
-
-public sealed class HierarchicalStateMachine
-&#123;
-    private readonly HState _root;
-    private readonly IReadOnlyList&lt;HTransition&gt; _transitions;
-    private HState _activeLeaf;
-
-    public HierarchicalStateMachine(
-        HState root,
-        HState initialLeaf,
-        IReadOnlyList&lt;HTransition&gt; transitions)
-    &#123;
-        _root = root;
-        _activeLeaf = initialLeaf;
-        _transitions = transitions;
-        EnterInitialPath();
-    &#125;
-
-    public void Tick(GuardContext context)
-    &#123;
-        var transition = _transitions.FirstOrDefault(
-            item =&gt; item.Applies(_activeLeaf, context));
-
-        if (transition is not null &amp;&amp; !ReferenceEquals(transition.Target, _activeLeaf))
-        &#123;
-            ChangeState(transition.Target);
-        &#125;
-
-        foreach (var state in GetPath(_activeLeaf))
-        &#123;
-            state.Update(context);
-        &#125;
-    &#125;
-
-    private void ChangeState(HState target)
-    &#123;
-        var ancestor = FindCommonAncestor(_activeLeaf, target);
-        Console.WriteLine($&quot;Transition: &#123;_activeLeaf.Name&#125; -&gt; &#123;target.Name&#125;&quot;);
-        ExitToAncestor(_activeLeaf, ancestor);
-        EnterFromAncestor(target, ancestor);
-        _activeLeaf = target;
-    &#125;
-
-    private void EnterInitialPath()
-    &#123;
-        if (!_root.Contains(_activeLeaf))
-        &#123;
-            throw new InvalidOperationException(&quot;Initial state is outside the root tree.&quot;);
-        &#125;
-
-        foreach (var state in GetPath(_activeLeaf))
-        &#123;
-            state.Enter();
-        &#125;
-    &#125;
-
-    private static void ExitToAncestor(HState state, HState ancestor)
-    &#123;
-        for (var cursor = state; !ReferenceEquals(cursor, ancestor); cursor = cursor.Parent!)
-        &#123;
-            cursor.Exit();
-        &#125;
-    &#125;
-
-    private static void EnterFromAncestor(HState target, HState ancestor)
-    &#123;
-        var pending = new Stack&lt;HState&gt;();
-        for (var cursor = target; !ReferenceEquals(cursor, ancestor); cursor = cursor.Parent!)
-        &#123;
-            pending.Push(cursor);
-        &#125;
-
-        while (pending.Count &gt; 0)
-        &#123;
-            pending.Pop().Enter();
-        &#125;
-    &#125;
-
-    private static HState FindCommonAncestor(HState source, HState target)
-    &#123;
-        var sourcePath = new HashSet&lt;HState&gt;();
-        for (var cursor = source; cursor is not null; cursor = cursor.Parent)
-        &#123;
-            sourcePath.Add(cursor);
-        &#125;
-
-        for (var cursor = target; cursor is not null; cursor = cursor.Parent)
-        &#123;
-            if (sourcePath.Contains(cursor))
-            &#123;
-                return cursor;
-            &#125;
-        &#125;
-
-        throw new InvalidOperationException(&quot;States do not share a root.&quot;);
-    &#125;
-
-    private static IReadOnlyList&lt;HState&gt; GetPath(HState leaf)
-    &#123;
-        var path = new List&lt;HState&gt;();
-        for (var cursor = leaf; cursor is not null; cursor = cursor.Parent)
-        &#123;
-            path.Add(cursor);
-        &#125;
-
-        path.Reverse();
-        return path;
-    &#125;
-&#125;
-
-public static class Program
-&#123;
-    private const float AttackRange = 2.0f;
-
-    public static void Main()
-    &#123;
-        var root = new HState(&quot;Root&quot;);
-        var peace = new HState(&quot;Peace&quot;, root);
-        var patrol = new HState(&quot;Patrol&quot;, peace);
-        var combat = new HState(&quot;Combat&quot;, root);
-        var chase = new HState(&quot;Chase&quot;, combat);
-        var attack = new HState(&quot;Attack&quot;, combat);
-        var flee = new HState(&quot;Flee&quot;, root);
-
-        var transitions = new List&lt;HTransition&gt;
-        &#123;
-            new(root, flee, context =&gt; context.LowHealth),
-            new(flee, patrol, context =&gt; !context.LowHealth),
-            new(patrol, chase, context =&gt; context.EnemyVisible),
-            new(combat, patrol, context =&gt; !context.EnemyVisible),
-            new(chase, attack, IsInAttackRange),
-            new(attack, chase, IsOutsideAttackRange)
-        &#125;;
-
-        var machine = new HierarchicalStateMachine(root, patrol, transitions);
-        machine.Tick(new GuardContext(true, 8.0f, false));
-        machine.Tick(new GuardContext(true, 1.5f, false));
-        machine.Tick(new GuardContext(false, 10.0f, false));
-        machine.Tick(new GuardContext(false, 10.0f, true));
-    &#125;
-
-    private static bool IsInAttackRange(GuardContext context)
-    &#123;
-        return context.EnemyVisible &amp;&amp; context.DistanceToEnemy &lt;= AttackRange;
-    &#125;
-
-    private static bool IsOutsideAttackRange(GuardContext context)
-    &#123;
-        return !context.EnemyVisible || context.DistanceToEnemy &gt; AttackRange;
-    &#125;
-&#125;
-```text
-
-这段代码刻意完整实现进入和退出路径，没有用“直接把当前叶状态改成目标状态”的简化写法。后者看似能跑，却会漏掉父状态的清理和初始化，是 HFSM 中最隐蔽的一类错误。
-
-## 五、父层和子层迁移如何竞争
-
-当前处于 `Root -&gt; Combat -&gt; Attack` 时，下面两条迁移可能同时成立：
-
-```text
-Root   --低血量--&gt; Flee
-Attack --距离过远--&gt; Chase
-```text
-
-必须定义优先级。常见策略有两种：
-
-- **外层优先**：先检查根和父状态，适合死亡、眩晕、撤退等全局中断。
-- **内层优先**：先检查叶状态，局部行为更容易覆盖父层默认规则。
-
-示例使用有序迁移表，把全局撤退放在第一位。完整框架可以先按显式优先级排序，再按层级深度处理；重要的是同一组条件每次得到相同结果，并在日志中输出获胜迁移。
-
-不要让父状态和子状态直接互相调用 `ChangeState`。所有迁移仍应经过同一个仲裁入口，否则层级优先级只是纸面规则。
-
-## 六、默认子状态与历史状态
-
-父状态本身通常不能作为最终执行位置。进入 `Combat` 时，需要决定进入哪个叶状态：
-
-- **Initial State**：每次进入都从默认子状态开始，例如 `Combat -&gt; Chase`。
-- **Shallow History**：记住上次直接子状态。
-- **Deep History**：记住上次完整子路径。
-
-历史状态适合“被短暂打断后继续原流程”，例如攻击被硬直打断，恢复后回到攻击子阶段。但历史也会保存已经失效的上下文；目标死亡后仍恢复到 `Attack` 就不合理。因此恢复历史前仍要验证进入条件，失败时回到默认子状态。
-
-示例直接把迁移目标写到叶状态，避开了默认/历史策略。真正封装框架时，应把它们作为显式配置，而不是在 `Enter` 里偷偷选择子状态。
-
-UnityHFSM 等开源实现进一步提供了需要退出时间、全局迁移和嵌套状态机等工程能力，可用于对照自研框架的语义边界[^3]。
-
-## 七、HFSM 不等于无限嵌套
-
-HFSM 的层级越深，单个状态的行为来源越分散。调试 `Attack` 时可能同时受到 `Root`、`Alive`、`Combat`、`RangedCombat` 四层规则影响，理解成本并不会凭空消失。
-
-适合升级 HFSM 的信号：
-
-- 多个相邻状态共享同一组生命周期逻辑。
-- 多个状态共享相同的高优先级迁移。
-- 行为天然存在“模式 -&gt; 子行为”的层级，例如地面/空中、和平/战斗。
-- 需要在一个模式内切换子状态，同时保持父模式不退出。
-
-不适合靠加层解决的问题：
-
-- 移动和武器是两个可并行变化的维度，应考虑正交状态机。
-- 高层目标需要多因素评分，应交给 Utility AI。
-- 行为分支频繁按优先级重新评估，行为树往往更直接。
-- 状态只是在转发服务调用，说明职责可能拆错了。
-
-## 八、调试信息至少要包含什么
-
-普通 FSM 输出 `Attack -&gt; Flee` 还算清楚，HFSM 只输出叶状态就不够。至少记录：
-
-- 切换前激活路径
-- 命中的迁移来源层级
-- 条件或事件名称
-- 最近公共祖先
-- 实际退出路径和进入路径
-- 切换后的激活路径
-
-例如：
-
-```text
-Before: Root/Combat/Attack
-Rule: Root.LowHealth -&gt; Flee
-LCA: Root
-Exit: Attack, Combat
-Enter: Flee
-After: Root/Flee
-```text
-
-有了这组信息，层级结构才真正可维护。
-
-## 九、自查清单
-
-- 当前执行位置是否用完整激活路径表达？
-- 父状态是否承担真正共享的职责，而不只是目录分组？
-- 跨层迁移是否通过最近公共祖先计算退出和进入路径？
-- 父层与子层迁移冲突是否有确定优先级？
-- 默认子状态、浅历史和深历史是否被显式区分？
-- 日志能否还原命中的层级规则和完整生命周期路径？
-- 层级过深时，是否应该改用行为树、正交状态机或高层决策器？
-
-## 参考
-
-[^1]: [Statecharts: A Visual Formalism for Complex Systems](https://doi.org/10.1016/0167-6423(87)90035-9) - David Harel 在 1987 年提出的 Statecharts 论文
-[^2]: [State - Game Programming Patterns](https://gameprogrammingpatterns.com/state.html) - 游戏场景中的并发状态机与分层状态机说明
-[^3]: [Inspiaaa/UnityHFSM](https://github.com/Inspiaaa/UnityHFSM) - Unity 中类式 HFSM 的开源实现，可参考状态、迁移和退出时间设计
-</code></pre>
-</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://csy7749.github.io">Csy7749</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://csy7749.github.io/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%882%EF%BC%89%EF%BC%9AHFSM%E5%88%86%E5%B1%82%E6%9C%89%E9%99%90%E7%8A%B6%E6%80%81%E6%9C%BA/">https://csy7749.github.io/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%882%EF%BC%89%EF%BC%9AHFSM%E5%88%86%E5%B1%82%E6%9C%89%E9%99%90%E7%8A%B6%E6%80%81%E6%9C%BA/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%B8%B8%E6%88%8FAI/">游戏AI</a><a class="post-meta__tags" href="/tags/%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84/">决策架构</a><a class="post-meta__tags" href="/tags/HFSM/">HFSM</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%883%EF%BC%89%EF%BC%9A%E8%A1%8C%E4%B8%BA%E6%A0%91/" title="游戏AI-决策架构（3）：行为树"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">游戏AI-决策架构（3）：行为树</div></div><div class="info-2"><div class="info-item-1">行为树（Behavior Tree）把 AI 行为组织成可组合节点，并用 Success、Failure、Running 三种结果驱动控制流。它特别适合持续重新评估威胁、按优先级选择分支，以及把复杂战斗逻辑拆成可复用子树。   本文假设读者理解基本的树结构和 C# 接口。示例使用 .NET 8，实现一棵响应式守卫行为树；重点不是可视化编辑器，而是编辑器背后必须稳定成立的 Tick、中断和状态语义。 一、行为树和状态机看问题的角度不同FSM 首先问： 我当前处于哪个状态？什么条件会让我切到另一个状态？ ```text  行为树首先问：  ```text 从根节点开始，这一帧哪条分支能够执行？执行到哪里还没结束？ ```text  同一个守卫逻辑可以写成：  ```text Priority Selector ├── Sequence: 撤退 │   ├── Condition: 低血量 │   └── Action: 逃离 ├── Sequence: 战斗 │   ├── Condition: 看见敌人 │   └── Selector │       ├── Sequence: ...</div></div></div></a><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%881%EF%BC%89%EF%BC%9AFSM%E6%9C%89%E9%99%90%E7%8A%B6%E6%80%81%E6%9C%BA/" title="游戏AI-决策架构（1）：FSM 有限状态机"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">游戏AI-决策架构（1）：FSM 有限状态机</div></div><div class="info-2"><div class="info-item-1">FSM（Finite State Machine，有限状态机）把角色行为表达为有限个状态，以及状态之间带条件的迁移。它不负责生成长期计划，但很适合把巡逻、追击、攻击、撤退这类边界明确的行为组织成一个稳定、可观察的执行闭环。   本文假设读者熟悉 C# 接口、委托和集合。示例使用 .NET 8，可直接放进控制台项目运行；接入 Unity 时，把 Tick 放到组件更新入口，并把输出动作替换为注入的移动、技能和动画服务即可。 一、FSM 真正在管理什么一个 FSM 至少包含四部分；这种“状态对象 + 迁移规则”的拆分也对应状态模式在游戏逻辑中的典型用法[^1]：  State：当前行为模式，例如 Patrol、Chase、Attack。 Transition：从源状态到目标状态的有向边。 Condition：迁移成立的条件，例如“看见敌人且距离不超过攻击范围”。 State Machine：保存当前状态，检查迁移，按顺序调用退出与进入逻辑。  守卫 NPC 可以画成下面这张状态图： Patrol --发现敌人--&gt; Chase --进入射程--&gt; Attack    ^ ...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%886%EF%BC%89%EF%BC%9AAI%E5%86%B3%E7%AD%96%E6%AF%94%E8%BE%83/" title="游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型</div></div><div class="info-2"><div class="info-item-1">FSM、HFSM、行为树、Utility AI、GOAP、HTN 经常被放在一起比较，但它们并不完全处于同一层。本文按“解决什么问题、输出什么结果、适合什么场景”重新对齐六种方案，并给出面向实际项目的选型与组合方式。   本文假设读者已经了解游戏 AI 中的感知、移动和动作执行概念。重点不是重复每种算法的完整实现，而是建立一套能用于项目判断的比较坐标。 一、先区分：执行控制、即时选择与多步规划很多选型争论没有结果，是因为大家比较的并不是同一个问题。 感知层   收集血量、距离、目标、危险度、资源等事实         |         v 决策与规划层   Utility AI：当前哪个候选行为最值得做   GOAP：哪些动作可以组成一条达成目标的路径   HTN：高层任务应该按哪种方法逐层拆解         |         v 执行控制层   FSM：当前处于哪个明确状态   HFSM：当前处于哪条层级状态路径   行为树：当前哪条优先级分支可以继续执行         |         v 动作能力层   寻路、技能、动画、交互、Smart Object ```te...</div></div></div></a><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%881%EF%BC%89%EF%BC%9AFSM%E6%9C%89%E9%99%90%E7%8A%B6%E6%80%81%E6%9C%BA/" title="游戏AI-决策架构（1）：FSM 有限状态机"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构（1）：FSM 有限状态机</div></div><div class="info-2"><div class="info-item-1">FSM（Finite State Machine，有限状态机）把角色行为表达为有限个状态，以及状态之间带条件的迁移。它不负责生成长期计划，但很适合把巡逻、追击、攻击、撤退这类边界明确的行为组织成一个稳定、可观察的执行闭环。   本文假设读者熟悉 C# 接口、委托和集合。示例使用 .NET 8，可直接放进控制台项目运行；接入 Unity 时，把 Tick 放到组件更新入口，并把输出动作替换为注入的移动、技能和动画服务即可。 一、FSM 真正在管理什么一个 FSM 至少包含四部分；这种“状态对象 + 迁移规则”的拆分也对应状态模式在游戏逻辑中的典型用法[^1]：  State：当前行为模式，例如 Patrol、Chase、Attack。 Transition：从源状态到目标状态的有向边。 Condition：迁移成立的条件，例如“看见敌人且距离不超过攻击范围”。 State Machine：保存当前状态，检查迁移，按顺序调用退出与进入逻辑。  守卫 NPC 可以画成下面这张状态图： Patrol --发现敌人--&gt; Chase --进入射程--&gt; Attack    ^ ...</div></div></div></a><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%E7%B3%BB%E5%88%97-%E8%A7%84%E5%88%92/" title="游戏AI-决策架构 系列·写作规划"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构 系列·写作规划</div></div><div class="info-2"><div class="info-item-1">游戏 AI 不只有“怎么想”，还要解决“选定行为后怎么稳定执行”。这组文章先从 FSM、HFSM 和行为树拆解三种执行模型，再进入 Utility AI 的即时评分与 HTN 的长程规划，最后横向比较各类方案及其组合边界。   系列定位名称：游戏AI-决策架构 目标读者：熟悉 C# 基础，希望给敌人、NPC 或 Boss 搭建可维护行为逻辑的游戏开发者。 核心问题：感知系统已经给出了敌人距离、血量、目标等上下文后，AI 如何完成行为执行、即时选择与多步规划，并把它们组合成稳定、可维护的决策链。 这组文章讨论的是执行与轻量决策层，不把 FSM、HFSM、行为树和 GOAP、HTN、Utility AI 混成同一种东西： Sensor / Perception         |         v GOAP / HTN / Utility AI     选择目标、策略或计划         |         v FSM / HFSM / Behavior Tree  执行当前行为         |         v Movement / Ability / Animation...</div></div></div></a><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%883%EF%BC%89%EF%BC%9A%E8%A1%8C%E4%B8%BA%E6%A0%91/" title="游戏AI-决策架构（3）：行为树"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构（3）：行为树</div></div><div class="info-2"><div class="info-item-1">行为树（Behavior Tree）把 AI 行为组织成可组合节点，并用 Success、Failure、Running 三种结果驱动控制流。它特别适合持续重新评估威胁、按优先级选择分支，以及把复杂战斗逻辑拆成可复用子树。   本文假设读者理解基本的树结构和 C# 接口。示例使用 .NET 8，实现一棵响应式守卫行为树；重点不是可视化编辑器，而是编辑器背后必须稳定成立的 Tick、中断和状态语义。 一、行为树和状态机看问题的角度不同FSM 首先问： 我当前处于哪个状态？什么条件会让我切到另一个状态？ ```text  行为树首先问：  ```text 从根节点开始，这一帧哪条分支能够执行？执行到哪里还没结束？ ```text  同一个守卫逻辑可以写成：  ```text Priority Selector ├── Sequence: 撤退 │   ├── Condition: 低血量 │   └── Action: 逃离 ├── Sequence: 战斗 │   ├── Condition: 看见敌人 │   └── Selector │       ├── Sequence: ...</div></div></div></a><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%884%EF%BC%89%EF%BC%9AUtilityAI%E6%95%88%E7%94%A8%E5%86%B3%E7%AD%96/" title="游戏AI-决策架构（4）：Utility AI 效用决策"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构（4）：Utility AI 效用决策</div></div><div class="info-2"><div class="info-item-1">Utility AI（效用型 AI）把血量、距离、风险、资源等上下文转换成统一分数，再从候选行为中选择当前效用最高的一项。它解决的不是“动作如何执行”，而是多个因素同时变化时，角色此刻更应该攻击、治疗、撤退还是巡逻。   本文假设读者熟悉 C# 委托、集合和基本数学函数。示例使用 .NET 8，实现归一化输入、响应曲线、评分合成、惯性修正和可解释的候选输出，可以直接放进控制台项目运行。 一、Utility AI 解决什么问题硬条件适合表达明确规则： if 死亡 -&gt; 进入死亡状态 if 技能未解锁 -&gt; 禁止释放 ```text  但下面这种选择很难只靠一组阈值维护：  ```text 血量低，希望治疗或撤退 敌人很近，希望攻击或拉开距离 敌人很多，希望找掩体 治疗技能可用，但释放过程可能被打断 当前攻击已经进行一半，切换也有成本 ```text  如果继续添加 `if / else`，不同条件的优先级会散落在代码顺序里，临界值附近还可能发生生硬切换。Utility AI 把问题改写为：  ```text Attack  = 0.65 Retreat = 0.56 H...</div></div></div></a><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%885%EF%BC%89%EF%BC%9AHTN%E5%88%86%E5%B1%82%E4%BB%BB%E5%8A%A1%E7%BD%91%E7%BB%9C/" title="游戏AI-决策架构（5）：HTN 分层任务网络"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构（5）：HTN 分层任务网络</div></div><div class="info-2"><div class="info-item-1">HTN（Hierarchical Task Network，分层任务网络）从高层任务出发，根据当前世界状态选择 Method，逐层拆解 Compound Task，最终生成可执行的 Primitive Task 序列。它适合步骤较长、领域套路明确，同时又需要根据局势选择不同执行方案的游戏 AI。   本文假设读者熟悉 C# 继承、委托、不可变记录和集合。示例使用 .NET 8，实现一个支持 Method 回溯、规划期状态效果和完整展开轨迹的总序 HTN Planner，可以直接放进控制台项目运行。 一、HTN 解决什么问题守卫 NPC 接到 DefendArea 任务后，可能面对不同情况： 低血量且有药品 -&gt; 治疗 -&gt; 接敌 低血量且没有药品 -&gt; 移动到掩体 发现敌人且距离较远 -&gt; 接近 -&gt; 攻击 发现敌人且已在射程 -&gt; 直接攻击 没有威胁 -&gt; 巡逻 ```text  FSM 可以为每一步建立状态，行为树可以把所有分支画出来，GOAP 可以在动作状态空间中搜索。HTN 采用另一种思路：把设计者已经知道的领域套路写成任务分解规...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Csy7749</div><div class="author-info-description">键来！</div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">38</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">79</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">10</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/csy7749"><i class="fab fa-github"></i><span>GitHub</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">日积月累</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E4%B8%BA%E4%BB%80%E4%B9%88%E5%B9%B3%E9%93%BA-FSM-%E4%BC%9A%E5%87%BA%E7%8E%B0%E9%87%8D%E5%A4%8D"><span class="toc-number">1.</span> <span class="toc-text">一、为什么平铺 FSM 会出现重复</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%886%EF%BC%89%EF%BC%9AAI%E5%86%B3%E7%AD%96%E6%AF%94%E8%BE%83/" title="游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型">游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型</a><time datetime="2026-08-17T08:00:00.000Z" title="Created 2026-08-17 16:00:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%885%EF%BC%89%EF%BC%9AHTN%E5%88%86%E5%B1%82%E4%BB%BB%E5%8A%A1%E7%BD%91%E7%BB%9C/" title="游戏AI-决策架构（5）：HTN 分层任务网络">游戏AI-决策架构（5）：HTN 分层任务网络</a><time datetime="2026-08-17T07:50:00.000Z" title="Created 2026-08-17 15:50:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%884%EF%BC%89%EF%BC%9AUtilityAI%E6%95%88%E7%94%A8%E5%86%B3%E7%AD%96/" title="游戏AI-决策架构（4）：Utility AI 效用决策">游戏AI-决策架构（4）：Utility AI 效用决策</a><time datetime="2026-08-17T07:40:00.000Z" title="Created 2026-08-17 15:40:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%883%EF%BC%89%EF%BC%9A%E8%A1%8C%E4%B8%BA%E6%A0%91/" title="游戏AI-决策架构（3）：行为树">游戏AI-决策架构（3）：行为树</a><time datetime="2026-08-17T07:30:00.000Z" title="Created 2026-08-17 15:30:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%882%EF%BC%89%EF%BC%9AHFSM%E5%88%86%E5%B1%82%E6%9C%89%E9%99%90%E7%8A%B6%E6%80%81%E6%9C%BA/" title="游戏AI-决策架构（2）：HFSM 分层有限状态机">游戏AI-决策架构（2）：HFSM 分层有限状态机</a><time datetime="2026-08-17T07:20:00.000Z" title="Created 2026-08-17 15:20:00">2026-08-17</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2020 - 2026 By Csy7749</span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/koharu.model.json"},"display":{"position":"left","width":150,"height":300},"mobile":{"show":false},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/"});</script></body></html>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Chase  --低血量--&gt; Flee</span><br><span class="line">Attack --低血量--&gt; Flee</span><br><span class="line">Search --低血量--&gt; Flee</span><br><span class="line"></span><br><span class="line">Chase  --目标丢失--&gt; Patrol</span><br><span class="line">Attack --目标丢失--&gt; Patrol</span><br><span class="line">Search --目标丢失--&gt; Patrol</span><br></pre></td></tr></table></figure>
+
+<p>增加一个 <code>TakeCover</code> 状态后，还要再补两条迁移。HFSM 把共同关系提升到 <code>Combat</code>：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Root</span><br><span class="line">├── Peace</span><br><span class="line">│   └── Patrol</span><br><span class="line">├── Combat</span><br><span class="line">│   ├── Chase</span><br><span class="line">│   └── Attack</span><br><span class="line">└── Flee</span><br><span class="line"></span><br><span class="line">Combat --目标丢失--&gt; Patrol</span><br><span class="line">Root   --低血量----&gt; Flee</span><br></pre></td></tr></table></figure>
+
+<p>这样 <code>Combat</code> 不是一个只用来分组的文件夹，而是一个真正的父状态：它有进入、更新、退出行为，也能声明对子状态共同生效的迁移。这种层级状态思想来自 Harel 对 Statecharts 的形式化扩展：用层级、并发和通信缓解传统状态图的状态爆炸问题[^1]。</p>
+<h2 id="二、当前状态变成一条激活路径"><a href="#二、当前状态变成一条激活路径" class="headerlink" title="二、当前状态变成一条激活路径"></a>二、当前状态变成一条激活路径</h2><p>普通 FSM 的当前状态是一个值：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Current = Attack</span><br></pre></td></tr></table></figure>
+
+<p>HFSM 的当前配置是一条从根到叶子的路径：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ActivePath = Root -&gt; Combat -&gt; Attack</span><br></pre></td></tr></table></figure>
+
+<p>一次 Tick 通常会让激活路径上的状态按父到子顺序更新：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Root.Update()</span><br><span class="line">Combat.Update()</span><br><span class="line">Attack.Update()</span><br></pre></td></tr></table></figure>
+
+<p>父状态适合处理共享上下文，叶状态负责具体动作。若父状态直接操纵攻击动画、叶状态又控制同一动画，两层就会争夺执行权；分层只消除真正共同的职责，不应该把所有逻辑都向父层搬。</p>
+<h2 id="三、跨层迁移的核心：最近公共祖先"><a href="#三、跨层迁移的核心：最近公共祖先" class="headerlink" title="三、跨层迁移的核心：最近公共祖先"></a>三、跨层迁移的核心：最近公共祖先</h2><p>假设当前路径为：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Root -&gt; Combat -&gt; Attack</span><br></pre></td></tr></table></figure>
+
+<p>目标路径为：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Root -&gt; Peace -&gt; Patrol</span><br></pre></td></tr></table></figure>
+
+<p>两条路径的最近公共祖先是 <code>Root</code>。正确切换顺序是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Exit Attack</span><br><span class="line">Exit Combat</span><br><span class="line">Enter Peace</span><br><span class="line">Enter Patrol</span><br></pre></td></tr></table></figure>
+
+<p>这里的 <code>Root</code> 没有离开再进入，因为它仍然处于激活路径上。若从 <code>Attack</code> 切到同父级的 <code>Chase</code>，最近公共祖先变成 <code>Combat</code>，只需要：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Exit Attack</span><br><span class="line">Enter Chase</span><br></pre></td></tr></table></figure>
+
+<p>这套算法让跨层迁移不必硬编码“退出几层、进入几层”。只要父子关系正确，状态机就能统一计算生命周期路径。</p>
+<p>《Game Programming Patterns》也把分层状态机作为减少状态行为重复的直接扩展：子状态处理差异，父状态保留共同实现[^2]。</p>
+<h2 id="四、一个可运行的-HFSM"><a href="#四、一个可运行的-HFSM" class="headerlink" title="四、一个可运行的 HFSM"></a>四、一个可运行的 HFSM</h2><p>下面的实现用叶状态保存当前执行位置。迁移的源可以是任意祖先：<code>Combat -&gt; Patrol</code> 会同时作用于 <code>Chase</code> 和 <code>Attack</code>，<code>Root -&gt; Flee</code> 则是全局迁移。</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">using</span> System;</span><br><span class="line"><span class="keyword">using</span> System.Collections.Generic;</span><br><span class="line"><span class="keyword">using</span> System.Linq;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">record</span> <span class="title">GuardContext</span>(<span class="params"></span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="built_in">bool</span> EnemyVisible,</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="built_in">float</span> DistanceToEnemy,</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="built_in">bool</span> LowHealth</span>)</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">HState</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="built_in">string</span> Name &#123; <span class="keyword">get</span>; &#125;</span><br><span class="line">    <span class="keyword">public</span> HState? Parent &#123; <span class="keyword">get</span>; &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">HState</span>(<span class="params"><span class="built_in">string</span> name, HState? parent = <span class="literal">null</span></span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        Name = name;</span><br><span class="line">        Parent = parent;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">Enter</span>()</span> =&gt; Console.WriteLine(<span class="string">$&quot;Enter <span class="subst">&#123;Name&#125;</span>&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">Update</span>(<span class="params">GuardContext context</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        Console.WriteLine(<span class="string">$&quot;Update <span class="subst">&#123;Name&#125;</span>&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">Exit</span>()</span> =&gt; Console.WriteLine(<span class="string">$&quot;Exit <span class="subst">&#123;Name&#125;</span>&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="built_in">bool</span> <span class="title">Contains</span>(<span class="params">HState state</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">var</span> cursor = state; cursor <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">null</span>; cursor = cursor.Parent)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (ReferenceEquals(cursor, <span class="keyword">this</span>))</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">record</span> <span class="title">HTransition</span>(<span class="params"></span></span></span><br><span class="line"><span class="params"><span class="function">    HState Source,</span></span></span><br><span class="line"><span class="params"><span class="function">    HState Target,</span></span></span><br><span class="line"><span class="params"><span class="function">    Func&lt;GuardContext, <span class="built_in">bool</span>&gt; Condition</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="built_in">bool</span> <span class="title">Applies</span>(<span class="params">HState activeLeaf, GuardContext context</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> Source.Contains(activeLeaf) &amp;&amp; Condition(context);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">class</span> <span class="title">HierarchicalStateMachine</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> HState _root;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> IReadOnlyList&lt;HTransition&gt; _transitions;</span><br><span class="line">    <span class="keyword">private</span> HState _activeLeaf;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">HierarchicalStateMachine</span>(<span class="params"></span></span></span><br><span class="line"><span class="params"><span class="function">        HState root,</span></span></span><br><span class="line"><span class="params"><span class="function">        HState initialLeaf,</span></span></span><br><span class="line"><span class="params"><span class="function">        IReadOnlyList&lt;HTransition&gt; transitions</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        _root = root;</span><br><span class="line">        _activeLeaf = initialLeaf;</span><br><span class="line">        _transitions = transitions;</span><br><span class="line">        EnterInitialPath();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Tick</span>(<span class="params">GuardContext context</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">var</span> transition = _transitions.FirstOrDefault(</span><br><span class="line">            item =&gt; item.Applies(_activeLeaf, context));</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (transition <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">null</span> &amp;&amp; !ReferenceEquals(transition.Target, _activeLeaf))</span><br><span class="line">        &#123;</span><br><span class="line">            ChangeState(transition.Target);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">foreach</span> (<span class="function"><span class="keyword">var</span> state <span class="keyword">in</span> <span class="title">GetPath</span>(<span class="params">_activeLeaf</span>))</span></span><br><span class="line">        &#123;</span><br><span class="line">            state.Update(context);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">ChangeState</span>(<span class="params">HState target</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">var</span> ancestor = FindCommonAncestor(_activeLeaf, target);</span><br><span class="line">        Console.WriteLine(<span class="string">$&quot;Transition: <span class="subst">&#123;_activeLeaf.Name&#125;</span> -&gt; <span class="subst">&#123;target.Name&#125;</span>&quot;</span>);</span><br><span class="line">        ExitToAncestor(_activeLeaf, ancestor);</span><br><span class="line">        EnterFromAncestor(target, ancestor);</span><br><span class="line">        _activeLeaf = target;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">EnterInitialPath</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (!_root.Contains(_activeLeaf))</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> InvalidOperationException(<span class="string">&quot;Initial state is outside the root tree.&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">foreach</span> (<span class="function"><span class="keyword">var</span> state <span class="keyword">in</span> <span class="title">GetPath</span>(<span class="params">_activeLeaf</span>))</span></span><br><span class="line">        &#123;</span><br><span class="line">            state.Enter();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">ExitToAncestor</span>(<span class="params">HState state, HState ancestor</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">var</span> cursor = state; !ReferenceEquals(cursor, ancestor); cursor = cursor.Parent!)</span><br><span class="line">        &#123;</span><br><span class="line">            cursor.Exit();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">EnterFromAncestor</span>(<span class="params">HState target, HState ancestor</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">var</span> pending = <span class="keyword">new</span> Stack&lt;HState&gt;();</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">var</span> cursor = target; !ReferenceEquals(cursor, ancestor); cursor = cursor.Parent!)</span><br><span class="line">        &#123;</span><br><span class="line">            pending.Push(cursor);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">while</span> (pending.Count &gt; <span class="number">0</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            pending.Pop().Enter();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> HState <span class="title">FindCommonAncestor</span>(<span class="params">HState source, HState target</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">var</span> sourcePath = <span class="keyword">new</span> HashSet&lt;HState&gt;();</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">var</span> cursor = source; cursor <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">null</span>; cursor = cursor.Parent)</span><br><span class="line">        &#123;</span><br><span class="line">            sourcePath.Add(cursor);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">var</span> cursor = target; cursor <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">null</span>; cursor = cursor.Parent)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (sourcePath.Contains(cursor))</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">return</span> cursor;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> InvalidOperationException(<span class="string">&quot;States do not share a root.&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> IReadOnlyList&lt;HState&gt; <span class="title">GetPath</span>(<span class="params">HState leaf</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">var</span> path = <span class="keyword">new</span> List&lt;HState&gt;();</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">var</span> cursor = leaf; cursor <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">null</span>; cursor = cursor.Parent)</span><br><span class="line">        &#123;</span><br><span class="line">            path.Add(cursor);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        path.Reverse();</span><br><span class="line">        <span class="keyword">return</span> path;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title">Program</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">const</span> <span class="built_in">float</span> AttackRange = <span class="number">2.0f</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Main</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">var</span> root = <span class="keyword">new</span> HState(<span class="string">&quot;Root&quot;</span>);</span><br><span class="line">        <span class="keyword">var</span> peace = <span class="keyword">new</span> HState(<span class="string">&quot;Peace&quot;</span>, root);</span><br><span class="line">        <span class="keyword">var</span> patrol = <span class="keyword">new</span> HState(<span class="string">&quot;Patrol&quot;</span>, peace);</span><br><span class="line">        <span class="keyword">var</span> combat = <span class="keyword">new</span> HState(<span class="string">&quot;Combat&quot;</span>, root);</span><br><span class="line">        <span class="keyword">var</span> chase = <span class="keyword">new</span> HState(<span class="string">&quot;Chase&quot;</span>, combat);</span><br><span class="line">        <span class="keyword">var</span> attack = <span class="keyword">new</span> HState(<span class="string">&quot;Attack&quot;</span>, combat);</span><br><span class="line">        <span class="keyword">var</span> flee = <span class="keyword">new</span> HState(<span class="string">&quot;Flee&quot;</span>, root);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">var</span> transitions = <span class="keyword">new</span> List&lt;HTransition&gt;</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">new</span>(root, flee, context =&gt; context.LowHealth),</span><br><span class="line">            <span class="keyword">new</span>(flee, patrol, context =&gt; !context.LowHealth),</span><br><span class="line">            <span class="keyword">new</span>(patrol, chase, context =&gt; context.EnemyVisible),</span><br><span class="line">            <span class="keyword">new</span>(combat, patrol, context =&gt; !context.EnemyVisible),</span><br><span class="line">            <span class="keyword">new</span>(chase, attack, IsInAttackRange),</span><br><span class="line">            <span class="keyword">new</span>(attack, chase, IsOutsideAttackRange)</span><br><span class="line">        &#125;;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">var</span> machine = <span class="keyword">new</span> HierarchicalStateMachine(root, patrol, transitions);</span><br><span class="line">        machine.Tick(<span class="keyword">new</span> GuardContext(<span class="literal">true</span>, <span class="number">8.0f</span>, <span class="literal">false</span>));</span><br><span class="line">        machine.Tick(<span class="keyword">new</span> GuardContext(<span class="literal">true</span>, <span class="number">1.5f</span>, <span class="literal">false</span>));</span><br><span class="line">        machine.Tick(<span class="keyword">new</span> GuardContext(<span class="literal">false</span>, <span class="number">10.0f</span>, <span class="literal">false</span>));</span><br><span class="line">        machine.Tick(<span class="keyword">new</span> GuardContext(<span class="literal">false</span>, <span class="number">10.0f</span>, <span class="literal">true</span>));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="built_in">bool</span> <span class="title">IsInAttackRange</span>(<span class="params">GuardContext context</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> context.EnemyVisible &amp;&amp; context.DistanceToEnemy &lt;= AttackRange;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="built_in">bool</span> <span class="title">IsOutsideAttackRange</span>(<span class="params">GuardContext context</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> !context.EnemyVisible || context.DistanceToEnemy &gt; AttackRange;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这段代码刻意完整实现进入和退出路径，没有用“直接把当前叶状态改成目标状态”的简化写法。后者看似能跑，却会漏掉父状态的清理和初始化，是 HFSM 中最隐蔽的一类错误。</p>
+<h2 id="五、父层和子层迁移如何竞争"><a href="#五、父层和子层迁移如何竞争" class="headerlink" title="五、父层和子层迁移如何竞争"></a>五、父层和子层迁移如何竞争</h2><p>当前处于 <code>Root -&gt; Combat -&gt; Attack</code> 时，下面两条迁移可能同时成立：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Root   --低血量--&gt; Flee</span><br><span class="line">Attack --距离过远--&gt; Chase</span><br></pre></td></tr></table></figure>
+
+<p>必须定义优先级。常见策略有两种：</p>
+<ul>
+<li><strong>外层优先</strong>：先检查根和父状态，适合死亡、眩晕、撤退等全局中断。</li>
+<li><strong>内层优先</strong>：先检查叶状态，局部行为更容易覆盖父层默认规则。</li>
+</ul>
+<p>示例使用有序迁移表，把全局撤退放在第一位。完整框架可以先按显式优先级排序，再按层级深度处理；重要的是同一组条件每次得到相同结果，并在日志中输出获胜迁移。</p>
+<p>不要让父状态和子状态直接互相调用 <code>ChangeState</code>。所有迁移仍应经过同一个仲裁入口，否则层级优先级只是纸面规则。</p>
+<h2 id="六、默认子状态与历史状态"><a href="#六、默认子状态与历史状态" class="headerlink" title="六、默认子状态与历史状态"></a>六、默认子状态与历史状态</h2><p>父状态本身通常不能作为最终执行位置。进入 <code>Combat</code> 时，需要决定进入哪个叶状态：</p>
+<ul>
+<li><strong>Initial State</strong>：每次进入都从默认子状态开始，例如 <code>Combat -&gt; Chase</code>。</li>
+<li><strong>Shallow History</strong>：记住上次直接子状态。</li>
+<li><strong>Deep History</strong>：记住上次完整子路径。</li>
+</ul>
+<p>历史状态适合“被短暂打断后继续原流程”，例如攻击被硬直打断，恢复后回到攻击子阶段。但历史也会保存已经失效的上下文；目标死亡后仍恢复到 <code>Attack</code> 就不合理。因此恢复历史前仍要验证进入条件，失败时回到默认子状态。</p>
+<p>示例直接把迁移目标写到叶状态，避开了默认&#x2F;历史策略。真正封装框架时，应把它们作为显式配置，而不是在 <code>Enter</code> 里偷偷选择子状态。</p>
+<p>UnityHFSM 等开源实现进一步提供了需要退出时间、全局迁移和嵌套状态机等工程能力，可用于对照自研框架的语义边界[^3]。</p>
+<h2 id="七、HFSM-不等于无限嵌套"><a href="#七、HFSM-不等于无限嵌套" class="headerlink" title="七、HFSM 不等于无限嵌套"></a>七、HFSM 不等于无限嵌套</h2><p>HFSM 的层级越深，单个状态的行为来源越分散。调试 <code>Attack</code> 时可能同时受到 <code>Root</code>、<code>Alive</code>、<code>Combat</code>、<code>RangedCombat</code> 四层规则影响，理解成本并不会凭空消失。</p>
+<p>适合升级 HFSM 的信号：</p>
+<ul>
+<li>多个相邻状态共享同一组生命周期逻辑。</li>
+<li>多个状态共享相同的高优先级迁移。</li>
+<li>行为天然存在“模式 -&gt; 子行为”的层级，例如地面&#x2F;空中、和平&#x2F;战斗。</li>
+<li>需要在一个模式内切换子状态，同时保持父模式不退出。</li>
+</ul>
+<p>不适合靠加层解决的问题：</p>
+<ul>
+<li>移动和武器是两个可并行变化的维度，应考虑正交状态机。</li>
+<li>高层目标需要多因素评分，应交给 Utility AI。</li>
+<li>行为分支频繁按优先级重新评估，行为树往往更直接。</li>
+<li>状态只是在转发服务调用，说明职责可能拆错了。</li>
+</ul>
+<h2 id="八、调试信息至少要包含什么"><a href="#八、调试信息至少要包含什么" class="headerlink" title="八、调试信息至少要包含什么"></a>八、调试信息至少要包含什么</h2><p>普通 FSM 输出 <code>Attack -&gt; Flee</code> 还算清楚，HFSM 只输出叶状态就不够。至少记录：</p>
+<ul>
+<li>切换前激活路径</li>
+<li>命中的迁移来源层级</li>
+<li>条件或事件名称</li>
+<li>最近公共祖先</li>
+<li>实际退出路径和进入路径</li>
+<li>切换后的激活路径</li>
+</ul>
+<p>例如：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Before: Root/Combat/Attack</span><br><span class="line">Rule: Root.LowHealth -&gt; Flee</span><br><span class="line">LCA: Root</span><br><span class="line">Exit: Attack, Combat</span><br><span class="line">Enter: Flee</span><br><span class="line">After: Root/Flee</span><br></pre></td></tr></table></figure>
+
+<p>有了这组信息，层级结构才真正可维护。</p>
+<h2 id="九、自查清单"><a href="#九、自查清单" class="headerlink" title="九、自查清单"></a>九、自查清单</h2><ul>
+<li>当前执行位置是否用完整激活路径表达？</li>
+<li>父状态是否承担真正共享的职责，而不只是目录分组？</li>
+<li>跨层迁移是否通过最近公共祖先计算退出和进入路径？</li>
+<li>父层与子层迁移冲突是否有确定优先级？</li>
+<li>默认子状态、浅历史和深历史是否被显式区分？</li>
+<li>日志能否还原命中的层级规则和完整生命周期路径？</li>
+<li>层级过深时，是否应该改用行为树、正交状态机或高层决策器？</li>
+</ul>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>[^1]: <a target="_blank" rel="noopener" href="https://doi.org/10.1016/0167-6423(87)90035-9">Statecharts: A Visual Formalism for Complex Systems</a> - David Harel 在 1987 年提出的 Statecharts 论文<br>[^2]: <a target="_blank" rel="noopener" href="https://gameprogrammingpatterns.com/state.html">State - Game Programming Patterns</a> - 游戏场景中的并发状态机与分层状态机说明<br>[^3]: <a target="_blank" rel="noopener" href="https://github.com/Inspiaaa/UnityHFSM">Inspiaaa&#x2F;UnityHFSM</a> - Unity 中类式 HFSM 的开源实现，可参考状态、迁移和退出时间设计</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://csy7749.github.io">Csy7749</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://csy7749.github.io/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%882%EF%BC%89%EF%BC%9AHFSM%E5%88%86%E5%B1%82%E6%9C%89%E9%99%90%E7%8A%B6%E6%80%81%E6%9C%BA/">https://csy7749.github.io/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%882%EF%BC%89%EF%BC%9AHFSM%E5%88%86%E5%B1%82%E6%9C%89%E9%99%90%E7%8A%B6%E6%80%81%E6%9C%BA/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%B8%B8%E6%88%8FAI/">游戏AI</a><a class="post-meta__tags" href="/tags/%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84/">决策架构</a><a class="post-meta__tags" href="/tags/HFSM/">HFSM</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%883%EF%BC%89%EF%BC%9A%E8%A1%8C%E4%B8%BA%E6%A0%91/" title="游戏AI-决策架构（3）：行为树"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">游戏AI-决策架构（3）：行为树</div></div><div class="info-2"><div class="info-item-1">行为树（Behavior Tree）把 AI 行为组织成可组合节点，并用 Success、Failure、Running 三种结果驱动控制流。它特别适合持续重新评估威胁、按优先级选择分支，以及把复杂战斗逻辑拆成可复用子树。   本文假设读者理解基本的树结构和 C# 接口。示例使用 .NET 8，实现一棵响应式守卫行为树；重点不是可视化编辑器，而是编辑器背后必须稳定成立的 Tick、中断和状态语义。 一、行为树和状态机看问题的角度不同FSM 首先问： 1我当前处于哪个状态？什么条件会让我切到另一个状态？  行为树首先问： 1从根节点开始，这一帧哪条分支能够执行？执行到哪里还没结束？  同一个守卫逻辑可以写成： 123456789101112Priority Selector├── Sequence: 撤退│   ├── Condition: 低血量│   └── Action: 逃离├── Sequence: 战斗│   ├── Condition: 看见敌人│   └── Selector│       ├── Sequence: 攻击│       │   ├── Condit...</div></div></div></a><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%881%EF%BC%89%EF%BC%9AFSM%E6%9C%89%E9%99%90%E7%8A%B6%E6%80%81%E6%9C%BA/" title="游戏AI-决策架构（1）：FSM 有限状态机"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">游戏AI-决策架构（1）：FSM 有限状态机</div></div><div class="info-2"><div class="info-item-1">FSM（Finite State Machine，有限状态机）把角色行为表达为有限个状态，以及状态之间带条件的迁移。它不负责生成长期计划，但很适合把巡逻、追击、攻击、撤退这类边界明确的行为组织成一个稳定、可观察的执行闭环。   本文假设读者熟悉 C# 接口、委托和集合。示例使用 .NET 8，可直接放进控制台项目运行；接入 Unity 时，把 Tick 放到组件更新入口，并把输出动作替换为注入的移动、技能和动画服务即可。 一、FSM 真正在管理什么一个 FSM 至少包含四部分；这种“状态对象 + 迁移规则”的拆分也对应状态模式在游戏逻辑中的典型用法[^1]：  State：当前行为模式，例如 Patrol、Chase、Attack。 Transition：从源状态到目标状态的有向边。 Condition：迁移成立的条件，例如“看见敌人且距离不超过攻击范围”。 State Machine：保存当前状态，检查迁移，按顺序调用退出与进入逻辑。  守卫 NPC 可以画成下面这张状态图： 123456Patrol --发现敌人--&gt; Chase --进入射程--&gt; Attack...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%884%EF%BC%89%EF%BC%9AUtilityAI%E6%95%88%E7%94%A8%E5%86%B3%E7%AD%96/" title="游戏AI-决策架构（4）：Utility AI 效用决策"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构（4）：Utility AI 效用决策</div></div><div class="info-2"><div class="info-item-1">Utility AI（效用型 AI）把血量、距离、风险、资源等上下文转换成统一分数，再从候选行为中选择当前效用最高的一项。它解决的不是“动作如何执行”，而是多个因素同时变化时，角色此刻更应该攻击、治疗、撤退还是巡逻。   本文假设读者熟悉 C# 委托、集合和基本数学函数。示例使用 .NET 8，实现归一化输入、响应曲线、评分合成、惯性修正和可解释的候选输出，可以直接放进控制台项目运行。 一、Utility AI 解决什么问题硬条件适合表达明确规则： 12if 死亡 -&gt; 进入死亡状态if 技能未解锁 -&gt; 禁止释放  但下面这种选择很难只靠一组阈值维护： 12345血量低，希望治疗或撤退敌人很近，希望攻击或拉开距离敌人很多，希望找掩体治疗技能可用，但释放过程可能被打断当前攻击已经进行一半，切换也有成本  如果继续添加 if / else，不同条件的优先级会散落在代码顺序里，临界值附近还可能发生生硬切换。Utility AI 把问题改写为： 123456Attack  = 0.65Retreat = 0.56Heal    = 0.52Patrol  = 0.00选择 ...</div></div></div></a><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%881%EF%BC%89%EF%BC%9AFSM%E6%9C%89%E9%99%90%E7%8A%B6%E6%80%81%E6%9C%BA/" title="游戏AI-决策架构（1）：FSM 有限状态机"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构（1）：FSM 有限状态机</div></div><div class="info-2"><div class="info-item-1">FSM（Finite State Machine，有限状态机）把角色行为表达为有限个状态，以及状态之间带条件的迁移。它不负责生成长期计划，但很适合把巡逻、追击、攻击、撤退这类边界明确的行为组织成一个稳定、可观察的执行闭环。   本文假设读者熟悉 C# 接口、委托和集合。示例使用 .NET 8，可直接放进控制台项目运行；接入 Unity 时，把 Tick 放到组件更新入口，并把输出动作替换为注入的移动、技能和动画服务即可。 一、FSM 真正在管理什么一个 FSM 至少包含四部分；这种“状态对象 + 迁移规则”的拆分也对应状态模式在游戏逻辑中的典型用法[^1]：  State：当前行为模式，例如 Patrol、Chase、Attack。 Transition：从源状态到目标状态的有向边。 Condition：迁移成立的条件，例如“看见敌人且距离不超过攻击范围”。 State Machine：保存当前状态，检查迁移，按顺序调用退出与进入逻辑。  守卫 NPC 可以画成下面这张状态图： 123456Patrol --发现敌人--&gt; Chase --进入射程--&gt; Attack...</div></div></div></a><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%883%EF%BC%89%EF%BC%9A%E8%A1%8C%E4%B8%BA%E6%A0%91/" title="游戏AI-决策架构（3）：行为树"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构（3）：行为树</div></div><div class="info-2"><div class="info-item-1">行为树（Behavior Tree）把 AI 行为组织成可组合节点，并用 Success、Failure、Running 三种结果驱动控制流。它特别适合持续重新评估威胁、按优先级选择分支，以及把复杂战斗逻辑拆成可复用子树。   本文假设读者理解基本的树结构和 C# 接口。示例使用 .NET 8，实现一棵响应式守卫行为树；重点不是可视化编辑器，而是编辑器背后必须稳定成立的 Tick、中断和状态语义。 一、行为树和状态机看问题的角度不同FSM 首先问： 1我当前处于哪个状态？什么条件会让我切到另一个状态？  行为树首先问： 1从根节点开始，这一帧哪条分支能够执行？执行到哪里还没结束？  同一个守卫逻辑可以写成： 123456789101112Priority Selector├── Sequence: 撤退│   ├── Condition: 低血量│   └── Action: 逃离├── Sequence: 战斗│   ├── Condition: 看见敌人│   └── Selector│       ├── Sequence: 攻击│       │   ├── Condit...</div></div></div></a><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%886%EF%BC%89%EF%BC%9AAI%E5%86%B3%E7%AD%96%E6%AF%94%E8%BE%83/" title="游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型</div></div><div class="info-2"><div class="info-item-1">FSM、HFSM、行为树、Utility AI、GOAP、HTN 经常被放在一起比较，但它们并不完全处于同一层。本文按“解决什么问题、输出什么结果、适合什么场景”重新对齐六种方案，并给出面向实际项目的选型与组合方式。   本文假设读者已经了解游戏 AI 中的感知、移动和动作执行概念。重点不是重复每种算法的完整实现，而是建立一套能用于项目判断的比较坐标。 一、先区分：执行控制、即时选择与多步规划很多选型争论没有结果，是因为大家比较的并不是同一个问题。 123456789101112131415161718感知层  收集血量、距离、目标、危险度、资源等事实        |        v决策与规划层  Utility AI：当前哪个候选行为最值得做  GOAP：哪些动作可以组成一条达成目标的路径  HTN：高层任务应该按哪种方法逐层拆解        |        v执行控制层  FSM：当前处于哪个明确状态  HFSM：当前处于哪条层级状态路径  行为树：当前哪条优先级分支可以继续执行        |        v动作能力层  寻路、技能、动画、交互、Smart Ob...</div></div></div></a><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%885%EF%BC%89%EF%BC%9AHTN%E5%88%86%E5%B1%82%E4%BB%BB%E5%8A%A1%E7%BD%91%E7%BB%9C/" title="游戏AI-决策架构（5）：HTN 分层任务网络"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构（5）：HTN 分层任务网络</div></div><div class="info-2"><div class="info-item-1">HTN（Hierarchical Task Network，分层任务网络）从高层任务出发，根据当前世界状态选择 Method，逐层拆解 Compound Task，最终生成可执行的 Primitive Task 序列。它适合步骤较长、领域套路明确，同时又需要根据局势选择不同执行方案的游戏 AI。   本文假设读者熟悉 C# 继承、委托、不可变记录和集合。示例使用 .NET 8，实现一个支持 Method 回溯、规划期状态效果和完整展开轨迹的总序 HTN Planner，可以直接放进控制台项目运行。 一、HTN 解决什么问题守卫 NPC 接到 DefendArea 任务后，可能面对不同情况： 12345低血量且有药品 -&gt; 治疗 -&gt; 接敌低血量且没有药品 -&gt; 移动到掩体发现敌人且距离较远 -&gt; 接近 -&gt; 攻击发现敌人且已在射程 -&gt; 直接攻击没有威胁 -&gt; 巡逻  FSM 可以为每一步建立状态，行为树可以把所有分支画出来，GOAP 可以在动作状态空间中搜索。HTN 采用另一种思路：把设计者已经知道的领域套路写成任务分解规则。 1234...</div></div></div></a><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%E7%B3%BB%E5%88%97-%E8%A7%84%E5%88%92/" title="游戏AI-决策架构 系列·写作规划"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构 系列·写作规划</div></div><div class="info-2"><div class="info-item-1">游戏 AI 不只有“怎么想”，还要解决“选定行为后怎么稳定执行”。这组文章先从 FSM、HFSM 和行为树拆解三种执行模型，再进入 Utility AI 的即时评分与 HTN 的长程规划，最后横向比较各类方案及其组合边界。   系列定位名称：游戏AI-决策架构 目标读者：熟悉 C# 基础，希望给敌人、NPC 或 Boss 搭建可维护行为逻辑的游戏开发者。 核心问题：感知系统已经给出了敌人距离、血量、目标等上下文后，AI 如何完成行为执行、即时选择与多步规划，并把它们组合成稳定、可维护的决策链。 这组文章讨论的是执行与轻量决策层，不把 FSM、HFSM、行为树和 GOAP、HTN、Utility AI 混成同一种东西： 12345678910Sensor / Perception        |        vGOAP / HTN / Utility AI     选择目标、策略或计划        |        vFSM / HFSM / Behavior Tree  执行当前行为        |        vMovement / Ability / Animati...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Csy7749</div><div class="author-info-description">键来！</div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">42</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">87</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">12</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/csy7749"><i class="fab fa-github"></i><span>GitHub</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">日积月累</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E4%B8%BA%E4%BB%80%E4%B9%88%E5%B9%B3%E9%93%BA-FSM-%E4%BC%9A%E5%87%BA%E7%8E%B0%E9%87%8D%E5%A4%8D"><span class="toc-number">1.</span> <span class="toc-text">一、为什么平铺 FSM 会出现重复</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E5%BD%93%E5%89%8D%E7%8A%B6%E6%80%81%E5%8F%98%E6%88%90%E4%B8%80%E6%9D%A1%E6%BF%80%E6%B4%BB%E8%B7%AF%E5%BE%84"><span class="toc-number">2.</span> <span class="toc-text">二、当前状态变成一条激活路径</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E8%B7%A8%E5%B1%82%E8%BF%81%E7%A7%BB%E7%9A%84%E6%A0%B8%E5%BF%83%EF%BC%9A%E6%9C%80%E8%BF%91%E5%85%AC%E5%85%B1%E7%A5%96%E5%85%88"><span class="toc-number">3.</span> <span class="toc-text">三、跨层迁移的核心：最近公共祖先</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E4%B8%80%E4%B8%AA%E5%8F%AF%E8%BF%90%E8%A1%8C%E7%9A%84-HFSM"><span class="toc-number">4.</span> <span class="toc-text">四、一个可运行的 HFSM</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E7%88%B6%E5%B1%82%E5%92%8C%E5%AD%90%E5%B1%82%E8%BF%81%E7%A7%BB%E5%A6%82%E4%BD%95%E7%AB%9E%E4%BA%89"><span class="toc-number">5.</span> <span class="toc-text">五、父层和子层迁移如何竞争</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E9%BB%98%E8%AE%A4%E5%AD%90%E7%8A%B6%E6%80%81%E4%B8%8E%E5%8E%86%E5%8F%B2%E7%8A%B6%E6%80%81"><span class="toc-number">6.</span> <span class="toc-text">六、默认子状态与历史状态</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81HFSM-%E4%B8%8D%E7%AD%89%E4%BA%8E%E6%97%A0%E9%99%90%E5%B5%8C%E5%A5%97"><span class="toc-number">7.</span> <span class="toc-text">七、HFSM 不等于无限嵌套</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E8%B0%83%E8%AF%95%E4%BF%A1%E6%81%AF%E8%87%B3%E5%B0%91%E8%A6%81%E5%8C%85%E5%90%AB%E4%BB%80%E4%B9%88"><span class="toc-number">8.</span> <span class="toc-text">八、调试信息至少要包含什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B9%9D%E3%80%81%E8%87%AA%E6%9F%A5%E6%B8%85%E5%8D%95"><span class="toc-number">9.</span> <span class="toc-text">九、自查清单</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-number">10.</span> <span class="toc-text">参考</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/18/Unity-AssetBundle%E5%8A%A0%E8%BD%BD%E6%A1%86%E6%9E%B6%EF%BC%9A%E4%BB%8E%E7%89%88%E6%9C%AC%E6%B8%85%E5%8D%95%E5%88%B0%E5%BC%95%E7%94%A8%E5%8D%B8%E8%BD%BD/" title="Unity AssetBundle加载框架：从版本清单到引用卸载">Unity AssetBundle加载框架：从版本清单到引用卸载</a><time datetime="2026-08-18T02:00:00.000Z" title="Created 2026-08-18 10:00:00">2026-08-18</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/Unity-UGUI%E6%9E%B6%E6%9E%84%EF%BC%883%EF%BC%89%EF%BC%9AMVC%E4%B8%8EMVVM%E5%AF%B9%E6%AF%94/" title="Unity UGUI架构（3）：MVC与MVVM对比">Unity UGUI架构（3）：MVC与MVVM对比</a><time datetime="2026-08-17T10:20:00.000Z" title="Created 2026-08-17 18:20:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/Unity-UGUI%E6%9E%B6%E6%9E%84%EF%BC%882%EF%BC%89%EF%BC%9AMVVM%E6%A8%A1%E5%BC%8F/" title="Unity UGUI架构（2）：MVVM模式">Unity UGUI架构（2）：MVVM模式</a><time datetime="2026-08-17T10:10:00.000Z" title="Created 2026-08-17 18:10:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/Unity-UGUI%E6%9E%B6%E6%9E%84%EF%BC%881%EF%BC%89%EF%BC%9AMVC%E6%A8%A1%E5%BC%8F/" title="Unity UGUI架构（1）：MVC模式">Unity UGUI架构（1）：MVC模式</a><time datetime="2026-08-17T10:00:00.000Z" title="Created 2026-08-17 18:00:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%886%EF%BC%89%EF%BC%9AAI%E5%86%B3%E7%AD%96%E6%AF%94%E8%BE%83/" title="游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型">游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型</a><time datetime="2026-08-17T08:00:00.000Z" title="Created 2026-08-17 16:00:00">2026-08-17</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2020 - 2026 By Csy7749</span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/koharu.model.json"},"display":{"position":"left","width":150,"height":300},"mobile":{"show":false},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/"});</script></body></html>

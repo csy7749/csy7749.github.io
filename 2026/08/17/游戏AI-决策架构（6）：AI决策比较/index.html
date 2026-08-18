@@ -7,7 +7,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://csy7749.github.io/img/avatar.png">
 <meta property="article:published_time" content="2026-08-17T08:00:00.000Z">
-<meta property="article:modified_time" content="2026-08-17T10:24:18.523Z">
+<meta property="article:modified_time" content="2026-08-18T04:42:28.426Z">
 <meta property="article:author" content="Csy7749">
 <meta property="article:tag" content="游戏AI">
 <meta property="article:tag" content="决策架构">
@@ -20,7 +20,7 @@
   "url": "https://csy7749.github.io/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%886%EF%BC%89%EF%BC%9AAI%E5%86%B3%E7%AD%96%E6%AF%94%E8%BE%83/",
   "image": "https://csy7749.github.io/img/avatar.png",
   "datePublished": "2026-08-17T08:00:00.000Z",
-  "dateModified": "2026-08-17T10:24:18.523Z",
+  "dateModified": "2026-08-18T04:42:28.426Z",
   "author": [
     {
       "@type": "Person",
@@ -203,363 +203,332 @@
   isHighlightShrink: false,
   isToc: true,
   pageType: 'post'
-}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">38</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">79</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">10</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Csy7749-Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-08-17T08:00:00.000Z" title="Created 2026-08-17 16:00:00">2026-08-17</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-08-17T10:24:18.523Z" title="Updated 2026-08-17 18:24:18">2026-08-17</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%B8%B8%E6%88%8FAI/">游戏AI</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%B8%B8%E6%88%8FAI/%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84/">决策架构</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>FSM、HFSM、行为树、Utility AI、GOAP、HTN 经常被放在一起比较，但它们并不完全处于同一层。本文按“解决什么问题、输出什么结果、适合什么场景”重新对齐六种方案，并给出面向实际项目的选型与组合方式。</p>
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">42</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">87</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">12</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Csy7749-Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-08-17T08:00:00.000Z" title="Created 2026-08-17 16:00:00">2026-08-17</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-08-18T04:42:28.426Z" title="Updated 2026-08-18 12:42:28">2026-08-18</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%B8%B8%E6%88%8FAI/">游戏AI</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%B8%B8%E6%88%8FAI/%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84/">决策架构</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>FSM、HFSM、行为树、Utility AI、GOAP、HTN 经常被放在一起比较，但它们并不完全处于同一层。本文按“解决什么问题、输出什么结果、适合什么场景”重新对齐六种方案，并给出面向实际项目的选型与组合方式。</p>
 <span id="more"></span>
 
 <p>本文假设读者已经了解游戏 AI 中的感知、移动和动作执行概念。重点不是重复每种算法的完整实现，而是建立一套能用于项目判断的比较坐标。</p>
 <h2 id="一、先区分：执行控制、即时选择与多步规划"><a href="#一、先区分：执行控制、即时选择与多步规划" class="headerlink" title="一、先区分：执行控制、即时选择与多步规划"></a>一、先区分：执行控制、即时选择与多步规划</h2><p>很多选型争论没有结果，是因为大家比较的并不是同一个问题。</p>
-<pre><code class="language-text">感知层
-  收集血量、距离、目标、危险度、资源等事实
-        |
-        v
-决策与规划层
-  Utility AI：当前哪个候选行为最值得做
-  GOAP：哪些动作可以组成一条达成目标的路径
-  HTN：高层任务应该按哪种方法逐层拆解
-        |
-        v
-执行控制层
-  FSM：当前处于哪个明确状态
-  HFSM：当前处于哪条层级状态路径
-  行为树：当前哪条优先级分支可以继续执行
-        |
-        v
-动作能力层
-  寻路、技能、动画、交互、Smart Object
-```text
-
-这不是强制分层。行为树可以承担轻量决策，FSM 也可以直接根据条件选择动作。但当系统变复杂后，把“选什么”“怎么安排步骤”“如何执行”分开，通常更容易调试和扩展。
-
-## 二、一张表看懂六种方案
-
-| 方案 | 核心问题 | 主要输出 | 核心特点 | 典型场景 | 主要限制 |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| FSM | 当前处于什么状态 | 单个状态 | 简单、确定、生命周期清晰 | 小怪、机关、技能阶段 | 状态与迁移容易膨胀 |
-| HFSM | 状态如何分层并复用 | 激活状态路径 | 父子层级、共享迁移、模式清晰 | Boss 阶段、战斗/和平模式 | 跨层语义和调试成本更高 |
-| 行为树 | 当前哪条分支可执行 | Running 节点与执行路径 | 组合式、响应式、易可视化 | 战斗 AI、Boss 技能、战术行为 | 大树、Blackboard 和中断容易失控 |
-| Utility AI | 当前哪个候选最有价值 | 候选及效用分数 | 连续评分、动态权衡、行为自然 | 技能选择、目标选择、生存需求 | 曲线调参与行为震荡 |
-| GOAP | 如何动态组合动作达成目标 | 动作计划 | 前提/效果、状态空间搜索、涌现性 | 沙盒 NPC、生存模拟、动态战术 | 建模、搜索和重规划成本高 |
-| HTN | 已知领域任务如何逐层拆解 | 原子任务序列 | 领域知识驱动、结构可控、可解释 | 长任务链、SLG、RPG、队伍策略 | Method 设计成本高、动态性受域约束 |
-
-如果只记一组关键词：
-
-```text
-FSM     = 明确状态
-HFSM    = 层级模式
-行为树   = 条件控制流
-Utility = 当前评分
-GOAP    = 动态找路
-HTN     = 按套路拆任务
-```text
-
-## 三、FSM：最小、确定的行为闭环
-
-FSM 用有限状态和显式迁移描述行为。角色同一时间通常处于一个状态，切换时执行固定的 `Exit -&gt; Enter` 生命周期。状态模式在游戏开发中的价值，正是把分散的布尔条件收束成互斥、可命名的行为模式[^1]。
-
-### 核心特点
-
-- 当前状态唯一，行为容易观察。
-- 迁移条件显式，运行结果确定。
-- `Enter / Update / Exit` 生命周期清楚。
-- 实现成本低，不依赖复杂工具。
-- 状态少、迁移稀疏时，调试效率很高。
-
-### 适合使用
-
-- 塔防或动作游戏中的普通小怪：巡逻、追击、攻击、死亡。
-- 技能施法流程：前摇、释放、后摇、冷却。
-- 门、机关、宝箱、生产建筑等交互对象。
-- Boss 的少量固定阶段。
-- UI、任务节点和关卡流程。
-
-### 不适合使用
-
-- 一个行为需要同时考虑很多连续因素。
-- 状态之间几乎都能互相迁移。
-- 多个状态重复死亡、撤退、受控等规则。
-- 需要运行时动态生成一串动作。
-
-FSM 的问题通常不是“状态达到某个数量”，而是新增一个状态时必须修改多少旧迁移。如果每次扩展都要触碰大量已有状态，结构就已经开始变脆。
-
-## 四、HFSM：为状态增加模式与层级
-
-HFSM 在 FSM 上增加父子状态。`Chase` 和 `Attack` 可以归入 `Combat`，共享战斗模式的进入、退出、更新和迁移。层级状态思想来自 Statecharts，它通过层级和扩展语义缓解平铺状态图的复杂度[^2]。
-
-### 核心特点
-
-- 当前状态是一条 `Root -&gt; Parent -&gt; Leaf` 激活路径。
-- 父状态承载共享生命周期和共享迁移。
-- 可以表达和平、战斗、受控、死亡等稳定模式。
-- 子状态切换时可以保持父状态持续激活。
-- 默认子状态和历史状态能恢复局部流程。
-
-### 适合使用
-
-- Boss 的阶段内还有攻击、移动、施法等子状态。
-- 角色存在地面、空中、游泳等大模式。
-- 战斗模式中的多个状态共享目标锁定和威胁更新。
-- 技能或动画存在稳定的层级阶段。
-- 普通 FSM 已出现大量重复迁移，但行为仍然以状态为中心。
-
-### 不适合使用
-
-- 行为主要由大量优先级条件分支构成。
-- 多个维度需要并行变化，例如移动状态和武器状态。
-- 层级只是为了整理文件，没有共享行为或迁移。
-- 父层和子层都在争夺同一个动作控制权。
-
-HFSM 的风险是把一张复杂平面图变成一棵更难追踪的深树。跨层迁移必须记录完整的退出路径、最近公共祖先和进入路径，否则问题会藏在父状态中。
-
-## 五、行为树：面向优先级与持续响应的控制流
-
-行为树通过 Selector、Sequence、Decorator、Condition、Action 等节点组合行为，并用 `Success / Failure / Running` 驱动树的执行。其优势在于模块化和反应性：高优先级条件变化后，树可以中断当前低优先级分支并重新选择[^3]。
-
-### 核心特点
-
-- 分支顺序可以直接表达优先级。
-- 子树和通用节点容易复用。
-- 条件与动作分离，适合可视化编辑。
-- 能持续检查死亡、眩晕、撤退等高优先级中断。
-- 适合把战斗行为组织成可读的层级控制流。
-
-### 适合使用
-
-- 射击或动作游戏中的战术敌人。
-- Boss 技能选择、连招条件和阶段内行为。
-- 搜索、追击、找掩体、攻击之间的响应式切换。
-- 需要策划使用可视化工具配置的 NPC。
-- 行为能够自然汇报成功、失败和运行中状态。
-
-### 不适合使用
-
-- 需要在大量候选之间进行连续数值权衡。
-- 需要动态搜索没有预先写在树里的动作链。
-- 长期计划会被硬编码成很深的 Sequence。
-- 团队没有定义 Running、Abort 和 Blackboard 规范。
-
-行为树真正的工程难点不是画节点，而是中断。一个 `Running` 的追击节点被撤退分支抢占后，必须取消寻路并释放动作资源；只停止 Tick 会留下脏状态。
-
-## 六、Utility AI：用分数表达倾向和权衡
-
-Utility AI 为每个候选行为计算效用分数，再选择当前分数最高的行为。血量、距离、弹药、敌人数量等输入通常先归一化，再经过响应曲线和权重组合。Utility Theory 在游戏 AI 中常用于把硬阈值决策改造成连续的行为偏好[^4]。
-
-### 核心特点
-
-- 多个连续变量可以共同参与决策。
-- 输出不仅有选择结果，还有可解释的候选分数。
-- 通过响应曲线表达“越来越想做某件事”。
-- 增加候选行为时，不必修改所有已有候选。
-- 容易产生比固定条件链更柔和的行为变化。
-
-### 适合使用
-
-- 攻击、治疗、撤退、找掩体之间的选择。
-- 技能选择和攻击目标选择。
-- 生存游戏中的饥饿、口渴、睡眠、安全需求。
-- 模拟经营中的工作、休息、社交等活动选择。
-- RTS 或小队 AI 中选择当前最合适的任务执行者。
-
-### 不适合使用
-
-- 行为必须严格按固定步骤执行。
-- 需要生成多步计划，而不是只选当前候选。
-- 输入和曲线缺乏明确业务含义。
-- 没有分数可视化和回放工具。
-
-Utility AI 最常见的问题是震荡：攻击分数和撤退分数在临界值附近反复超越。迟滞、最短执行时间、冷却、切换惩罚和降频评估都应该属于显式决策规则，而不是藏在动作内部。
-
-## 七、GOAP：在状态空间中动态组合动作
-
-GOAP 把动作描述成前提条件、效果和代价，再搜索一条从当前世界状态到目标状态的动作序列。它不要求开发者预先写死完整流程，而是让动作根据当前条件重新组合。F.E.A.R. 对 GOAP 的应用展示了“规划器生成动作计划，执行器负责移动、动画和 Smart Object”的分层方式[^5]。
-
-### 核心特点
-
-- 以目标状态为驱动，而不是以固定流程为驱动。
-- 动作通过前提和效果松耦合。
-- 同一个目标可以根据资源和环境产生不同计划。
-- 动作库扩展后，已有目标可能自动获得新的达成方式。
-- 能产生设计者没有逐条编排的行为组合。
-
-### 适合使用
-
-- 沙盒世界中的自主 NPC。
-- 生存模拟中的采集、制作、补给和战斗。
-- 动作资源和环境条件经常变化的任务。
-- 需要多种路径达成同一目标的战术 AI。
-- Smart Object 丰富、交互方式多的场景。
-
-### 不适合使用
-
-- 行为流程短而固定，FSM 或行为树已经足够。
-- 世界状态难以抽象成稳定的规划事实。
-- 动作前提、效果和代价无法被可靠维护。
-- 大量 Agent 高频重规划，但没有预算和调度机制。
-- 设计要求结果严格按预定脚本执行。
-
-GOAP 找到的是抽象动作链，不是完整表现。`MoveToCover` 仍然需要寻路，`AttackEnemy` 仍然需要技能或状态机执行。规划模型和真实世界不一致时，执行前验证、动作失败和重规划路径必须明确暴露。
-
-## 八、HTN：用领域知识拆解长任务
-
-HTN（Hierarchical Task Network）从高层任务开始，通过满足条件的 Method 把复合任务逐层拆成子任务，直到得到可执行的 Primitive Task。它把“这类任务通常应该怎么做”的领域知识写进分解结构，因此比自由搜索更可控、更容易解释[^6]。
-
-### 核心特点
-
-- 任务天然具有从战略到动作的层级。
-- 同一个复合任务可以提供多种条件化 Method。
-- 计划结果由领域知识约束，可控性强。
-- 展开过程和失败位置容易记录。
-- 对长任务链和团队流程表达能力较好。
-
-### 适合使用
-
-- SLG 中的集结、行军、攻城和防守。
-- RPG 中的任务链、生活行为和剧情角色流程。
-- 小队协同与战术任务分配。
-- 采集、生产、运输、建设等长链行为。
-- 希望 AI 有适应性，但仍要遵循设计套路的项目。
-
-### 不适合使用
-
-- 行为只需要在少量状态之间切换。
-- 团队无法投入成本维护 Task 和 Method 域模型。
-- 世界变化极快，长计划频繁失效。
-- 期望系统自由发现领域设计之外的新动作组合。
-
-HTN 的质量取决于 Method。条件写得过宽会出现多个分解同时可用，条件写得过窄又会导致没有计划；Primitive Task 粒度不一致，则会把规划细节和动作执行重新混在一起。
-
-## 九、按游戏场景选择
-
-| 游戏场景 | 首选方案 | 常见组合 | 原因 |
-| :--- | :--- | :--- | :--- |
-| 塔防普通怪、简单野怪 | FSM | FSM + NavMesh | 行为少、状态边界明确 |
-| 多阶段 Boss | HFSM | HFSM + 行为树 | 阶段稳定，阶段内分支较多 |
-| 射击游戏战斗敌人 | 行为树 | 行为树 + Utility AI | 需要高频响应、掩体和技能选择 |
-| 技能很多的战斗单位 | Utility AI | Utility AI + FSM | 先评分选技能，再执行技能阶段 |
-| 生活模拟角色 | Utility AI | Utility AI + 行为树 | 多需求动态权衡，动作需要持续执行 |
-| 沙盒生存 NPC | GOAP | Utility AI + GOAP + HFSM | 选目标、生成动作链、稳定执行 |
-| SLG 队伍或生产流程 | HTN | HTN + 行为树 | 长链任务有明确领域结构 |
-| 剧情和任务角色 | HTN 或 HFSM | HTN + FSM | 流程可控、步骤可解释 |
-| 机关、交互物、技能流程 | FSM | FSM + 事件系统 | 不需要引入复杂规划 |
-
-“首选”表示最先验证的最小方案，不代表最终架构。先用最低复杂度建立可玩的行为闭环，再根据重复关系和变化压力升级，比一开始搭完整 AI 平台更可靠。
-
-## 十、一个实用的选型流程
-
-可以按下面的顺序判断：
-
-```text
-1. 行为是否只有少量明确模式？
-   是 -&gt; FSM
-   否 -&gt; 继续
-
-2. 多个状态是否存在稳定的父子模式和共享迁移？
-   是 -&gt; HFSM
-   否 -&gt; 继续
-
-3. 问题是否主要是大量条件分支、优先级和持续中断？
-   是 -&gt; 行为树
-   否 -&gt; 继续
-
-4. 问题是否主要是多个连续因素下“现在选哪个”？
-   是 -&gt; Utility AI
-   否 -&gt; 继续
-
-5. 系统是否需要动态组合动作来达成目标？
-   是 -&gt; GOAP
-   否 -&gt; 继续
-
-6. 系统是否需要按领域套路拆解可控的长任务？
-   是 -&gt; HTN
-```text
-
-如果同时回答多个“是”，通常意味着需要组合，而不是继续寻找一个包办所有职责的方案。
-
-## 十一、常见的混合架构
-
-一个复杂 NPC 可以采用下面的分层：
-
-```text
-Sensor / Blackboard
-    提供事实
-        |
-        v
-Utility AI
-    选择当前目标：战斗、治疗、补给、逃跑
-        |
-        v
-GOAP 或 HTN
-    生成达成目标的动作序列
-        |
-        v
-行为树或 HFSM
-    处理中断、重试和动作执行流程
-        |
-        v
-FSM / Ability / Movement / Animation
-    完成具体技能和移动
-```text
-
-并不是每层都必须存在：
-
-- 普通小怪可能只有 FSM。
-- Boss 可能是 HFSM + 行为树。
-- 生存 NPC 可能是 Utility AI + GOAP + 动作状态机。
-- SLG 队伍可能是 HTN + 行为树 + 寻路系统。
-
-组合架构必须明确所有权。例如 Utility AI 选择“撤退”后，由谁能取消撤退、谁负责释放寻路、谁报告完成，都要有唯一入口。多个系统同时切换行为，比单个系统复杂更危险。
-
-## 十二、选型时最容易犯的错误
-
-### 只按行为数量选
-
-十个状态未必复杂，四个互相强耦合的状态也可能很难维护。应该看迁移密度、共享规则和变化范围。
-
-### 把行为树当自动规划器
-
-行为树只会执行设计者写进树里的控制流。它可以做轻量选择，但不会自动发现树外的新动作链。
-
-### 把 Utility AI 当执行器
-
-Utility AI 选出高分动作后，动作仍然需要生命周期、中断和完成结果。评分系统不应该直接接管动画和移动细节。
-
-### 把 GOAP 或 HTN 接到表现层
-
-Planner 应操作抽象动作，不应该为每个动画片段建立规划事实。规划粒度过细会扩大搜索空间，也让计划与表现资源强耦合。
-
-### 一开始就组合全部方案
-
-每增加一层，就增加状态同步、失败传播、调试工具和所有权规则。没有明确问题时不应引入对应系统。
-
-## 十三、最终判断标准
-
-选型时可以用五个维度复核：
-
-| 维度 | 要问的问题 |
-| :--- | :--- |
-| 行为规模 | 行为和关系是否已经超出简单状态图？ |
-| 动态性 | 行为链需要运行时生成，还是预先编排即可？ |
-| 可控性 | 设计是否要求结果严格遵循领域流程？ |
-| 响应性 | 当前动作是否需要被高优先级条件频繁中断？ |
-| 可调试性 | 团队能否看到状态、分数、计划或节点路径？ |
-
-没有绝对最强的 AI 决策方案。FSM 的简单、HFSM 的层级、行为树的响应、Utility AI 的权衡、GOAP 的动态组合、HTN 的可控分解，分别对应不同的设计压力。先判断系统真正需要回答的问题，再选择最小可用结构，最后才考虑组合。
-
-## 自查清单
-
-- 当前问题属于执行控制、即时选择还是多步规划？
-- 是否正在用复杂系统解决一个简单状态切换问题？
-- 决策输出能否交给独立执行器，而不是直接操作表现层？
-- 行为切换、中断、失败和重规划是否有唯一入口？
-- 团队能否查看 FSM 状态、Utility 分数、GOAP 计划、HTN 展开或行为树路径？
-- 混合架构中每一层是否解决了一个无法由更低成本方案解决的问题？
-
-## 参考
-
-[^1]: [State - Game Programming Patterns](https://www.gameprogrammingpatterns.com/state.html) - 游戏中的 FSM、并发状态机与分层状态机
-[^2]: [Statecharts: A Visual Formalism for Complex Systems](https://doi.org/10.1016/0167-6423(87)90035-9) - David Harel 对层级状态图的形式化描述
-[^3]: [Behavior Trees in Robotics and AI: An Introduction](https://arxiv.org/abs/1709.00084) - 行为树结构、组合性与反应性的系统介绍
-[^4]: [Improving AI Decision Modeling Through Utility Theory](https://www.gdcvault.com/play/1012747/Improving-AI-Decision-Modeling-Through) - Dave Mark 与 Kevin Dill 关于 Utility AI 决策建模的 GDC 演讲
-[^5]: [Building the AI of F.E.A.R. with Goal Oriented Action Planning](https://www.gamedeveloper.com/design/building-the-ai-of-f-e-a-r-with-goal-oriented-action-planning) - F.E.A.R. 的 GOAP 规划与执行架构分析
-[^6]: [Exploring HTN Planners through Example](https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter12_Exploring_HTN_Planners_through_Example.pdf) - 通过游戏 AI 示例说明 HTN 的 Task、Method 与计划展开
-</code></pre>
-</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://csy7749.github.io">Csy7749</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://csy7749.github.io/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%886%EF%BC%89%EF%BC%9AAI%E5%86%B3%E7%AD%96%E6%AF%94%E8%BE%83/">https://csy7749.github.io/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%886%EF%BC%89%EF%BC%9AAI%E5%86%B3%E7%AD%96%E6%AF%94%E8%BE%83/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%B8%B8%E6%88%8FAI/">游戏AI</a><a class="post-meta__tags" href="/tags/%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84/">决策架构</a><a class="post-meta__tags" href="/tags/AI%E5%86%B3%E7%AD%96/">AI决策</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%885%EF%BC%89%EF%BC%9AHTN%E5%88%86%E5%B1%82%E4%BB%BB%E5%8A%A1%E7%BD%91%E7%BB%9C/" title="游戏AI-决策架构（5）：HTN 分层任务网络"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">游戏AI-决策架构（5）：HTN 分层任务网络</div></div><div class="info-2"><div class="info-item-1">HTN（Hierarchical Task Network，分层任务网络）从高层任务出发，根据当前世界状态选择 Method，逐层拆解 Compound Task，最终生成可执行的 Primitive Task 序列。它适合步骤较长、领域套路明确，同时又需要根据局势选择不同执行方案的游戏 AI。   本文假设读者熟悉 C# 继承、委托、不可变记录和集合。示例使用 .NET 8，实现一个支持 Method 回溯、规划期状态效果和完整展开轨迹的总序 HTN Planner，可以直接放进控制台项目运行。 一、HTN 解决什么问题守卫 NPC 接到 DefendArea 任务后，可能面对不同情况： 低血量且有药品 -&gt; 治疗 -&gt; 接敌 低血量且没有药品 -&gt; 移动到掩体 发现敌人且距离较远 -&gt; 接近 -&gt; 攻击 发现敌人且已在射程 -&gt; 直接攻击 没有威胁 -&gt; 巡逻 ```text  FSM 可以为每一步建立状态，行为树可以把所有分支画出来，GOAP 可以在动作状态空间中搜索。HTN 采用另一种思路：把设计者已经知道的领域套路写成任务分解规...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%E7%B3%BB%E5%88%97-%E8%A7%84%E5%88%92/" title="游戏AI-决策架构 系列·写作规划"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构 系列·写作规划</div></div><div class="info-2"><div class="info-item-1">游戏 AI 不只有“怎么想”，还要解决“选定行为后怎么稳定执行”。这组文章先从 FSM、HFSM 和行为树拆解三种执行模型，再进入 Utility AI 的即时评分与 HTN 的长程规划，最后横向比较各类方案及其组合边界。   系列定位名称：游戏AI-决策架构 目标读者：熟悉 C# 基础，希望给敌人、NPC 或 Boss 搭建可维护行为逻辑的游戏开发者。 核心问题：感知系统已经给出了敌人距离、血量、目标等上下文后，AI 如何完成行为执行、即时选择与多步规划，并把它们组合成稳定、可维护的决策链。 这组文章讨论的是执行与轻量决策层，不把 FSM、HFSM、行为树和 GOAP、HTN、Utility AI 混成同一种东西： Sensor / Perception         |         v GOAP / HTN / Utility AI     选择目标、策略或计划         |         v FSM / HFSM / Behavior Tree  执行当前行为         |         v Movement / Ability / Animation...</div></div></div></a><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%884%EF%BC%89%EF%BC%9AUtilityAI%E6%95%88%E7%94%A8%E5%86%B3%E7%AD%96/" title="游戏AI-决策架构（4）：Utility AI 效用决策"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构（4）：Utility AI 效用决策</div></div><div class="info-2"><div class="info-item-1">Utility AI（效用型 AI）把血量、距离、风险、资源等上下文转换成统一分数，再从候选行为中选择当前效用最高的一项。它解决的不是“动作如何执行”，而是多个因素同时变化时，角色此刻更应该攻击、治疗、撤退还是巡逻。   本文假设读者熟悉 C# 委托、集合和基本数学函数。示例使用 .NET 8，实现归一化输入、响应曲线、评分合成、惯性修正和可解释的候选输出，可以直接放进控制台项目运行。 一、Utility AI 解决什么问题硬条件适合表达明确规则： if 死亡 -&gt; 进入死亡状态 if 技能未解锁 -&gt; 禁止释放 ```text  但下面这种选择很难只靠一组阈值维护：  ```text 血量低，希望治疗或撤退 敌人很近，希望攻击或拉开距离 敌人很多，希望找掩体 治疗技能可用，但释放过程可能被打断 当前攻击已经进行一半，切换也有成本 ```text  如果继续添加 `if / else`，不同条件的优先级会散落在代码顺序里，临界值附近还可能发生生硬切换。Utility AI 把问题改写为：  ```text Attack  = 0.65 Retreat = 0.56 H...</div></div></div></a><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%885%EF%BC%89%EF%BC%9AHTN%E5%88%86%E5%B1%82%E4%BB%BB%E5%8A%A1%E7%BD%91%E7%BB%9C/" title="游戏AI-决策架构（5）：HTN 分层任务网络"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构（5）：HTN 分层任务网络</div></div><div class="info-2"><div class="info-item-1">HTN（Hierarchical Task Network，分层任务网络）从高层任务出发，根据当前世界状态选择 Method，逐层拆解 Compound Task，最终生成可执行的 Primitive Task 序列。它适合步骤较长、领域套路明确，同时又需要根据局势选择不同执行方案的游戏 AI。   本文假设读者熟悉 C# 继承、委托、不可变记录和集合。示例使用 .NET 8，实现一个支持 Method 回溯、规划期状态效果和完整展开轨迹的总序 HTN Planner，可以直接放进控制台项目运行。 一、HTN 解决什么问题守卫 NPC 接到 DefendArea 任务后，可能面对不同情况： 低血量且有药品 -&gt; 治疗 -&gt; 接敌 低血量且没有药品 -&gt; 移动到掩体 发现敌人且距离较远 -&gt; 接近 -&gt; 攻击 发现敌人且已在射程 -&gt; 直接攻击 没有威胁 -&gt; 巡逻 ```text  FSM 可以为每一步建立状态，行为树可以把所有分支画出来，GOAP 可以在动作状态空间中搜索。HTN 采用另一种思路：把设计者已经知道的领域套路写成任务分解规...</div></div></div></a><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%882%EF%BC%89%EF%BC%9AHFSM%E5%88%86%E5%B1%82%E6%9C%89%E9%99%90%E7%8A%B6%E6%80%81%E6%9C%BA/" title="游戏AI-决策架构（2）：HFSM 分层有限状态机"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构（2）：HFSM 分层有限状态机</div></div><div class="info-2"><div class="info-item-1">HFSM（Hierarchical Finite State Machine，分层有限状态机）在 FSM 之上增加父子层级，让一组相关状态共享生命周期、更新逻辑和迁移规则。它解决的不是“如何让状态更多”，而是“如何把重复关系提升到共同父状态，同时保留明确的执行边界”。   本文假设已经理解 FSM 的状态、迁移和 Enter / Update / Exit。示例使用 .NET 8 与 C#，重点实现 HFSM 最容易出错的部分：激活路径、父层迁移，以及跨层切换时的退出和进入顺序。 一、为什么平铺 FSM 会出现重复守卫 NPC 有三个战斗相关状态：  Chase：追击目标 Attack：攻击目标 Search：短暂搜索丢失的目标  它们通常共享一组规则：进入战斗时锁定目标、持续刷新威胁、离开战斗时清理目标；低血量时都要撤退，目标彻底丢失时都要回到巡逻。 平铺 FSM 只能把这些规则复制到每个状态： Chase  --低血量--&gt; Flee Attack --低血量--&gt; Flee Search --低血量--&gt; Flee  Chase  --目标丢失--&gt;...</div></div></div></a><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%881%EF%BC%89%EF%BC%9AFSM%E6%9C%89%E9%99%90%E7%8A%B6%E6%80%81%E6%9C%BA/" title="游戏AI-决策架构（1）：FSM 有限状态机"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构（1）：FSM 有限状态机</div></div><div class="info-2"><div class="info-item-1">FSM（Finite State Machine，有限状态机）把角色行为表达为有限个状态，以及状态之间带条件的迁移。它不负责生成长期计划，但很适合把巡逻、追击、攻击、撤退这类边界明确的行为组织成一个稳定、可观察的执行闭环。   本文假设读者熟悉 C# 接口、委托和集合。示例使用 .NET 8，可直接放进控制台项目运行；接入 Unity 时，把 Tick 放到组件更新入口，并把输出动作替换为注入的移动、技能和动画服务即可。 一、FSM 真正在管理什么一个 FSM 至少包含四部分；这种“状态对象 + 迁移规则”的拆分也对应状态模式在游戏逻辑中的典型用法[^1]：  State：当前行为模式，例如 Patrol、Chase、Attack。 Transition：从源状态到目标状态的有向边。 Condition：迁移成立的条件，例如“看见敌人且距离不超过攻击范围”。 State Machine：保存当前状态，检查迁移，按顺序调用退出与进入逻辑。  守卫 NPC 可以画成下面这张状态图： Patrol --发现敌人--&gt; Chase --进入射程--&gt; Attack    ^ ...</div></div></div></a><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%883%EF%BC%89%EF%BC%9A%E8%A1%8C%E4%B8%BA%E6%A0%91/" title="游戏AI-决策架构（3）：行为树"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构（3）：行为树</div></div><div class="info-2"><div class="info-item-1">行为树（Behavior Tree）把 AI 行为组织成可组合节点，并用 Success、Failure、Running 三种结果驱动控制流。它特别适合持续重新评估威胁、按优先级选择分支，以及把复杂战斗逻辑拆成可复用子树。   本文假设读者理解基本的树结构和 C# 接口。示例使用 .NET 8，实现一棵响应式守卫行为树；重点不是可视化编辑器，而是编辑器背后必须稳定成立的 Tick、中断和状态语义。 一、行为树和状态机看问题的角度不同FSM 首先问： 我当前处于哪个状态？什么条件会让我切到另一个状态？ ```text  行为树首先问：  ```text 从根节点开始，这一帧哪条分支能够执行？执行到哪里还没结束？ ```text  同一个守卫逻辑可以写成：  ```text Priority Selector ├── Sequence: 撤退 │   ├── Condition: 低血量 │   └── Action: 逃离 ├── Sequence: 战斗 │   ├── Condition: 看见敌人 │   └── Selector │       ├── Sequence: ...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Csy7749</div><div class="author-info-description">键来！</div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">38</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">79</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">10</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/csy7749"><i class="fab fa-github"></i><span>GitHub</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">日积月累</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E5%85%88%E5%8C%BA%E5%88%86%EF%BC%9A%E6%89%A7%E8%A1%8C%E6%8E%A7%E5%88%B6%E3%80%81%E5%8D%B3%E6%97%B6%E9%80%89%E6%8B%A9%E4%B8%8E%E5%A4%9A%E6%AD%A5%E8%A7%84%E5%88%92"><span class="toc-number">1.</span> <span class="toc-text">一、先区分：执行控制、即时选择与多步规划</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%886%EF%BC%89%EF%BC%9AAI%E5%86%B3%E7%AD%96%E6%AF%94%E8%BE%83/" title="游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型">游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型</a><time datetime="2026-08-17T08:00:00.000Z" title="Created 2026-08-17 16:00:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%885%EF%BC%89%EF%BC%9AHTN%E5%88%86%E5%B1%82%E4%BB%BB%E5%8A%A1%E7%BD%91%E7%BB%9C/" title="游戏AI-决策架构（5）：HTN 分层任务网络">游戏AI-决策架构（5）：HTN 分层任务网络</a><time datetime="2026-08-17T07:50:00.000Z" title="Created 2026-08-17 15:50:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%884%EF%BC%89%EF%BC%9AUtilityAI%E6%95%88%E7%94%A8%E5%86%B3%E7%AD%96/" title="游戏AI-决策架构（4）：Utility AI 效用决策">游戏AI-决策架构（4）：Utility AI 效用决策</a><time datetime="2026-08-17T07:40:00.000Z" title="Created 2026-08-17 15:40:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%883%EF%BC%89%EF%BC%9A%E8%A1%8C%E4%B8%BA%E6%A0%91/" title="游戏AI-决策架构（3）：行为树">游戏AI-决策架构（3）：行为树</a><time datetime="2026-08-17T07:30:00.000Z" title="Created 2026-08-17 15:30:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%882%EF%BC%89%EF%BC%9AHFSM%E5%88%86%E5%B1%82%E6%9C%89%E9%99%90%E7%8A%B6%E6%80%81%E6%9C%BA/" title="游戏AI-决策架构（2）：HFSM 分层有限状态机">游戏AI-决策架构（2）：HFSM 分层有限状态机</a><time datetime="2026-08-17T07:20:00.000Z" title="Created 2026-08-17 15:20:00">2026-08-17</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2020 - 2026 By Csy7749</span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/koharu.model.json"},"display":{"position":"left","width":150,"height":300},"mobile":{"show":false},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/"});</script></body></html>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">感知层</span><br><span class="line">  收集血量、距离、目标、危险度、资源等事实</span><br><span class="line">        |</span><br><span class="line">        v</span><br><span class="line">决策与规划层</span><br><span class="line">  Utility AI：当前哪个候选行为最值得做</span><br><span class="line">  GOAP：哪些动作可以组成一条达成目标的路径</span><br><span class="line">  HTN：高层任务应该按哪种方法逐层拆解</span><br><span class="line">        |</span><br><span class="line">        v</span><br><span class="line">执行控制层</span><br><span class="line">  FSM：当前处于哪个明确状态</span><br><span class="line">  HFSM：当前处于哪条层级状态路径</span><br><span class="line">  行为树：当前哪条优先级分支可以继续执行</span><br><span class="line">        |</span><br><span class="line">        v</span><br><span class="line">动作能力层</span><br><span class="line">  寻路、技能、动画、交互、Smart Object</span><br></pre></td></tr></table></figure>
+
+<p>这不是强制分层。行为树可以承担轻量决策，FSM 也可以直接根据条件选择动作。但当系统变复杂后，把“选什么”“怎么安排步骤”“如何执行”分开，通常更容易调试和扩展。</p>
+<h2 id="二、一张表看懂六种方案"><a href="#二、一张表看懂六种方案" class="headerlink" title="二、一张表看懂六种方案"></a>二、一张表看懂六种方案</h2><table>
+<thead>
+<tr>
+<th align="left">方案</th>
+<th align="left">核心问题</th>
+<th align="left">主要输出</th>
+<th align="left">核心特点</th>
+<th align="left">典型场景</th>
+<th align="left">主要限制</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">FSM</td>
+<td align="left">当前处于什么状态</td>
+<td align="left">单个状态</td>
+<td align="left">简单、确定、生命周期清晰</td>
+<td align="left">小怪、机关、技能阶段</td>
+<td align="left">状态与迁移容易膨胀</td>
+</tr>
+<tr>
+<td align="left">HFSM</td>
+<td align="left">状态如何分层并复用</td>
+<td align="left">激活状态路径</td>
+<td align="left">父子层级、共享迁移、模式清晰</td>
+<td align="left">Boss 阶段、战斗&#x2F;和平模式</td>
+<td align="left">跨层语义和调试成本更高</td>
+</tr>
+<tr>
+<td align="left">行为树</td>
+<td align="left">当前哪条分支可执行</td>
+<td align="left">Running 节点与执行路径</td>
+<td align="left">组合式、响应式、易可视化</td>
+<td align="left">战斗 AI、Boss 技能、战术行为</td>
+<td align="left">大树、Blackboard 和中断容易失控</td>
+</tr>
+<tr>
+<td align="left">Utility AI</td>
+<td align="left">当前哪个候选最有价值</td>
+<td align="left">候选及效用分数</td>
+<td align="left">连续评分、动态权衡、行为自然</td>
+<td align="left">技能选择、目标选择、生存需求</td>
+<td align="left">曲线调参与行为震荡</td>
+</tr>
+<tr>
+<td align="left">GOAP</td>
+<td align="left">如何动态组合动作达成目标</td>
+<td align="left">动作计划</td>
+<td align="left">前提&#x2F;效果、状态空间搜索、涌现性</td>
+<td align="left">沙盒 NPC、生存模拟、动态战术</td>
+<td align="left">建模、搜索和重规划成本高</td>
+</tr>
+<tr>
+<td align="left">HTN</td>
+<td align="left">已知领域任务如何逐层拆解</td>
+<td align="left">原子任务序列</td>
+<td align="left">领域知识驱动、结构可控、可解释</td>
+<td align="left">长任务链、SLG、RPG、队伍策略</td>
+<td align="left">Method 设计成本高、动态性受域约束</td>
+</tr>
+</tbody></table>
+<p>如果只记一组关键词：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">FSM     = 明确状态</span><br><span class="line">HFSM    = 层级模式</span><br><span class="line">行为树   = 条件控制流</span><br><span class="line">Utility = 当前评分</span><br><span class="line">GOAP    = 动态找路</span><br><span class="line">HTN     = 按套路拆任务</span><br></pre></td></tr></table></figure>
+
+<h2 id="三、FSM：最小、确定的行为闭环"><a href="#三、FSM：最小、确定的行为闭环" class="headerlink" title="三、FSM：最小、确定的行为闭环"></a>三、FSM：最小、确定的行为闭环</h2><p>FSM 用有限状态和显式迁移描述行为。角色同一时间通常处于一个状态，切换时执行固定的 <code>Exit -&gt; Enter</code> 生命周期。状态模式在游戏开发中的价值，正是把分散的布尔条件收束成互斥、可命名的行为模式[^1]。</p>
+<h3 id="核心特点"><a href="#核心特点" class="headerlink" title="核心特点"></a>核心特点</h3><ul>
+<li>当前状态唯一，行为容易观察。</li>
+<li>迁移条件显式，运行结果确定。</li>
+<li><code>Enter / Update / Exit</code> 生命周期清楚。</li>
+<li>实现成本低，不依赖复杂工具。</li>
+<li>状态少、迁移稀疏时，调试效率很高。</li>
+</ul>
+<h3 id="适合使用"><a href="#适合使用" class="headerlink" title="适合使用"></a>适合使用</h3><ul>
+<li>塔防或动作游戏中的普通小怪：巡逻、追击、攻击、死亡。</li>
+<li>技能施法流程：前摇、释放、后摇、冷却。</li>
+<li>门、机关、宝箱、生产建筑等交互对象。</li>
+<li>Boss 的少量固定阶段。</li>
+<li>UI、任务节点和关卡流程。</li>
+</ul>
+<h3 id="不适合使用"><a href="#不适合使用" class="headerlink" title="不适合使用"></a>不适合使用</h3><ul>
+<li>一个行为需要同时考虑很多连续因素。</li>
+<li>状态之间几乎都能互相迁移。</li>
+<li>多个状态重复死亡、撤退、受控等规则。</li>
+<li>需要运行时动态生成一串动作。</li>
+</ul>
+<p>FSM 的问题通常不是“状态达到某个数量”，而是新增一个状态时必须修改多少旧迁移。如果每次扩展都要触碰大量已有状态，结构就已经开始变脆。</p>
+<h2 id="四、HFSM：为状态增加模式与层级"><a href="#四、HFSM：为状态增加模式与层级" class="headerlink" title="四、HFSM：为状态增加模式与层级"></a>四、HFSM：为状态增加模式与层级</h2><p>HFSM 在 FSM 上增加父子状态。<code>Chase</code> 和 <code>Attack</code> 可以归入 <code>Combat</code>，共享战斗模式的进入、退出、更新和迁移。层级状态思想来自 Statecharts，它通过层级和扩展语义缓解平铺状态图的复杂度[^2]。</p>
+<h3 id="核心特点-1"><a href="#核心特点-1" class="headerlink" title="核心特点"></a>核心特点</h3><ul>
+<li>当前状态是一条 <code>Root -&gt; Parent -&gt; Leaf</code> 激活路径。</li>
+<li>父状态承载共享生命周期和共享迁移。</li>
+<li>可以表达和平、战斗、受控、死亡等稳定模式。</li>
+<li>子状态切换时可以保持父状态持续激活。</li>
+<li>默认子状态和历史状态能恢复局部流程。</li>
+</ul>
+<h3 id="适合使用-1"><a href="#适合使用-1" class="headerlink" title="适合使用"></a>适合使用</h3><ul>
+<li>Boss 的阶段内还有攻击、移动、施法等子状态。</li>
+<li>角色存在地面、空中、游泳等大模式。</li>
+<li>战斗模式中的多个状态共享目标锁定和威胁更新。</li>
+<li>技能或动画存在稳定的层级阶段。</li>
+<li>普通 FSM 已出现大量重复迁移，但行为仍然以状态为中心。</li>
+</ul>
+<h3 id="不适合使用-1"><a href="#不适合使用-1" class="headerlink" title="不适合使用"></a>不适合使用</h3><ul>
+<li>行为主要由大量优先级条件分支构成。</li>
+<li>多个维度需要并行变化，例如移动状态和武器状态。</li>
+<li>层级只是为了整理文件，没有共享行为或迁移。</li>
+<li>父层和子层都在争夺同一个动作控制权。</li>
+</ul>
+<p>HFSM 的风险是把一张复杂平面图变成一棵更难追踪的深树。跨层迁移必须记录完整的退出路径、最近公共祖先和进入路径，否则问题会藏在父状态中。</p>
+<h2 id="五、行为树：面向优先级与持续响应的控制流"><a href="#五、行为树：面向优先级与持续响应的控制流" class="headerlink" title="五、行为树：面向优先级与持续响应的控制流"></a>五、行为树：面向优先级与持续响应的控制流</h2><p>行为树通过 Selector、Sequence、Decorator、Condition、Action 等节点组合行为，并用 <code>Success / Failure / Running</code> 驱动树的执行。其优势在于模块化和反应性：高优先级条件变化后，树可以中断当前低优先级分支并重新选择[^3]。</p>
+<h3 id="核心特点-2"><a href="#核心特点-2" class="headerlink" title="核心特点"></a>核心特点</h3><ul>
+<li>分支顺序可以直接表达优先级。</li>
+<li>子树和通用节点容易复用。</li>
+<li>条件与动作分离，适合可视化编辑。</li>
+<li>能持续检查死亡、眩晕、撤退等高优先级中断。</li>
+<li>适合把战斗行为组织成可读的层级控制流。</li>
+</ul>
+<h3 id="适合使用-2"><a href="#适合使用-2" class="headerlink" title="适合使用"></a>适合使用</h3><ul>
+<li>射击或动作游戏中的战术敌人。</li>
+<li>Boss 技能选择、连招条件和阶段内行为。</li>
+<li>搜索、追击、找掩体、攻击之间的响应式切换。</li>
+<li>需要策划使用可视化工具配置的 NPC。</li>
+<li>行为能够自然汇报成功、失败和运行中状态。</li>
+</ul>
+<h3 id="不适合使用-2"><a href="#不适合使用-2" class="headerlink" title="不适合使用"></a>不适合使用</h3><ul>
+<li>需要在大量候选之间进行连续数值权衡。</li>
+<li>需要动态搜索没有预先写在树里的动作链。</li>
+<li>长期计划会被硬编码成很深的 Sequence。</li>
+<li>团队没有定义 Running、Abort 和 Blackboard 规范。</li>
+</ul>
+<p>行为树真正的工程难点不是画节点，而是中断。一个 <code>Running</code> 的追击节点被撤退分支抢占后，必须取消寻路并释放动作资源；只停止 Tick 会留下脏状态。</p>
+<h2 id="六、Utility-AI：用分数表达倾向和权衡"><a href="#六、Utility-AI：用分数表达倾向和权衡" class="headerlink" title="六、Utility AI：用分数表达倾向和权衡"></a>六、Utility AI：用分数表达倾向和权衡</h2><p>Utility AI 为每个候选行为计算效用分数，再选择当前分数最高的行为。血量、距离、弹药、敌人数量等输入通常先归一化，再经过响应曲线和权重组合。Utility Theory 在游戏 AI 中常用于把硬阈值决策改造成连续的行为偏好[^4]。</p>
+<h3 id="核心特点-3"><a href="#核心特点-3" class="headerlink" title="核心特点"></a>核心特点</h3><ul>
+<li>多个连续变量可以共同参与决策。</li>
+<li>输出不仅有选择结果，还有可解释的候选分数。</li>
+<li>通过响应曲线表达“越来越想做某件事”。</li>
+<li>增加候选行为时，不必修改所有已有候选。</li>
+<li>容易产生比固定条件链更柔和的行为变化。</li>
+</ul>
+<h3 id="适合使用-3"><a href="#适合使用-3" class="headerlink" title="适合使用"></a>适合使用</h3><ul>
+<li>攻击、治疗、撤退、找掩体之间的选择。</li>
+<li>技能选择和攻击目标选择。</li>
+<li>生存游戏中的饥饿、口渴、睡眠、安全需求。</li>
+<li>模拟经营中的工作、休息、社交等活动选择。</li>
+<li>RTS 或小队 AI 中选择当前最合适的任务执行者。</li>
+</ul>
+<h3 id="不适合使用-3"><a href="#不适合使用-3" class="headerlink" title="不适合使用"></a>不适合使用</h3><ul>
+<li>行为必须严格按固定步骤执行。</li>
+<li>需要生成多步计划，而不是只选当前候选。</li>
+<li>输入和曲线缺乏明确业务含义。</li>
+<li>没有分数可视化和回放工具。</li>
+</ul>
+<p>Utility AI 最常见的问题是震荡：攻击分数和撤退分数在临界值附近反复超越。迟滞、最短执行时间、冷却、切换惩罚和降频评估都应该属于显式决策规则，而不是藏在动作内部。</p>
+<h2 id="七、GOAP：在状态空间中动态组合动作"><a href="#七、GOAP：在状态空间中动态组合动作" class="headerlink" title="七、GOAP：在状态空间中动态组合动作"></a>七、GOAP：在状态空间中动态组合动作</h2><p>GOAP 把动作描述成前提条件、效果和代价，再搜索一条从当前世界状态到目标状态的动作序列。它不要求开发者预先写死完整流程，而是让动作根据当前条件重新组合。F.E.A.R. 对 GOAP 的应用展示了“规划器生成动作计划，执行器负责移动、动画和 Smart Object”的分层方式[^5]。</p>
+<h3 id="核心特点-4"><a href="#核心特点-4" class="headerlink" title="核心特点"></a>核心特点</h3><ul>
+<li>以目标状态为驱动，而不是以固定流程为驱动。</li>
+<li>动作通过前提和效果松耦合。</li>
+<li>同一个目标可以根据资源和环境产生不同计划。</li>
+<li>动作库扩展后，已有目标可能自动获得新的达成方式。</li>
+<li>能产生设计者没有逐条编排的行为组合。</li>
+</ul>
+<h3 id="适合使用-4"><a href="#适合使用-4" class="headerlink" title="适合使用"></a>适合使用</h3><ul>
+<li>沙盒世界中的自主 NPC。</li>
+<li>生存模拟中的采集、制作、补给和战斗。</li>
+<li>动作资源和环境条件经常变化的任务。</li>
+<li>需要多种路径达成同一目标的战术 AI。</li>
+<li>Smart Object 丰富、交互方式多的场景。</li>
+</ul>
+<h3 id="不适合使用-4"><a href="#不适合使用-4" class="headerlink" title="不适合使用"></a>不适合使用</h3><ul>
+<li>行为流程短而固定，FSM 或行为树已经足够。</li>
+<li>世界状态难以抽象成稳定的规划事实。</li>
+<li>动作前提、效果和代价无法被可靠维护。</li>
+<li>大量 Agent 高频重规划，但没有预算和调度机制。</li>
+<li>设计要求结果严格按预定脚本执行。</li>
+</ul>
+<p>GOAP 找到的是抽象动作链，不是完整表现。<code>MoveToCover</code> 仍然需要寻路，<code>AttackEnemy</code> 仍然需要技能或状态机执行。规划模型和真实世界不一致时，执行前验证、动作失败和重规划路径必须明确暴露。</p>
+<h2 id="八、HTN：用领域知识拆解长任务"><a href="#八、HTN：用领域知识拆解长任务" class="headerlink" title="八、HTN：用领域知识拆解长任务"></a>八、HTN：用领域知识拆解长任务</h2><p>HTN（Hierarchical Task Network）从高层任务开始，通过满足条件的 Method 把复合任务逐层拆成子任务，直到得到可执行的 Primitive Task。它把“这类任务通常应该怎么做”的领域知识写进分解结构，因此比自由搜索更可控、更容易解释[^6]。</p>
+<h3 id="核心特点-5"><a href="#核心特点-5" class="headerlink" title="核心特点"></a>核心特点</h3><ul>
+<li>任务天然具有从战略到动作的层级。</li>
+<li>同一个复合任务可以提供多种条件化 Method。</li>
+<li>计划结果由领域知识约束，可控性强。</li>
+<li>展开过程和失败位置容易记录。</li>
+<li>对长任务链和团队流程表达能力较好。</li>
+</ul>
+<h3 id="适合使用-5"><a href="#适合使用-5" class="headerlink" title="适合使用"></a>适合使用</h3><ul>
+<li>SLG 中的集结、行军、攻城和防守。</li>
+<li>RPG 中的任务链、生活行为和剧情角色流程。</li>
+<li>小队协同与战术任务分配。</li>
+<li>采集、生产、运输、建设等长链行为。</li>
+<li>希望 AI 有适应性，但仍要遵循设计套路的项目。</li>
+</ul>
+<h3 id="不适合使用-5"><a href="#不适合使用-5" class="headerlink" title="不适合使用"></a>不适合使用</h3><ul>
+<li>行为只需要在少量状态之间切换。</li>
+<li>团队无法投入成本维护 Task 和 Method 域模型。</li>
+<li>世界变化极快，长计划频繁失效。</li>
+<li>期望系统自由发现领域设计之外的新动作组合。</li>
+</ul>
+<p>HTN 的质量取决于 Method。条件写得过宽会出现多个分解同时可用，条件写得过窄又会导致没有计划；Primitive Task 粒度不一致，则会把规划细节和动作执行重新混在一起。</p>
+<h2 id="九、按游戏场景选择"><a href="#九、按游戏场景选择" class="headerlink" title="九、按游戏场景选择"></a>九、按游戏场景选择</h2><table>
+<thead>
+<tr>
+<th align="left">游戏场景</th>
+<th align="left">首选方案</th>
+<th align="left">常见组合</th>
+<th align="left">原因</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">塔防普通怪、简单野怪</td>
+<td align="left">FSM</td>
+<td align="left">FSM + NavMesh</td>
+<td align="left">行为少、状态边界明确</td>
+</tr>
+<tr>
+<td align="left">多阶段 Boss</td>
+<td align="left">HFSM</td>
+<td align="left">HFSM + 行为树</td>
+<td align="left">阶段稳定，阶段内分支较多</td>
+</tr>
+<tr>
+<td align="left">射击游戏战斗敌人</td>
+<td align="left">行为树</td>
+<td align="left">行为树 + Utility AI</td>
+<td align="left">需要高频响应、掩体和技能选择</td>
+</tr>
+<tr>
+<td align="left">技能很多的战斗单位</td>
+<td align="left">Utility AI</td>
+<td align="left">Utility AI + FSM</td>
+<td align="left">先评分选技能，再执行技能阶段</td>
+</tr>
+<tr>
+<td align="left">生活模拟角色</td>
+<td align="left">Utility AI</td>
+<td align="left">Utility AI + 行为树</td>
+<td align="left">多需求动态权衡，动作需要持续执行</td>
+</tr>
+<tr>
+<td align="left">沙盒生存 NPC</td>
+<td align="left">GOAP</td>
+<td align="left">Utility AI + GOAP + HFSM</td>
+<td align="left">选目标、生成动作链、稳定执行</td>
+</tr>
+<tr>
+<td align="left">SLG 队伍或生产流程</td>
+<td align="left">HTN</td>
+<td align="left">HTN + 行为树</td>
+<td align="left">长链任务有明确领域结构</td>
+</tr>
+<tr>
+<td align="left">剧情和任务角色</td>
+<td align="left">HTN 或 HFSM</td>
+<td align="left">HTN + FSM</td>
+<td align="left">流程可控、步骤可解释</td>
+</tr>
+<tr>
+<td align="left">机关、交互物、技能流程</td>
+<td align="left">FSM</td>
+<td align="left">FSM + 事件系统</td>
+<td align="left">不需要引入复杂规划</td>
+</tr>
+</tbody></table>
+<p>“首选”表示最先验证的最小方案，不代表最终架构。先用最低复杂度建立可玩的行为闭环，再根据重复关系和变化压力升级，比一开始搭完整 AI 平台更可靠。</p>
+<h2 id="十、一个实用的选型流程"><a href="#十、一个实用的选型流程" class="headerlink" title="十、一个实用的选型流程"></a>十、一个实用的选型流程</h2><p>可以按下面的顺序判断：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">1. 行为是否只有少量明确模式？</span><br><span class="line">   是 -&gt; FSM</span><br><span class="line">   否 -&gt; 继续</span><br><span class="line"></span><br><span class="line">2. 多个状态是否存在稳定的父子模式和共享迁移？</span><br><span class="line">   是 -&gt; HFSM</span><br><span class="line">   否 -&gt; 继续</span><br><span class="line"></span><br><span class="line">3. 问题是否主要是大量条件分支、优先级和持续中断？</span><br><span class="line">   是 -&gt; 行为树</span><br><span class="line">   否 -&gt; 继续</span><br><span class="line"></span><br><span class="line">4. 问题是否主要是多个连续因素下“现在选哪个”？</span><br><span class="line">   是 -&gt; Utility AI</span><br><span class="line">   否 -&gt; 继续</span><br><span class="line"></span><br><span class="line">5. 系统是否需要动态组合动作来达成目标？</span><br><span class="line">   是 -&gt; GOAP</span><br><span class="line">   否 -&gt; 继续</span><br><span class="line"></span><br><span class="line">6. 系统是否需要按领域套路拆解可控的长任务？</span><br><span class="line">   是 -&gt; HTN</span><br></pre></td></tr></table></figure>
+
+<p>如果同时回答多个“是”，通常意味着需要组合，而不是继续寻找一个包办所有职责的方案。</p>
+<h2 id="十一、常见的混合架构"><a href="#十一、常见的混合架构" class="headerlink" title="十一、常见的混合架构"></a>十一、常见的混合架构</h2><p>一个复杂 NPC 可以采用下面的分层：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">Sensor / Blackboard</span><br><span class="line">    提供事实</span><br><span class="line">        |</span><br><span class="line">        v</span><br><span class="line">Utility AI</span><br><span class="line">    选择当前目标：战斗、治疗、补给、逃跑</span><br><span class="line">        |</span><br><span class="line">        v</span><br><span class="line">GOAP 或 HTN</span><br><span class="line">    生成达成目标的动作序列</span><br><span class="line">        |</span><br><span class="line">        v</span><br><span class="line">行为树或 HFSM</span><br><span class="line">    处理中断、重试和动作执行流程</span><br><span class="line">        |</span><br><span class="line">        v</span><br><span class="line">FSM / Ability / Movement / Animation</span><br><span class="line">    完成具体技能和移动</span><br></pre></td></tr></table></figure>
+
+<p>并不是每层都必须存在：</p>
+<ul>
+<li>普通小怪可能只有 FSM。</li>
+<li>Boss 可能是 HFSM + 行为树。</li>
+<li>生存 NPC 可能是 Utility AI + GOAP + 动作状态机。</li>
+<li>SLG 队伍可能是 HTN + 行为树 + 寻路系统。</li>
+</ul>
+<p>组合架构必须明确所有权。例如 Utility AI 选择“撤退”后，由谁能取消撤退、谁负责释放寻路、谁报告完成，都要有唯一入口。多个系统同时切换行为，比单个系统复杂更危险。</p>
+<h2 id="十二、选型时最容易犯的错误"><a href="#十二、选型时最容易犯的错误" class="headerlink" title="十二、选型时最容易犯的错误"></a>十二、选型时最容易犯的错误</h2><h3 id="只按行为数量选"><a href="#只按行为数量选" class="headerlink" title="只按行为数量选"></a>只按行为数量选</h3><p>十个状态未必复杂，四个互相强耦合的状态也可能很难维护。应该看迁移密度、共享规则和变化范围。</p>
+<h3 id="把行为树当自动规划器"><a href="#把行为树当自动规划器" class="headerlink" title="把行为树当自动规划器"></a>把行为树当自动规划器</h3><p>行为树只会执行设计者写进树里的控制流。它可以做轻量选择，但不会自动发现树外的新动作链。</p>
+<h3 id="把-Utility-AI-当执行器"><a href="#把-Utility-AI-当执行器" class="headerlink" title="把 Utility AI 当执行器"></a>把 Utility AI 当执行器</h3><p>Utility AI 选出高分动作后，动作仍然需要生命周期、中断和完成结果。评分系统不应该直接接管动画和移动细节。</p>
+<h3 id="把-GOAP-或-HTN-接到表现层"><a href="#把-GOAP-或-HTN-接到表现层" class="headerlink" title="把 GOAP 或 HTN 接到表现层"></a>把 GOAP 或 HTN 接到表现层</h3><p>Planner 应操作抽象动作，不应该为每个动画片段建立规划事实。规划粒度过细会扩大搜索空间，也让计划与表现资源强耦合。</p>
+<h3 id="一开始就组合全部方案"><a href="#一开始就组合全部方案" class="headerlink" title="一开始就组合全部方案"></a>一开始就组合全部方案</h3><p>每增加一层，就增加状态同步、失败传播、调试工具和所有权规则。没有明确问题时不应引入对应系统。</p>
+<h2 id="十三、最终判断标准"><a href="#十三、最终判断标准" class="headerlink" title="十三、最终判断标准"></a>十三、最终判断标准</h2><p>选型时可以用五个维度复核：</p>
+<table>
+<thead>
+<tr>
+<th align="left">维度</th>
+<th align="left">要问的问题</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">行为规模</td>
+<td align="left">行为和关系是否已经超出简单状态图？</td>
+</tr>
+<tr>
+<td align="left">动态性</td>
+<td align="left">行为链需要运行时生成，还是预先编排即可？</td>
+</tr>
+<tr>
+<td align="left">可控性</td>
+<td align="left">设计是否要求结果严格遵循领域流程？</td>
+</tr>
+<tr>
+<td align="left">响应性</td>
+<td align="left">当前动作是否需要被高优先级条件频繁中断？</td>
+</tr>
+<tr>
+<td align="left">可调试性</td>
+<td align="left">团队能否看到状态、分数、计划或节点路径？</td>
+</tr>
+</tbody></table>
+<p>没有绝对最强的 AI 决策方案。FSM 的简单、HFSM 的层级、行为树的响应、Utility AI 的权衡、GOAP 的动态组合、HTN 的可控分解，分别对应不同的设计压力。先判断系统真正需要回答的问题，再选择最小可用结构，最后才考虑组合。</p>
+<h2 id="自查清单"><a href="#自查清单" class="headerlink" title="自查清单"></a>自查清单</h2><ul>
+<li>当前问题属于执行控制、即时选择还是多步规划？</li>
+<li>是否正在用复杂系统解决一个简单状态切换问题？</li>
+<li>决策输出能否交给独立执行器，而不是直接操作表现层？</li>
+<li>行为切换、中断、失败和重规划是否有唯一入口？</li>
+<li>团队能否查看 FSM 状态、Utility 分数、GOAP 计划、HTN 展开或行为树路径？</li>
+<li>混合架构中每一层是否解决了一个无法由更低成本方案解决的问题？</li>
+</ul>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>[^1]: <a target="_blank" rel="noopener" href="https://www.gameprogrammingpatterns.com/state.html">State - Game Programming Patterns</a> - 游戏中的 FSM、并发状态机与分层状态机<br>[^2]: <a target="_blank" rel="noopener" href="https://doi.org/10.1016/0167-6423(87)90035-9">Statecharts: A Visual Formalism for Complex Systems</a> - David Harel 对层级状态图的形式化描述<br>[^3]: <a target="_blank" rel="noopener" href="https://arxiv.org/abs/1709.00084">Behavior Trees in Robotics and AI: An Introduction</a> - 行为树结构、组合性与反应性的系统介绍<br>[^4]: <a target="_blank" rel="noopener" href="https://www.gdcvault.com/play/1012747/Improving-AI-Decision-Modeling-Through">Improving AI Decision Modeling Through Utility Theory</a> - Dave Mark 与 Kevin Dill 关于 Utility AI 决策建模的 GDC 演讲<br>[^5]: <a target="_blank" rel="noopener" href="https://www.gamedeveloper.com/design/building-the-ai-of-f-e-a-r-with-goal-oriented-action-planning">Building the AI of F.E.A.R. with Goal Oriented Action Planning</a> - F.E.A.R. 的 GOAP 规划与执行架构分析<br>[^6]: <a target="_blank" rel="noopener" href="https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter12_Exploring_HTN_Planners_through_Example.pdf">Exploring HTN Planners through Example</a> - 通过游戏 AI 示例说明 HTN 的 Task、Method 与计划展开</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://csy7749.github.io">Csy7749</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://csy7749.github.io/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%886%EF%BC%89%EF%BC%9AAI%E5%86%B3%E7%AD%96%E6%AF%94%E8%BE%83/">https://csy7749.github.io/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%886%EF%BC%89%EF%BC%9AAI%E5%86%B3%E7%AD%96%E6%AF%94%E8%BE%83/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%B8%B8%E6%88%8FAI/">游戏AI</a><a class="post-meta__tags" href="/tags/%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84/">决策架构</a><a class="post-meta__tags" href="/tags/AI%E5%86%B3%E7%AD%96/">AI决策</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/08/17/Unity-UGUI%E6%9E%B6%E6%9E%84%EF%BC%881%EF%BC%89%EF%BC%9AMVC%E6%A8%A1%E5%BC%8F/" title="Unity UGUI架构（1）：MVC模式"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">Unity UGUI架构（1）：MVC模式</div></div><div class="info-2"><div class="info-item-1"> MVC 在 Unity UGUI 中的价值，不是把脚本机械地分成三个文件，而是把界面显示、业务状态和用户操作分开。本文从一次按钮点击的完整数据流出发，说明 Model、View、Controller 的职责、依赖方向、优缺点，以及它真正适合的项目规模。    本文假设读者熟悉 Unity、MonoBehaviour、Button 和 Text 等基本 UGUI 组件。文中的 MVC 指面向客户端界面的工程化变体，不要求照搬 Web MVC 的请求&#x2F;响应模型。 一、UGUI 为什么需要 MVC一个小型界面通常会从下面这种脚本开始： 1234567public void OnAddClicked()&#123;    quantity++;    quantityText.text = quantity.ToString();    PlayerPrefs.SetInt(&quot;Quantity&quot;, quantity);    audioSource.Play();&#125;  它在功能很少时没有问题，但一段代码同时承担了五件事：  接收按钮事件。 修改业...</div></div></div></a><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%885%EF%BC%89%EF%BC%9AHTN%E5%88%86%E5%B1%82%E4%BB%BB%E5%8A%A1%E7%BD%91%E7%BB%9C/" title="游戏AI-决策架构（5）：HTN 分层任务网络"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">游戏AI-决策架构（5）：HTN 分层任务网络</div></div><div class="info-2"><div class="info-item-1">HTN（Hierarchical Task Network，分层任务网络）从高层任务出发，根据当前世界状态选择 Method，逐层拆解 Compound Task，最终生成可执行的 Primitive Task 序列。它适合步骤较长、领域套路明确，同时又需要根据局势选择不同执行方案的游戏 AI。   本文假设读者熟悉 C# 继承、委托、不可变记录和集合。示例使用 .NET 8，实现一个支持 Method 回溯、规划期状态效果和完整展开轨迹的总序 HTN Planner，可以直接放进控制台项目运行。 一、HTN 解决什么问题守卫 NPC 接到 DefendArea 任务后，可能面对不同情况： 12345低血量且有药品 -&gt; 治疗 -&gt; 接敌低血量且没有药品 -&gt; 移动到掩体发现敌人且距离较远 -&gt; 接近 -&gt; 攻击发现敌人且已在射程 -&gt; 直接攻击没有威胁 -&gt; 巡逻  FSM 可以为每一步建立状态，行为树可以把所有分支画出来，GOAP 可以在动作状态空间中搜索。HTN 采用另一种思路：把设计者已经知道的领域套路写成任务分解规则。 1234...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%885%EF%BC%89%EF%BC%9AHTN%E5%88%86%E5%B1%82%E4%BB%BB%E5%8A%A1%E7%BD%91%E7%BB%9C/" title="游戏AI-决策架构（5）：HTN 分层任务网络"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构（5）：HTN 分层任务网络</div></div><div class="info-2"><div class="info-item-1">HTN（Hierarchical Task Network，分层任务网络）从高层任务出发，根据当前世界状态选择 Method，逐层拆解 Compound Task，最终生成可执行的 Primitive Task 序列。它适合步骤较长、领域套路明确，同时又需要根据局势选择不同执行方案的游戏 AI。   本文假设读者熟悉 C# 继承、委托、不可变记录和集合。示例使用 .NET 8，实现一个支持 Method 回溯、规划期状态效果和完整展开轨迹的总序 HTN Planner，可以直接放进控制台项目运行。 一、HTN 解决什么问题守卫 NPC 接到 DefendArea 任务后，可能面对不同情况： 12345低血量且有药品 -&gt; 治疗 -&gt; 接敌低血量且没有药品 -&gt; 移动到掩体发现敌人且距离较远 -&gt; 接近 -&gt; 攻击发现敌人且已在射程 -&gt; 直接攻击没有威胁 -&gt; 巡逻  FSM 可以为每一步建立状态，行为树可以把所有分支画出来，GOAP 可以在动作状态空间中搜索。HTN 采用另一种思路：把设计者已经知道的领域套路写成任务分解规则。 1234...</div></div></div></a><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%E7%B3%BB%E5%88%97-%E8%A7%84%E5%88%92/" title="游戏AI-决策架构 系列·写作规划"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构 系列·写作规划</div></div><div class="info-2"><div class="info-item-1">游戏 AI 不只有“怎么想”，还要解决“选定行为后怎么稳定执行”。这组文章先从 FSM、HFSM 和行为树拆解三种执行模型，再进入 Utility AI 的即时评分与 HTN 的长程规划，最后横向比较各类方案及其组合边界。   系列定位名称：游戏AI-决策架构 目标读者：熟悉 C# 基础，希望给敌人、NPC 或 Boss 搭建可维护行为逻辑的游戏开发者。 核心问题：感知系统已经给出了敌人距离、血量、目标等上下文后，AI 如何完成行为执行、即时选择与多步规划，并把它们组合成稳定、可维护的决策链。 这组文章讨论的是执行与轻量决策层，不把 FSM、HFSM、行为树和 GOAP、HTN、Utility AI 混成同一种东西： 12345678910Sensor / Perception        |        vGOAP / HTN / Utility AI     选择目标、策略或计划        |        vFSM / HFSM / Behavior Tree  执行当前行为        |        vMovement / Ability / Animati...</div></div></div></a><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%884%EF%BC%89%EF%BC%9AUtilityAI%E6%95%88%E7%94%A8%E5%86%B3%E7%AD%96/" title="游戏AI-决策架构（4）：Utility AI 效用决策"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构（4）：Utility AI 效用决策</div></div><div class="info-2"><div class="info-item-1">Utility AI（效用型 AI）把血量、距离、风险、资源等上下文转换成统一分数，再从候选行为中选择当前效用最高的一项。它解决的不是“动作如何执行”，而是多个因素同时变化时，角色此刻更应该攻击、治疗、撤退还是巡逻。   本文假设读者熟悉 C# 委托、集合和基本数学函数。示例使用 .NET 8，实现归一化输入、响应曲线、评分合成、惯性修正和可解释的候选输出，可以直接放进控制台项目运行。 一、Utility AI 解决什么问题硬条件适合表达明确规则： 12if 死亡 -&gt; 进入死亡状态if 技能未解锁 -&gt; 禁止释放  但下面这种选择很难只靠一组阈值维护： 12345血量低，希望治疗或撤退敌人很近，希望攻击或拉开距离敌人很多，希望找掩体治疗技能可用，但释放过程可能被打断当前攻击已经进行一半，切换也有成本  如果继续添加 if / else，不同条件的优先级会散落在代码顺序里，临界值附近还可能发生生硬切换。Utility AI 把问题改写为： 123456Attack  = 0.65Retreat = 0.56Heal    = 0.52Patrol  = 0.00选择 ...</div></div></div></a><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%882%EF%BC%89%EF%BC%9AHFSM%E5%88%86%E5%B1%82%E6%9C%89%E9%99%90%E7%8A%B6%E6%80%81%E6%9C%BA/" title="游戏AI-决策架构（2）：HFSM 分层有限状态机"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构（2）：HFSM 分层有限状态机</div></div><div class="info-2"><div class="info-item-1">HFSM（Hierarchical Finite State Machine，分层有限状态机）在 FSM 之上增加父子层级，让一组相关状态共享生命周期、更新逻辑和迁移规则。它解决的不是“如何让状态更多”，而是“如何把重复关系提升到共同父状态，同时保留明确的执行边界”。   本文假设已经理解 FSM 的状态、迁移和 Enter / Update / Exit。示例使用 .NET 8 与 C#，重点实现 HFSM 最容易出错的部分：激活路径、父层迁移，以及跨层切换时的退出和进入顺序。 一、为什么平铺 FSM 会出现重复守卫 NPC 有三个战斗相关状态：  Chase：追击目标 Attack：攻击目标 Search：短暂搜索丢失的目标  它们通常共享一组规则：进入战斗时锁定目标、持续刷新威胁、离开战斗时清理目标；低血量时都要撤退，目标彻底丢失时都要回到巡逻。 平铺 FSM 只能把这些规则复制到每个状态： 1234567Chase  --低血量--&gt; FleeAttack --低血量--&gt; FleeSearch --低血量--&gt; FleeChase  --目标丢失--&...</div></div></div></a><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%883%EF%BC%89%EF%BC%9A%E8%A1%8C%E4%B8%BA%E6%A0%91/" title="游戏AI-决策架构（3）：行为树"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构（3）：行为树</div></div><div class="info-2"><div class="info-item-1">行为树（Behavior Tree）把 AI 行为组织成可组合节点，并用 Success、Failure、Running 三种结果驱动控制流。它特别适合持续重新评估威胁、按优先级选择分支，以及把复杂战斗逻辑拆成可复用子树。   本文假设读者理解基本的树结构和 C# 接口。示例使用 .NET 8，实现一棵响应式守卫行为树；重点不是可视化编辑器，而是编辑器背后必须稳定成立的 Tick、中断和状态语义。 一、行为树和状态机看问题的角度不同FSM 首先问： 1我当前处于哪个状态？什么条件会让我切到另一个状态？  行为树首先问： 1从根节点开始，这一帧哪条分支能够执行？执行到哪里还没结束？  同一个守卫逻辑可以写成： 123456789101112Priority Selector├── Sequence: 撤退│   ├── Condition: 低血量│   └── Action: 逃离├── Sequence: 战斗│   ├── Condition: 看见敌人│   └── Selector│       ├── Sequence: 攻击│       │   ├── Condit...</div></div></div></a><a class="pagination-related" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%881%EF%BC%89%EF%BC%9AFSM%E6%9C%89%E9%99%90%E7%8A%B6%E6%80%81%E6%9C%BA/" title="游戏AI-决策架构（1）：FSM 有限状态机"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">游戏AI-决策架构（1）：FSM 有限状态机</div></div><div class="info-2"><div class="info-item-1">FSM（Finite State Machine，有限状态机）把角色行为表达为有限个状态，以及状态之间带条件的迁移。它不负责生成长期计划，但很适合把巡逻、追击、攻击、撤退这类边界明确的行为组织成一个稳定、可观察的执行闭环。   本文假设读者熟悉 C# 接口、委托和集合。示例使用 .NET 8，可直接放进控制台项目运行；接入 Unity 时，把 Tick 放到组件更新入口，并把输出动作替换为注入的移动、技能和动画服务即可。 一、FSM 真正在管理什么一个 FSM 至少包含四部分；这种“状态对象 + 迁移规则”的拆分也对应状态模式在游戏逻辑中的典型用法[^1]：  State：当前行为模式，例如 Patrol、Chase、Attack。 Transition：从源状态到目标状态的有向边。 Condition：迁移成立的条件，例如“看见敌人且距离不超过攻击范围”。 State Machine：保存当前状态，检查迁移，按顺序调用退出与进入逻辑。  守卫 NPC 可以画成下面这张状态图： 123456Patrol --发现敌人--&gt; Chase --进入射程--&gt; Attack...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Csy7749</div><div class="author-info-description">键来！</div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">42</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">87</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">12</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/csy7749"><i class="fab fa-github"></i><span>GitHub</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">日积月累</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E5%85%88%E5%8C%BA%E5%88%86%EF%BC%9A%E6%89%A7%E8%A1%8C%E6%8E%A7%E5%88%B6%E3%80%81%E5%8D%B3%E6%97%B6%E9%80%89%E6%8B%A9%E4%B8%8E%E5%A4%9A%E6%AD%A5%E8%A7%84%E5%88%92"><span class="toc-number">1.</span> <span class="toc-text">一、先区分：执行控制、即时选择与多步规划</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E4%B8%80%E5%BC%A0%E8%A1%A8%E7%9C%8B%E6%87%82%E5%85%AD%E7%A7%8D%E6%96%B9%E6%A1%88"><span class="toc-number">2.</span> <span class="toc-text">二、一张表看懂六种方案</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81FSM%EF%BC%9A%E6%9C%80%E5%B0%8F%E3%80%81%E7%A1%AE%E5%AE%9A%E7%9A%84%E8%A1%8C%E4%B8%BA%E9%97%AD%E7%8E%AF"><span class="toc-number">3.</span> <span class="toc-text">三、FSM：最小、确定的行为闭环</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E7%89%B9%E7%82%B9"><span class="toc-number">3.1.</span> <span class="toc-text">核心特点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%82%E5%90%88%E4%BD%BF%E7%94%A8"><span class="toc-number">3.2.</span> <span class="toc-text">适合使用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%8D%E9%80%82%E5%90%88%E4%BD%BF%E7%94%A8"><span class="toc-number">3.3.</span> <span class="toc-text">不适合使用</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81HFSM%EF%BC%9A%E4%B8%BA%E7%8A%B6%E6%80%81%E5%A2%9E%E5%8A%A0%E6%A8%A1%E5%BC%8F%E4%B8%8E%E5%B1%82%E7%BA%A7"><span class="toc-number">4.</span> <span class="toc-text">四、HFSM：为状态增加模式与层级</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E7%89%B9%E7%82%B9-1"><span class="toc-number">4.1.</span> <span class="toc-text">核心特点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%82%E5%90%88%E4%BD%BF%E7%94%A8-1"><span class="toc-number">4.2.</span> <span class="toc-text">适合使用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%8D%E9%80%82%E5%90%88%E4%BD%BF%E7%94%A8-1"><span class="toc-number">4.3.</span> <span class="toc-text">不适合使用</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E8%A1%8C%E4%B8%BA%E6%A0%91%EF%BC%9A%E9%9D%A2%E5%90%91%E4%BC%98%E5%85%88%E7%BA%A7%E4%B8%8E%E6%8C%81%E7%BB%AD%E5%93%8D%E5%BA%94%E7%9A%84%E6%8E%A7%E5%88%B6%E6%B5%81"><span class="toc-number">5.</span> <span class="toc-text">五、行为树：面向优先级与持续响应的控制流</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E7%89%B9%E7%82%B9-2"><span class="toc-number">5.1.</span> <span class="toc-text">核心特点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%82%E5%90%88%E4%BD%BF%E7%94%A8-2"><span class="toc-number">5.2.</span> <span class="toc-text">适合使用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%8D%E9%80%82%E5%90%88%E4%BD%BF%E7%94%A8-2"><span class="toc-number">5.3.</span> <span class="toc-text">不适合使用</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81Utility-AI%EF%BC%9A%E7%94%A8%E5%88%86%E6%95%B0%E8%A1%A8%E8%BE%BE%E5%80%BE%E5%90%91%E5%92%8C%E6%9D%83%E8%A1%A1"><span class="toc-number">6.</span> <span class="toc-text">六、Utility AI：用分数表达倾向和权衡</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E7%89%B9%E7%82%B9-3"><span class="toc-number">6.1.</span> <span class="toc-text">核心特点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%82%E5%90%88%E4%BD%BF%E7%94%A8-3"><span class="toc-number">6.2.</span> <span class="toc-text">适合使用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%8D%E9%80%82%E5%90%88%E4%BD%BF%E7%94%A8-3"><span class="toc-number">6.3.</span> <span class="toc-text">不适合使用</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81GOAP%EF%BC%9A%E5%9C%A8%E7%8A%B6%E6%80%81%E7%A9%BA%E9%97%B4%E4%B8%AD%E5%8A%A8%E6%80%81%E7%BB%84%E5%90%88%E5%8A%A8%E4%BD%9C"><span class="toc-number">7.</span> <span class="toc-text">七、GOAP：在状态空间中动态组合动作</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E7%89%B9%E7%82%B9-4"><span class="toc-number">7.1.</span> <span class="toc-text">核心特点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%82%E5%90%88%E4%BD%BF%E7%94%A8-4"><span class="toc-number">7.2.</span> <span class="toc-text">适合使用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%8D%E9%80%82%E5%90%88%E4%BD%BF%E7%94%A8-4"><span class="toc-number">7.3.</span> <span class="toc-text">不适合使用</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81HTN%EF%BC%9A%E7%94%A8%E9%A2%86%E5%9F%9F%E7%9F%A5%E8%AF%86%E6%8B%86%E8%A7%A3%E9%95%BF%E4%BB%BB%E5%8A%A1"><span class="toc-number">8.</span> <span class="toc-text">八、HTN：用领域知识拆解长任务</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E7%89%B9%E7%82%B9-5"><span class="toc-number">8.1.</span> <span class="toc-text">核心特点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%82%E5%90%88%E4%BD%BF%E7%94%A8-5"><span class="toc-number">8.2.</span> <span class="toc-text">适合使用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%8D%E9%80%82%E5%90%88%E4%BD%BF%E7%94%A8-5"><span class="toc-number">8.3.</span> <span class="toc-text">不适合使用</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B9%9D%E3%80%81%E6%8C%89%E6%B8%B8%E6%88%8F%E5%9C%BA%E6%99%AF%E9%80%89%E6%8B%A9"><span class="toc-number">9.</span> <span class="toc-text">九、按游戏场景选择</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%81%E3%80%81%E4%B8%80%E4%B8%AA%E5%AE%9E%E7%94%A8%E7%9A%84%E9%80%89%E5%9E%8B%E6%B5%81%E7%A8%8B"><span class="toc-number">10.</span> <span class="toc-text">十、一个实用的选型流程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%81%E4%B8%80%E3%80%81%E5%B8%B8%E8%A7%81%E7%9A%84%E6%B7%B7%E5%90%88%E6%9E%B6%E6%9E%84"><span class="toc-number">11.</span> <span class="toc-text">十一、常见的混合架构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%81%E4%BA%8C%E3%80%81%E9%80%89%E5%9E%8B%E6%97%B6%E6%9C%80%E5%AE%B9%E6%98%93%E7%8A%AF%E7%9A%84%E9%94%99%E8%AF%AF"><span class="toc-number">12.</span> <span class="toc-text">十二、选型时最容易犯的错误</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%AA%E6%8C%89%E8%A1%8C%E4%B8%BA%E6%95%B0%E9%87%8F%E9%80%89"><span class="toc-number">12.1.</span> <span class="toc-text">只按行为数量选</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8A%8A%E8%A1%8C%E4%B8%BA%E6%A0%91%E5%BD%93%E8%87%AA%E5%8A%A8%E8%A7%84%E5%88%92%E5%99%A8"><span class="toc-number">12.2.</span> <span class="toc-text">把行为树当自动规划器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8A%8A-Utility-AI-%E5%BD%93%E6%89%A7%E8%A1%8C%E5%99%A8"><span class="toc-number">12.3.</span> <span class="toc-text">把 Utility AI 当执行器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8A%8A-GOAP-%E6%88%96-HTN-%E6%8E%A5%E5%88%B0%E8%A1%A8%E7%8E%B0%E5%B1%82"><span class="toc-number">12.4.</span> <span class="toc-text">把 GOAP 或 HTN 接到表现层</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E5%BC%80%E5%A7%8B%E5%B0%B1%E7%BB%84%E5%90%88%E5%85%A8%E9%83%A8%E6%96%B9%E6%A1%88"><span class="toc-number">12.5.</span> <span class="toc-text">一开始就组合全部方案</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%81%E4%B8%89%E3%80%81%E6%9C%80%E7%BB%88%E5%88%A4%E6%96%AD%E6%A0%87%E5%87%86"><span class="toc-number">13.</span> <span class="toc-text">十三、最终判断标准</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%87%AA%E6%9F%A5%E6%B8%85%E5%8D%95"><span class="toc-number">14.</span> <span class="toc-text">自查清单</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-number">15.</span> <span class="toc-text">参考</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/18/Unity-AssetBundle%E5%8A%A0%E8%BD%BD%E6%A1%86%E6%9E%B6%EF%BC%9A%E4%BB%8E%E7%89%88%E6%9C%AC%E6%B8%85%E5%8D%95%E5%88%B0%E5%BC%95%E7%94%A8%E5%8D%B8%E8%BD%BD/" title="Unity AssetBundle加载框架：从版本清单到引用卸载">Unity AssetBundle加载框架：从版本清单到引用卸载</a><time datetime="2026-08-18T02:00:00.000Z" title="Created 2026-08-18 10:00:00">2026-08-18</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/Unity-UGUI%E6%9E%B6%E6%9E%84%EF%BC%883%EF%BC%89%EF%BC%9AMVC%E4%B8%8EMVVM%E5%AF%B9%E6%AF%94/" title="Unity UGUI架构（3）：MVC与MVVM对比">Unity UGUI架构（3）：MVC与MVVM对比</a><time datetime="2026-08-17T10:20:00.000Z" title="Created 2026-08-17 18:20:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/Unity-UGUI%E6%9E%B6%E6%9E%84%EF%BC%882%EF%BC%89%EF%BC%9AMVVM%E6%A8%A1%E5%BC%8F/" title="Unity UGUI架构（2）：MVVM模式">Unity UGUI架构（2）：MVVM模式</a><time datetime="2026-08-17T10:10:00.000Z" title="Created 2026-08-17 18:10:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/Unity-UGUI%E6%9E%B6%E6%9E%84%EF%BC%881%EF%BC%89%EF%BC%9AMVC%E6%A8%A1%E5%BC%8F/" title="Unity UGUI架构（1）：MVC模式">Unity UGUI架构（1）：MVC模式</a><time datetime="2026-08-17T10:00:00.000Z" title="Created 2026-08-17 18:00:00">2026-08-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/17/%E6%B8%B8%E6%88%8FAI-%E5%86%B3%E7%AD%96%E6%9E%B6%E6%9E%84%EF%BC%886%EF%BC%89%EF%BC%9AAI%E5%86%B3%E7%AD%96%E6%AF%94%E8%BE%83/" title="游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型">游戏AI-决策架构（6）：AI 决策比较——特点、场景与选型</a><time datetime="2026-08-17T08:00:00.000Z" title="Created 2026-08-17 16:00:00">2026-08-17</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2020 - 2026 By Csy7749</span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/koharu.model.json"},"display":{"position":"left","width":150,"height":300},"mobile":{"show":false},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/"});</script></body></html>
