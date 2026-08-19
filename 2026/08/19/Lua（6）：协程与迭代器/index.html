@@ -1,0 +1,259 @@
+<!DOCTYPE html><html lang="zh-cn" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Lua（6）：协程与迭代器 | Csy7749-Blog</title><meta name="author" content="Csy7749"><meta name="copyright" content="Csy7749"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="协程让一段逻辑”跑一半挂起来、下次接着跑”，迭代器让”按协议逐个取值”。两个机制叠加，游戏里的分帧任务、异步流程、生成器都能用极简代码实现。这篇讲透协程的 API 与状态机，再讲泛型 for 的迭代器协议。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Lua（6）：协程与迭代器">
+<meta property="og:url" content="https://csy7749.github.io/2026/08/19/Lua%EF%BC%886%EF%BC%89%EF%BC%9A%E5%8D%8F%E7%A8%8B%E4%B8%8E%E8%BF%AD%E4%BB%A3%E5%99%A8/index.html">
+<meta property="og:site_name" content="Csy7749-Blog">
+<meta property="og:description" content="协程让一段逻辑”跑一半挂起来、下次接着跑”，迭代器让”按协议逐个取值”。两个机制叠加，游戏里的分帧任务、异步流程、生成器都能用极简代码实现。这篇讲透协程的 API 与状态机，再讲泛型 for 的迭代器协议。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://csy7749.github.io/img/avatar.png">
+<meta property="article:published_time" content="2026-08-19T06:00:00.000Z">
+<meta property="article:modified_time" content="2026-08-19T03:26:20.225Z">
+<meta property="article:author" content="Csy7749">
+<meta property="article:tag" content="Lua">
+<meta property="article:tag" content="编程语言">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://csy7749.github.io/img/avatar.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Lua（6）：协程与迭代器",
+  "url": "https://csy7749.github.io/2026/08/19/Lua%EF%BC%886%EF%BC%89%EF%BC%9A%E5%8D%8F%E7%A8%8B%E4%B8%8E%E8%BF%AD%E4%BB%A3%E5%99%A8/",
+  "image": "https://csy7749.github.io/img/avatar.png",
+  "datePublished": "2026-08-19T06:00:00.000Z",
+  "dateModified": "2026-08-19T03:26:20.225Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Csy7749",
+      "url": "https://csy7749.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://csy7749.github.io/2026/08/19/Lua%EF%BC%886%EF%BC%89%EF%BC%9A%E5%8D%8F%E7%A8%8B%E4%B8%8E%E8%BF%AD%E4%BB%A3%E5%99%A8/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        const data = { value }
+
+        if (ttl != null) {
+          data.expiry = Date.now() + ttl * 86400000
+        }
+
+        localStorage.setItem(key, JSON.stringify(data))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return
+
+        try {
+          const data = JSON.parse(itemStr)
+
+          if (data.expiry && Date.now() > data.expiry) {
+            localStorage.removeItem(key)
+            return
+          }
+
+          return data.value
+        } catch {
+          localStorage.removeItem(key)
+        }
+      }
+    }
+
+    const scriptCache = new Map()
+    const cssCache = new Map()
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => {
+        if (scriptCache.has(url)) {
+          return scriptCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const script = document.createElement('script')
+
+          script.src = url
+          script.async = true
+
+          for (const key in attr) {
+            script.setAttribute(key, attr[key])
+          }
+
+          script.onload = resolve
+          script.onerror = reject
+
+          document.head.appendChild(script)
+        })
+
+        scriptCache.set(url, promise)
+
+        return promise
+      },
+      getCSS: (url, id) => {
+        if (cssCache.has(url)) {
+          return cssCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const link = document.createElement('link')
+
+          link.rel = 'stylesheet'
+          link.href = url
+
+          if (id) {
+            link.id = id
+          }
+
+          link.onload = resolve
+          link.onerror = reject
+
+          document.head.appendChild(link)
+        })
+
+        cssCache.set(url, promise)
+
+        return promise
+      },
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+      const activateDarkMode = () => {
+        document.documentElement.dataset.theme = 'dark'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.dataset.theme = 'light'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Lua（6）：协程与迭代器',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">56</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">93</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">14</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Csy7749-Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Lua（6）：协程与迭代器</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Lua（6）：协程与迭代器</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-08-19T06:00:00.000Z" title="Created 2026-08-19 14:00:00">2026-08-19</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-08-19T03:26:20.225Z" title="Updated 2026-08-19 11:26:20">2026-08-19</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/">编程语言</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/Lua/">Lua</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>协程让一段逻辑”跑一半挂起来、下次接着跑”，迭代器让”按协议逐个取值”。两个机制叠加，游戏里的分帧任务、异步流程、生成器都能用极简代码实现。这篇讲透协程的 API 与状态机，再讲泛型 for 的迭代器协议。</p>
+<span id="more"></span>
+
+<h2 id="一、协程是什么：协作式，不是线程"><a href="#一、协程是什么：协作式，不是线程" class="headerlink" title="一、协程是什么：协作式，不是线程"></a>一、协程是什么：协作式，不是线程</h2><p>Lua 的协程是**非抢占式（协作式）**调度：只有协程自己 <code>yield</code> 才让出控制权，不会像线程那样被系统切走。因此：</p>
+<ul>
+<li>同一时刻只有一个协程在跑，不需要锁；</li>
+<li><code>yield</code>&#x2F;<code>resume</code> 是显式的，流程可预测；</li>
+<li>不能利用多核——多核是宿主（C&#x2F;C#）的事。</li>
+</ul>
+<h2 id="二、coroutine-API-与状态流转"><a href="#二、coroutine-API-与状态流转" class="headerlink" title="二、coroutine API 与状态流转"></a>二、coroutine API 与状态流转</h2><p>四个核心函数 + 一个语法糖：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> co = <span class="built_in">coroutine</span>.<span class="built_in">create</span>(<span class="function"><span class="keyword">function</span><span class="params">(a, b)</span></span></span><br><span class="line">  <span class="built_in">print</span>(<span class="string">&quot;start:&quot;</span>, a, b)</span><br><span class="line">  <span class="keyword">local</span> r1 = <span class="built_in">coroutine</span>.<span class="built_in">yield</span>(a + b)   <span class="comment">-- 第一次挂起，带出 a+b</span></span><br><span class="line">  <span class="built_in">print</span>(<span class="string">&quot;resume with:&quot;</span>, r1)</span><br><span class="line">  <span class="keyword">local</span> r2 = <span class="built_in">coroutine</span>.<span class="built_in">yield</span>(a * b)   <span class="comment">-- 第二次挂起，带出 a*b</span></span><br><span class="line">  <span class="built_in">print</span>(<span class="string">&quot;resume with:&quot;</span>, r2)</span><br><span class="line">  <span class="keyword">return</span> <span class="string">&quot;done&quot;</span></span><br><span class="line"><span class="keyword">end</span>)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">coroutine</span>.<span class="built_in">status</span>(co))            <span class="comment">--&gt; suspended</span></span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">coroutine</span>.<span class="built_in">resume</span>(co, <span class="number">3</span>, <span class="number">4</span>))      <span class="comment">--&gt; true   start: 3 4   /   7</span></span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">coroutine</span>.<span class="built_in">status</span>(co))            <span class="comment">--&gt; suspended</span></span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">coroutine</span>.<span class="built_in">resume</span>(co, <span class="number">10</span>))        <span class="comment">--&gt; true   resume with: 10   /   12</span></span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">coroutine</span>.<span class="built_in">resume</span>(co, <span class="number">20</span>))        <span class="comment">--&gt; true   resume with: 20   /   done</span></span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">coroutine</span>.<span class="built_in">status</span>(co))            <span class="comment">--&gt; dead</span></span><br></pre></td></tr></table></figure>
+
+<p>要点：</p>
+<ul>
+<li><code>resume</code> 的参数会传给函数首参，以及作为上一次 <code>yield</code> 的<strong>返回值</strong>；</li>
+<li><code>yield</code> 的参数作为本次 <code>resume</code> 的返回值；</li>
+<li><code>resume</code> 返回 <code>true, 结果...</code> 或 <code>false, 错误信息</code>，<strong>协程内错误不会向上抛异常</strong>，而是作为返回值暴露。</li>
+</ul>
+<p>状态机：<code>suspended / running / normal / dead</code></p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">suspended --resume--&gt; running --yield--&gt; suspended</span><br><span class="line">   ^                     |</span><br><span class="line">   |                     +--return/error--&gt; dead</span><br><span class="line">   +--------resume-------+</span><br><span class="line">（running 的协程再 resume 另一个协程时，自己变为 normal）</span><br></pre></td></tr></table></figure>
+
+<p>coroutine.wrap 把协程包装成普通函数，错误会直接抛出（内部帮你做了 pcall）：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> gen = <span class="built_in">coroutine</span>.<span class="built_in">wrap</span>(<span class="function"><span class="keyword">function</span><span class="params">()</span></span></span><br><span class="line">  <span class="keyword">for</span> i = <span class="number">1</span>, <span class="number">3</span> <span class="keyword">do</span> <span class="built_in">coroutine</span>.<span class="built_in">yield</span>(i * <span class="number">10</span>) <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span>)</span><br><span class="line"><span class="built_in">print</span>(gen())     <span class="comment">--&gt; 10</span></span><br><span class="line"><span class="built_in">print</span>(gen())     <span class="comment">--&gt; 20</span></span><br><span class="line"><span class="built_in">print</span>(gen())     <span class="comment">--&gt; 30</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="三、协程当生成器-迭代器"><a href="#三、协程当生成器-迭代器" class="headerlink" title="三、协程当生成器 &#x2F; 迭代器"></a>三、协程当生成器 &#x2F; 迭代器</h2><p>yield 天然适合”惰性生产序列”：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> <span class="function"><span class="keyword">function</span> <span class="title">countdown</span><span class="params">(n)</span></span></span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">coroutine</span>.<span class="built_in">wrap</span>(<span class="function"><span class="keyword">function</span><span class="params">()</span></span></span><br><span class="line">    <span class="keyword">while</span> n &gt; <span class="number">0</span> <span class="keyword">do</span></span><br><span class="line">      <span class="built_in">coroutine</span>.<span class="built_in">yield</span>(n)</span><br><span class="line">      n = n - <span class="number">1</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span>)</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> countdown(<span class="number">3</span>) <span class="keyword">do</span> <span class="built_in">print</span>(i) <span class="keyword">end</span>   <span class="comment">--&gt; 3 2 1</span></span><br></pre></td></tr></table></figure>
+
+<p>注意：<code>wrap</code> 生成的迭代器在提前 <code>break</code> 后仍停在挂起状态，会残留引用；长生命周期场景记得显式结束或复用同一协程。</p>
+<h2 id="四、泛型-for-协议"><a href="#四、泛型-for-协议" class="headerlink" title="四、泛型 for 协议"></a>四、泛型 for 协议</h2><p>for 循环 <code>for k, v in iter, state, control do ... end</code> 等价于：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> <span class="literal">true</span> <span class="keyword">do</span></span><br><span class="line">  k, v = iter(state, control)   <span class="comment">-- 第一次 control=第三个返回值</span></span><br><span class="line">  <span class="keyword">if</span> k == <span class="literal">nil</span> <span class="keyword">then</span> <span class="keyword">break</span> <span class="keyword">end</span></span><br><span class="line">  control = k                   <span class="comment">-- 下一次用返回值当 control</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
+<p>pairs(t) 返回 <code>(next, t, nil)</code>，所以遍历是：<code>next(t, nil)</code> 取第一对，再 <code>next(t, 上一个键)</code>……直到返回 <code>nil</code>。</p>
+<p>自定义迭代器三种写法，从简单到高效：</p>
+<p>闭包迭代器（带状态）：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> <span class="function"><span class="keyword">function</span> <span class="title">oneTo</span><span class="params">(n)</span></span></span><br><span class="line">  <span class="keyword">local</span> i = <span class="number">0</span></span><br><span class="line">  <span class="keyword">return</span> <span class="function"><span class="keyword">function</span><span class="params">()</span></span></span><br><span class="line">    i = i + <span class="number">1</span></span><br><span class="line">    <span class="keyword">if</span> i &lt;= n <span class="keyword">then</span> <span class="keyword">return</span> i <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> oneTo(<span class="number">5</span>) <span class="keyword">do</span> <span class="built_in">print</span>(i) <span class="keyword">end</span>   <span class="comment">--&gt; 1..5</span></span><br></pre></td></tr></table></figure>
+
+<p>无状态迭代器（把状态塞进参数，最适合性能要求高的场景）：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> <span class="function"><span class="keyword">function</span> <span class="title">iterState</span><span class="params">(state, control)</span></span></span><br><span class="line">  control = control + <span class="number">1</span></span><br><span class="line">  <span class="keyword">if</span> control &lt;= state <span class="keyword">then</span> <span class="keyword">return</span> control <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> <span class="function"><span class="keyword">function</span> <span class="title">oneToStateless</span><span class="params">(n)</span></span></span><br><span class="line">  <span class="keyword">return</span> iterState, n, <span class="number">0</span>        <span class="comment">-- iter, state, control 三元组</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> oneToStateless(<span class="number">5</span>) <span class="keyword">do</span> <span class="built_in">print</span>(i) <span class="keyword">end</span>   <span class="comment">--&gt; 1..5</span></span><br></pre></td></tr></table></figure>
+
+<p>协程迭代器（适合”生成逻辑复杂”的场景）：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> <span class="function"><span class="keyword">function</span> <span class="title">fibs</span><span class="params">(max)</span></span></span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">coroutine</span>.<span class="built_in">wrap</span>(<span class="function"><span class="keyword">function</span><span class="params">()</span></span></span><br><span class="line">    <span class="keyword">local</span> a, b = <span class="number">0</span>, <span class="number">1</span></span><br><span class="line">    <span class="keyword">while</span> a &lt; <span class="built_in">max</span> <span class="keyword">do</span></span><br><span class="line">      <span class="built_in">coroutine</span>.<span class="built_in">yield</span>(a)</span><br><span class="line">      a, b = b, a + b</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span>)</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> n <span class="keyword">in</span> fibs(<span class="number">50</span>) <span class="keyword">do</span> <span class="built_in">print</span>(n) <span class="keyword">end</span>   <span class="comment">--&gt; 0 1 1 2 3 5 8 13 21 34</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="五、实战：帧驱动的协程调度器"><a href="#五、实战：帧驱动的协程调度器" class="headerlink" title="五、实战：帧驱动的协程调度器"></a>五、实战：帧驱动的协程调度器</h2><p>游戏里最常见的需求是”把一段脚本拆成多帧执行，避免单帧卡顿”。用一个简单调度器即可：</p>
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> pending = &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">local</span> <span class="function"><span class="keyword">function</span> <span class="title">schedule</span><span class="params">(fn)</span></span></span><br><span class="line">  pending[#pending + <span class="number">1</span>] = <span class="built_in">coroutine</span>.<span class="built_in">create</span>(fn)</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 每帧调用；失败的协程打印错误并剔除（不静默吞掉）</span></span><br><span class="line"><span class="keyword">local</span> <span class="function"><span class="keyword">function</span> <span class="title">update</span><span class="params">(dt)</span></span></span><br><span class="line">  <span class="keyword">local</span> alive = &#123;&#125;</span><br><span class="line">  <span class="keyword">for</span> _, co <span class="keyword">in</span> <span class="built_in">ipairs</span>(pending) <span class="keyword">do</span></span><br><span class="line">    <span class="keyword">local</span> ok, err = <span class="built_in">coroutine</span>.<span class="built_in">resume</span>(co, dt)</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> ok <span class="keyword">then</span></span><br><span class="line">      <span class="built_in">print</span>(<span class="string">&quot;[coroutine] error:&quot;</span>, err)</span><br><span class="line">    <span class="keyword">elseif</span> <span class="built_in">coroutine</span>.<span class="built_in">status</span>(co) ~= <span class="string">&quot;dead&quot;</span> <span class="keyword">then</span></span><br><span class="line">      alive[#alive + <span class="number">1</span>] = co</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  pending = alive</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 用法：一段长任务拆成三步，跨帧推进</span></span><br><span class="line">schedule(<span class="function"><span class="keyword">function</span><span class="params">(dt)</span></span></span><br><span class="line">  <span class="built_in">print</span>(<span class="string">&quot;阶段1: 加载&quot;</span>, dt)</span><br><span class="line">  <span class="built_in">coroutine</span>.<span class="built_in">yield</span>()</span><br><span class="line">  <span class="built_in">print</span>(<span class="string">&quot;阶段2: 计算&quot;</span>)</span><br><span class="line">  <span class="built_in">coroutine</span>.<span class="built_in">yield</span>()</span><br><span class="line">  <span class="built_in">print</span>(<span class="string">&quot;阶段3: 上屏&quot;</span>)</span><br><span class="line"><span class="keyword">end</span>)</span><br><span class="line"></span><br><span class="line">update(<span class="number">0.016</span>)   <span class="comment">-- 阶段1</span></span><br><span class="line">update(<span class="number">0.016</span>)   <span class="comment">-- 阶段2</span></span><br><span class="line">update(<span class="number">0.016</span>)   <span class="comment">-- 阶段3</span></span><br></pre></td></tr></table></figure>
+
+<p>这套思路就是”协程调度器”的雏形：把 <code>pending</code> 换成按优先级&#x2F;时间片的队列，配合超时上限，就能支撑 UI 动画、战斗回放、批量刷怪等分帧逻辑。</p>
+<h2 id="自查清单"><a href="#自查清单" class="headerlink" title="自查清单"></a>自查清单</h2><ul>
+<li><input disabled="" type="checkbox"> 能说清协程与线程的区别：协作式、单线程、显式让出</li>
+<li><input disabled="" type="checkbox"> 能画出 suspended &#x2F; running &#x2F; normal &#x2F; dead 状态流转</li>
+<li><input disabled="" type="checkbox"> 会用 <code>wrap</code> 与裸 <code>create</code>，并知道前者抛错、后者返回错误</li>
+<li><input disabled="" type="checkbox"> 理解泛型 for 的 <code>iter, state, control</code> 三元组</li>
+<li><input disabled="" type="checkbox"> 能写出闭包&#x2F;无状态&#x2F;协程三种迭代器</li>
+</ul>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>[^1]: <a target="_blank" rel="noopener" href="https://www.lua.org/manual/5.4/manual.html#2.6">Lua 5.4 Manual §2.6: Coroutines (Threads)</a> — 线程类型与语义<br>[^2]: <a target="_blank" rel="noopener" href="https://www.lua.org/manual/5.4/manual.html#6.2">Lua 5.4 Manual §6.2: Coroutine Manipulation</a> — coroutine API<br>[^3]: <a target="_blank" rel="noopener" href="https://www.lua.org/pil/9.html">Programming in Lua §9: Coroutines</a> — 协程与管道、迭代器<br>[^4]: <a target="_blank" rel="noopener" href="https://www.lua.org/pil/7.html">Programming in Lua §7: Iterators and the Generic for</a> — 泛型 for 与迭代器协议<br>[^5]: <a target="_blank" rel="noopener" href="https://www.lua.org/pil/9.3.html">Programming in Lua §9.3: Coroutines as Iterators</a> — 协程迭代器</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://csy7749.github.io">Csy7749</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://csy7749.github.io/2026/08/19/Lua%EF%BC%886%EF%BC%89%EF%BC%9A%E5%8D%8F%E7%A8%8B%E4%B8%8E%E8%BF%AD%E4%BB%A3%E5%99%A8/">https://csy7749.github.io/2026/08/19/Lua%EF%BC%886%EF%BC%89%EF%BC%9A%E5%8D%8F%E7%A8%8B%E4%B8%8E%E8%BF%AD%E4%BB%A3%E5%99%A8/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Lua/">Lua</a><a class="post-meta__tags" href="/tags/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/">编程语言</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/08/19/Lua%EF%BC%887%EF%BC%89%EF%BC%9A%E6%A8%A1%E5%9D%97%E3%80%81%E5%8C%85%E4%B8%8E%E5%B7%A5%E7%A8%8B%E5%8C%96%E7%BB%84%E7%BB%87/" title="Lua（7）：模块、包与工程化组织"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">Lua（7）：模块、包与工程化组织</div></div><div class="info-2"><div class="info-item-1">单文件脚本随便写，项目一上规模就要回答三个问题：代码怎么拆分、依赖怎么加载、脚本怎么隔离。Lua 的答案是 require + package 体系：加载结果被缓存进 package.loaded，这一条语义既是工程化的基石，也是热更”重载模块”的原理。这篇把模块机制和工程化约定一次讲清。   一、require 的完整语义写一个模块文件 math_utils.lua： 123456789101112131415-- math_utils.lualocal M = &#123;&#125;local function gcd(a, b)  while b ~= 0 do a, b = b, a % b end  return aendfunction M.gcd(a, b) return gcd(a, b) endfunction M.clamp(v, lo, hi)  return math.max(lo, math.min(hi, v))endreturn M  使用端： 123local utils = require(&quot;math_utils&quot;)prin...</div></div></div></a><a class="pagination-related" href="/2026/08/19/Lua%EF%BC%885%EF%BC%89%EF%BC%9A%E5%85%83%E8%A1%A8%E4%B8%8E%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1/" title="Lua（5）：元表与面向对象"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">Lua（5）：元表与面向对象</div></div><div class="info-2"><div class="info-item-1">Lua 本身没有 class 关键字，但它用**元表（metatable）**给了你扩展行为的全部手段：拦截索引读写、重载运算符、让表能被调用、被打印、被比较。几乎所有 Lua 的 OOP 库（以及 xLua&#x2F;ToLua 封装）都是建立在这些机制之上的。这篇讲清元表的核心事件，再手写一套继承体系。   一、元表是什么元表是另一个 table，通过 setmetatable 挂到对象上，描述”对这个对象做某些操作时该怎么行为”： 1234local t = &#123;&#125;local mt = &#123;&#125;setmetatable(t, mt)print(getmetatable(t) == mt)     --&gt; true  被挂元表的对象叫 raw object，元表本身不存放数据，只存放行为（方法&#x2F;事件）。 二、__index：查找回退当索引在对象上找不到时，Lua 会查 __index。它可以是表（继续回退查找）或函数（自己决定返回值）。 表形态——把默认属性放另一张表： 123456local defaults = &#123...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/08/19/Lua%EF%BC%8810%EF%BC%89%EF%BC%9ALua%20C%20API%20%E4%B8%8E%E5%AE%BF%E4%B8%BB%E5%B5%8C%E5%85%A5/" title="Lua（10）：Lua C API 与宿主嵌入"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-19</div><div class="info-item-2">Lua（10）：Lua C API 与宿主嵌入</div></div><div class="info-2"><div class="info-item-1">前 9 篇都在 Lua 世界里打转，这一篇跨出边界：怎么用 C 把一个 Lua 解释器嵌进自己的程序。理解 C API 的”栈模型”，你才能真正看懂 xLua&#x2F;ToLua 的生成代码在干什么，也才能为引擎、工具链、服务器写自己的脚本层。   一、为什么需要自己嵌 LuaLua 的典型宿主有四种：  游戏引擎：脚本层调用引擎能力（xLua&#x2F;ToLua 就是这个模型的 C# 版）； 服务器&#x2F;网关：OpenResty、Redis 用 C 内嵌 Lua 做可编程逻辑； 编辑器&#x2F;工具链：用 Lua 做宏、做自动化； 独立 CLI：把 Lua 当配置+扩展语言嵌进自己的程序。  无论哪种，骨架都是同一个：创建解释器 → 打开库 → 跑脚本 → 释放。 二、最小宿主12345678910111213141516171819202122232425#include &lt;lua.h&gt;#include &lt;lauxlib.h&gt;#include &lt;lualib.h&gt;#include &lt;stdio.h&gt;int main(...</div></div></div></a><a class="pagination-related" href="/2026/08/19/Lua%EF%BC%887%EF%BC%89%EF%BC%9A%E6%A8%A1%E5%9D%97%E3%80%81%E5%8C%85%E4%B8%8E%E5%B7%A5%E7%A8%8B%E5%8C%96%E7%BB%84%E7%BB%87/" title="Lua（7）：模块、包与工程化组织"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-19</div><div class="info-item-2">Lua（7）：模块、包与工程化组织</div></div><div class="info-2"><div class="info-item-1">单文件脚本随便写，项目一上规模就要回答三个问题：代码怎么拆分、依赖怎么加载、脚本怎么隔离。Lua 的答案是 require + package 体系：加载结果被缓存进 package.loaded，这一条语义既是工程化的基石，也是热更”重载模块”的原理。这篇把模块机制和工程化约定一次讲清。   一、require 的完整语义写一个模块文件 math_utils.lua： 123456789101112131415-- math_utils.lualocal M = &#123;&#125;local function gcd(a, b)  while b ~= 0 do a, b = b, a % b end  return aendfunction M.gcd(a, b) return gcd(a, b) endfunction M.clamp(v, lo, hi)  return math.max(lo, math.min(hi, v))endreturn M  使用端： 123local utils = require(&quot;math_utils&quot;)prin...</div></div></div></a><a class="pagination-related" href="/2026/08/19/Lua%EF%BC%883%EF%BC%89%EF%BC%9A%E5%87%BD%E6%95%B0%E3%80%81%E9%97%AD%E5%8C%85%E4%B8%8E%E4%B8%80%E7%AD%89%E5%85%AC%E6%B0%91/" title="Lua（3）：函数、闭包与一等公民"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-19</div><div class="info-item-2">Lua（3）：函数、闭包与一等公民</div></div><div class="info-2"><div class="info-item-1">函数是 Lua 的一等公民：能赋值、能传参、能返回、能存进表。再加上词法作用域带来的闭包，Lua 就能用极少的语法写出回调、状态机、生成器等结构，而不用引入复杂的类体系。这篇讲清楚函数相关的语法，以及闭包捕获变量的真实语义。   一、函数是一等值123456789101112local function add(a, b) return a + b endlocal op = add                    -- 赋值print(op(1, 2))                   --&gt; 3local ops = &#123; add = add &#125;         -- 存进表print(ops.add(2, 3))              --&gt; 5local function apply(fn, a, b)    -- 作为参数  return fn(a, b)endprint(apply(add, 10, 20))         --&gt; 30  因为函数只是值，函数体也可以直接写成匿名函数： 12345local doub...</div></div></div></a><a class="pagination-related" href="/2026/08/19/Lua%E7%B3%BB%E5%88%97-%E8%A7%84%E5%88%92/" title="Lua 系列·写作规划"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-19</div><div class="info-item-2">Lua 系列·写作规划</div></div><div class="info-2"><div class="info-item-1">系列定位名称：Lua 入门到主程进阶（十三讲） 目标读者：有 C#&#x2F;Unity 基础、写过业务脚本但没系统学过 Lua 的程序员；想从”能用”提升到”能设计脚本层、能嵌入宿主、能搞定热更与性能”的主程水平。 篇幅标准：单篇 3000-5000 字，可独立阅读，合起来构成一条从语言语法到宿主集成的完整链路。   写作原则：  从问题出发：先讲”它解决了什么”，再讲语法与 API，最后给完整可运行的代码 所有 Lua 代码以 Lua 5.4 为基准可运行，涉及 5.1&#x2F;LuaJIT 差异时显式标注 每篇附”自查清单”，方便读者对照自己的项目检查理解 涉及 Unity 的篇目（第 11 讲）明确区分”代码可编译”与”编辑器&#x2F;真机验证”两个层次   篇目总览12345678910111213第1讲  为什么游戏脚本都选 Lua            ← 定位、生态与版本选型第2讲  语法速览：值、类型与表达式        ← 8 种类型与运算符体系第3讲  函数、闭包与一等公民              ← 词法作用域、多重返回值、尾调用第4讲  tabl...</div></div></div></a><a class="pagination-related" href="/2026/08/19/Lua%EF%BC%888%EF%BC%89%EF%BC%9A%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86%E3%80%81%E8%B0%83%E8%AF%95%E4%B8%8E%E6%B5%8B%E8%AF%95/" title="Lua（8）：错误处理、调试与测试"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-19</div><div class="info-item-2">Lua（8）：错误处理、调试与测试</div></div><div class="info-2"><div class="info-item-1">游戏脚本最怕”一崩全黑”。Lua 的错误哲学是”错误是值，不是异常”：error 抛出任意值，pcall&#x2F;xpcall 把它接住并返回。配合结构化错误对象和 traceback，才能做出”能定位、能上报、能恢复”的脚本层。这篇把错误处理、调试手段和单元测试一次讲清。   一、error 与 assert：显式的前置条件assert 不满足就抛错：assert(条件, 消息)；error(消息, level) 手动抛： 1234567local function divide(a, b)  assert(b ~= 0, &quot;除数不能为 0&quot;)  return a / bendprint(divide(10, 2))          --&gt; 5print(divide(10, 0))          -- 抛错：断言失败  error 的第二个参数 level 控制报错位置：默认 1（error 的调用处），2 是上层调用处；传 0 则不附加位置信息。给用户看的错误，尽量让 level 指向”调用方犯错的位置”。 二、pcall：保护调用pcal...</div></div></div></a><a class="pagination-related" href="/2026/08/19/Lua%EF%BC%885%EF%BC%89%EF%BC%9A%E5%85%83%E8%A1%A8%E4%B8%8E%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1/" title="Lua（5）：元表与面向对象"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-19</div><div class="info-item-2">Lua（5）：元表与面向对象</div></div><div class="info-2"><div class="info-item-1">Lua 本身没有 class 关键字，但它用**元表（metatable）**给了你扩展行为的全部手段：拦截索引读写、重载运算符、让表能被调用、被打印、被比较。几乎所有 Lua 的 OOP 库（以及 xLua&#x2F;ToLua 封装）都是建立在这些机制之上的。这篇讲清元表的核心事件，再手写一套继承体系。   一、元表是什么元表是另一个 table，通过 setmetatable 挂到对象上，描述”对这个对象做某些操作时该怎么行为”： 1234local t = &#123;&#125;local mt = &#123;&#125;setmetatable(t, mt)print(getmetatable(t) == mt)     --&gt; true  被挂元表的对象叫 raw object，元表本身不存放数据，只存放行为（方法&#x2F;事件）。 二、__index：查找回退当索引在对象上找不到时，Lua 会查 __index。它可以是表（继续回退查找）或函数（自己决定返回值）。 表形态——把默认属性放另一张表： 123456local defaults = &#123...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Csy7749</div><div class="author-info-description">键来！</div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">56</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">93</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">14</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/csy7749"><i class="fab fa-github"></i><span>GitHub</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">日积月累</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E5%8D%8F%E7%A8%8B%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9A%E5%8D%8F%E4%BD%9C%E5%BC%8F%EF%BC%8C%E4%B8%8D%E6%98%AF%E7%BA%BF%E7%A8%8B"><span class="toc-number">1.</span> <span class="toc-text">一、协程是什么：协作式，不是线程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81coroutine-API-%E4%B8%8E%E7%8A%B6%E6%80%81%E6%B5%81%E8%BD%AC"><span class="toc-number">2.</span> <span class="toc-text">二、coroutine API 与状态流转</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E5%8D%8F%E7%A8%8B%E5%BD%93%E7%94%9F%E6%88%90%E5%99%A8-%E8%BF%AD%E4%BB%A3%E5%99%A8"><span class="toc-number">3.</span> <span class="toc-text">三、协程当生成器 &#x2F; 迭代器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E6%B3%9B%E5%9E%8B-for-%E5%8D%8F%E8%AE%AE"><span class="toc-number">4.</span> <span class="toc-text">四、泛型 for 协议</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E5%AE%9E%E6%88%98%EF%BC%9A%E5%B8%A7%E9%A9%B1%E5%8A%A8%E7%9A%84%E5%8D%8F%E7%A8%8B%E8%B0%83%E5%BA%A6%E5%99%A8"><span class="toc-number">5.</span> <span class="toc-text">五、实战：帧驱动的协程调度器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%87%AA%E6%9F%A5%E6%B8%85%E5%8D%95"><span class="toc-number">6.</span> <span class="toc-text">自查清单</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-number">7.</span> <span class="toc-text">参考</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/19/Lua%EF%BC%8813%EF%BC%89%EF%BC%9AZLua%20%E5%AF%B9%E6%AF%94%E2%80%94%E2%80%94xLua%E3%80%81toLua%E3%80%81SLua%20%E4%B8%8E%E8%BF%90%E8%A1%8C%E6%97%B6%E9%80%89%E5%9E%8B/" title="Lua（13）：ZLua 对比——xLua、toLua、SLua 与运行时选型">Lua（13）：ZLua 对比——xLua、toLua、SLua 与运行时选型</a><time datetime="2026-08-19T15:00:00.000Z" title="Created 2026-08-19 23:00:00">2026-08-19</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/19/Lua%EF%BC%8812%EF%BC%89%EF%BC%9AZLua%E2%80%94%E2%80%94%E4%B8%BA%20IL2CPP%20%E4%BC%98%E5%8C%96%E7%9A%84%E7%8E%B0%E4%BB%A3%20Unity%20Lua%20%E6%96%B9%E6%A1%88/" title="Lua（12）：ZLua——为 IL2CPP 优化的现代 Unity Lua 方案">Lua（12）：ZLua——为 IL2CPP 优化的现代 Unity Lua 方案</a><time datetime="2026-08-19T14:00:00.000Z" title="Created 2026-08-19 22:00:00">2026-08-19</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/19/Lua%EF%BC%8811%EF%BC%89%EF%BC%9AUnity%20%E7%83%AD%E6%9B%B4%E5%AE%9E%E6%88%98%E2%80%94%E2%80%94xLua%E3%80%81ToLua%20%E4%B8%8E%E5%B7%A5%E7%A8%8B%E5%8C%96/" title="Lua（11）：Unity 热更实战——xLua/ToLua">Lua（11）：Unity 热更实战——xLua/ToLua</a><time datetime="2026-08-19T11:00:00.000Z" title="Created 2026-08-19 19:00:00">2026-08-19</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/19/Lua%EF%BC%8810%EF%BC%89%EF%BC%9ALua%20C%20API%20%E4%B8%8E%E5%AE%BF%E4%B8%BB%E5%B5%8C%E5%85%A5/" title="Lua（10）：Lua C API 与宿主嵌入">Lua（10）：Lua C API 与宿主嵌入</a><time datetime="2026-08-19T10:00:00.000Z" title="Created 2026-08-19 18:00:00">2026-08-19</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/19/Lua%EF%BC%889%EF%BC%89%EF%BC%9A%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E4%B8%8E%20LuaJIT/" title="Lua（9）：性能优化与 LuaJIT">Lua（9）：性能优化与 LuaJIT</a><time datetime="2026-08-19T09:00:00.000Z" title="Created 2026-08-19 17:00:00">2026-08-19</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2020 - 2026 By Csy7749</span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/koharu.model.json"},"display":{"position":"left","width":150,"height":300},"mobile":{"show":false},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/"});</script></body></html>

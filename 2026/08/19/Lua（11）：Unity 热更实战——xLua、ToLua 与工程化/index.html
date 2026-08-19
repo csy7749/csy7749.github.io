@@ -1,0 +1,367 @@
+<!DOCTYPE html><html lang="zh-cn" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Lua（11）：Unity 热更实战——xLua/ToLua | Csy7749-Blog</title><meta name="author" content="Csy7749"><meta name="copyright" content="Csy7749"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前 10 篇的知识在这篇汇合：Unity 项目里怎么用 Lua 做热更。文章覆盖方案选型、xLua&#x2F;ToLua 的最小接入、C# 与 Lua 双向互调、热补丁，以及主程必须设计的工程化骨架。所有 C# 代码以”能编译”为准，编辑器&#x2F;真机行为需按各自项目验证。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Lua（11）：Unity 热更实战——xLua&#x2F;ToLua">
+<meta property="og:url" content="https://csy7749.github.io/2026/08/19/Lua%EF%BC%8811%EF%BC%89%EF%BC%9AUnity%20%E7%83%AD%E6%9B%B4%E5%AE%9E%E6%88%98%E2%80%94%E2%80%94xLua%E3%80%81ToLua%20%E4%B8%8E%E5%B7%A5%E7%A8%8B%E5%8C%96/index.html">
+<meta property="og:site_name" content="Csy7749-Blog">
+<meta property="og:description" content="前 10 篇的知识在这篇汇合：Unity 项目里怎么用 Lua 做热更。文章覆盖方案选型、xLua&#x2F;ToLua 的最小接入、C# 与 Lua 双向互调、热补丁，以及主程必须设计的工程化骨架。所有 C# 代码以”能编译”为准，编辑器&#x2F;真机行为需按各自项目验证。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://csy7749.github.io/img/avatar.png">
+<meta property="article:published_time" content="2026-08-19T11:00:00.000Z">
+<meta property="article:modified_time" content="2026-08-19T03:25:22.267Z">
+<meta property="article:author" content="Csy7749">
+<meta property="article:tag" content="Unity">
+<meta property="article:tag" content="Lua">
+<meta property="article:tag" content="热更">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://csy7749.github.io/img/avatar.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Lua（11）：Unity 热更实战——xLua/ToLua",
+  "url": "https://csy7749.github.io/2026/08/19/Lua%EF%BC%8811%EF%BC%89%EF%BC%9AUnity%20%E7%83%AD%E6%9B%B4%E5%AE%9E%E6%88%98%E2%80%94%E2%80%94xLua%E3%80%81ToLua%20%E4%B8%8E%E5%B7%A5%E7%A8%8B%E5%8C%96/",
+  "image": "https://csy7749.github.io/img/avatar.png",
+  "datePublished": "2026-08-19T11:00:00.000Z",
+  "dateModified": "2026-08-19T03:25:22.267Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Csy7749",
+      "url": "https://csy7749.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://csy7749.github.io/2026/08/19/Lua%EF%BC%8811%EF%BC%89%EF%BC%9AUnity%20%E7%83%AD%E6%9B%B4%E5%AE%9E%E6%88%98%E2%80%94%E2%80%94xLua%E3%80%81ToLua%20%E4%B8%8E%E5%B7%A5%E7%A8%8B%E5%8C%96/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        const data = { value }
+
+        if (ttl != null) {
+          data.expiry = Date.now() + ttl * 86400000
+        }
+
+        localStorage.setItem(key, JSON.stringify(data))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return
+
+        try {
+          const data = JSON.parse(itemStr)
+
+          if (data.expiry && Date.now() > data.expiry) {
+            localStorage.removeItem(key)
+            return
+          }
+
+          return data.value
+        } catch {
+          localStorage.removeItem(key)
+        }
+      }
+    }
+
+    const scriptCache = new Map()
+    const cssCache = new Map()
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => {
+        if (scriptCache.has(url)) {
+          return scriptCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const script = document.createElement('script')
+
+          script.src = url
+          script.async = true
+
+          for (const key in attr) {
+            script.setAttribute(key, attr[key])
+          }
+
+          script.onload = resolve
+          script.onerror = reject
+
+          document.head.appendChild(script)
+        })
+
+        scriptCache.set(url, promise)
+
+        return promise
+      },
+      getCSS: (url, id) => {
+        if (cssCache.has(url)) {
+          return cssCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const link = document.createElement('link')
+
+          link.rel = 'stylesheet'
+          link.href = url
+
+          if (id) {
+            link.id = id
+          }
+
+          link.onload = resolve
+          link.onerror = reject
+
+          document.head.appendChild(link)
+        })
+
+        cssCache.set(url, promise)
+
+        return promise
+      },
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+      const activateDarkMode = () => {
+        document.documentElement.dataset.theme = 'dark'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.dataset.theme = 'light'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Lua（11）：Unity 热更实战——xLua/ToLua',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">56</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">93</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">14</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Csy7749-Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Lua（11）：Unity 热更实战——xLua/ToLua</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fa fa-heartbeat"></i><span> 清单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/Gallery/"><i class="fa-fw fas fa-images"></i><span> 照片</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Lua（11）：Unity 热更实战——xLua/ToLua</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-08-19T11:00:00.000Z" title="Created 2026-08-19 19:00:00">2026-08-19</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-08-19T03:25:22.267Z" title="Updated 2026-08-19 11:25:22">2026-08-19</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/">编程语言</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/Lua/">Lua</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>前 10 篇的知识在这篇汇合：Unity 项目里怎么用 Lua 做热更。文章覆盖方案选型、xLua&#x2F;ToLua 的最小接入、C# 与 Lua 双向互调、热补丁，以及主程必须设计的工程化骨架。所有 C# 代码以”能编译”为准，编辑器&#x2F;真机行为需按各自项目验证。</p>
+<span id="more"></span>
+
+<h2 id="一、为什么要热更"><a href="#一、为什么要热更" class="headerlink" title="一、为什么要热更"></a>一、为什么要热更</h2><p>手游的发布节奏决定了热更几乎是刚需：</p>
+<ul>
+<li><strong>审核周期不可控</strong>：iOS&#x2F;安卓上架有审核，线上 bug 等不了下一版；</li>
+<li><strong>活动与内容</strong>：节日活动、数值调整要当天上线；</li>
+<li><strong>成本对比</strong>：Lua 脚本热更比”整包重发”便宜一个量级。</li>
+</ul>
+<p><strong>前提与边界</strong>：</p>
+<ul>
+<li>iOS 平台禁止 JIT，LuaJIT 在 iOS 上只能解释执行；</li>
+<li>“下载脚本再解释执行”长期处于 App Store 审核的灰色地带，政策会变，上线前要确认当前条款与自家产品形态[^3]；</li>
+<li>因此多数团队的策略是：<strong>Lua 只放玩法逻辑，引擎能力全部走 C# 绑定</strong>，并做”热更失败回滚本地包”的兜底。</li>
+</ul>
+<h2 id="二、方案选型：xLua-vs-ToLua"><a href="#二、方案选型：xLua-vs-ToLua" class="headerlink" title="二、方案选型：xLua vs ToLua"></a>二、方案选型：xLua vs ToLua</h2><table>
+<thead>
+<tr>
+<th>维度</th>
+<th>xLua</th>
+<th>ToLua</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>运行时</td>
+<td>Lua 5.3 与 LuaJIT 2.1[^1]</td>
+<td>LuaJIT 2.1（win&#x2F;android&#x2F;ios）、Lua 5.1.5（mac）[^2]</td>
+</tr>
+<tr>
+<td>热补丁</td>
+<td>支持（Hotfix 特性）[^4]</td>
+<td>无，需自己写替换逻辑</td>
+</tr>
+<tr>
+<td>C# 互调</td>
+<td>生成代码 + 反射降级</td>
+<td>生成 wrap 代码</td>
+</tr>
+<tr>
+<td>维护状态</td>
+<td>腾讯开源，较活跃</td>
+<td>老牌稳定，更新慢</td>
+</tr>
+</tbody></table>
+<p>选型建议：</p>
+<ul>
+<li><strong>要做热补丁（改线上 C# 方法）</strong> 选 xLua；</li>
+<li><strong>项目存量在 LuaJIT&#x2F;5.1 生态</strong>（老模块、老库）选 ToLua 或 xLua 的 LuaJIT 模式；</li>
+<li><strong>追求极致性能</strong>：LuaJIT 解释+JIT 综合最快，但 iOS 无 JIT，性能优势只在 Android&#x2F;PC；</li>
+<li>两套都要求”生成代码”，<strong>CI 里必须把生成步骤固化成脚本</strong>，否则换机换版本就漏生成。</li>
+</ul>
+<h2 id="三、xLua-最小接入"><a href="#三、xLua-最小接入" class="headerlink" title="三、xLua 最小接入"></a>三、xLua 最小接入</h2><figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">using</span> UnityEngine;</span><br><span class="line"><span class="keyword">using</span> XLua;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">LuaBoot</span> : <span class="title">MonoBehaviour</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">private</span> LuaEnv _env;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">Start</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        _env = <span class="keyword">new</span> LuaEnv();</span><br><span class="line">        _env.AddLoader(LoadLuaFromResources);   <span class="comment">// 自定义加载器：决定 .lua 从哪来</span></span><br><span class="line">        _env.DoString(<span class="string">&quot;require(&#x27;game.main&#x27;)&quot;</span>);  <span class="comment">// 执行入口</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">Update</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        _env?.Tick();                           <span class="comment">// 驱动 Lua 侧定时器/协程计时</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="built_in">byte</span>[] <span class="title">LoadLuaFromResources</span>(<span class="params"><span class="keyword">ref</span> <span class="built_in">string</span> filepath</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// filepath 形如 &quot;game.main&quot;；按你的资源规范替换为 Resources/AssetBundle 读取</span></span><br><span class="line">        <span class="keyword">var</span> asset = Resources.Load&lt;TextAsset&gt;(<span class="string">&quot;lua/&quot;</span> + filepath.Replace(<span class="string">&#x27;.&#x27;</span>, <span class="string">&#x27;/&#x27;</span>));</span><br><span class="line">        <span class="keyword">return</span> asset != <span class="literal">null</span> ? asset.bytes : <span class="literal">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">OnDestroy</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        _env?.Dispose();</span><br><span class="line">        _env = <span class="literal">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>生命周期铁律：</p>
+<ul>
+<li><code>LuaEnv</code> 是重量级对象，<strong>全局单例</strong>，别每场景 new 一个；</li>
+<li><code>Update</code> 里必须 <code>Tick()</code>（驱动 Lua 侧计时器），忘了它协程类逻辑会”不动”；</li>
+<li><code>Dispose</code> 释放解释器与生成代码缓存，场景切换时统一处理。</li>
+</ul>
+<h2 id="四、C-↔-Lua-双向互调"><a href="#四、C-↔-Lua-双向互调" class="headerlink" title="四、C# ↔ Lua 双向互调"></a>四、C# ↔ Lua 双向互调</h2><p><strong>Lua 调 C#</strong>：给要暴露的类加 <code>[LuaCallCSharp]</code>，然后在编辑器菜单执行 <code>XLua → Generate Code</code>（生成代码）[^5]：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">using</span> XLua;</span><br><span class="line"></span><br><span class="line">[<span class="meta">LuaCallCSharp</span>]</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title">GameData</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="built_in">int</span> Level = <span class="number">1</span>;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="built_in">string</span> <span class="title">PlayerName</span>()</span> =&gt; <span class="string">&quot;alice&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- Lua 侧直接用，CS 命名空间是自动注入的</span></span><br><span class="line"><span class="built_in">print</span>(CS.GameData.Level)</span><br><span class="line"><span class="built_in">print</span>(CS.GameData.PlayerName())</span><br></pre></td></tr></table></figure>
+
+<p><strong>C# 调 Lua</strong>：声明委托 + <code>[CSharpCallLua]</code>，同样要生成代码：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">using</span> XLua;</span><br><span class="line"></span><br><span class="line">[<span class="meta">CSharpCallLua</span>]</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="built_in">delegate</span> <span class="keyword">void</span> <span class="title">LuaLog</span>(<span class="params"><span class="built_in">string</span> msg</span>)</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 拿到 Lua 侧函数</span></span><br><span class="line">LuaLog log = _env.Global.Get&lt;LuaLog&gt;(<span class="string">&quot;log&quot;</span>);</span><br><span class="line">log(<span class="string">&quot;from C#&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>要点：</p>
+<ul>
+<li>用了新类&#x2F;新委托就<strong>重新生成代码</strong>，否则运行时报 <code>LuaException: xlua access</code>；</li>
+<li>高频互调走生成代码路径（快）；低频、临时用可以用 <code>Get&lt;LuaTable&gt;()</code> 反射式访问，但别在热路径用；</li>
+<li>值类型（struct）与枚举在生成代码支持下可以零 GC 传递，这正是一开始就要规划好的接口形态。</li>
+</ul>
+<h2 id="五、热补丁：不改-C-也能改逻辑"><a href="#五、热补丁：不改-C-也能改逻辑" class="headerlink" title="五、热补丁：不改 C# 也能改逻辑"></a>五、热补丁：不改 C# 也能改逻辑</h2><p>给类加 <code>[Hotfix]</code>，Lua 侧就能替换它的方法：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">using</span> XLua;</span><br><span class="line"></span><br><span class="line">[<span class="meta">Hotfix</span>]</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">Player</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="built_in">int</span> Hp = <span class="number">100</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">TakeDamage</span>(<span class="params"><span class="built_in">int</span> damage</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        Hp -= damage;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight lua"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">local</span> hotfix = <span class="built_in">require</span>(<span class="string">&quot;xlua.hotfix&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">-- 把线上 TakeDamage 改成半伤</span></span><br><span class="line">hotfix(CS.Player, <span class="string">&quot;TakeDamage&quot;</span>, <span class="function"><span class="keyword">function</span><span class="params">(self, damage)</span></span></span><br><span class="line">    <span class="built_in">self</span>.Hp = <span class="built_in">self</span>.Hp - <span class="built_in">math</span>.<span class="built_in">floor</span>(damage * <span class="number">0.5</span>)</span><br><span class="line"><span class="keyword">end</span>)</span><br></pre></td></tr></table></figure>
+
+<p>工程注意：</p>
+<ul>
+<li>热补丁依赖<strong>构建时注入</strong>（xLua 的 Hotfix 注入开关），调试包&#x2F;发布包都要验证注入成功；</li>
+<li><code>[Hotfix]</code> 能替换方法体，但<strong>新增字段、改签名、改 MonoBehaviour 生命周期</strong>仍要发新包；</li>
+<li>热补丁是”最后手段”，<strong>结构性问题靠模块热更（重新 require）解决</strong>，别把热补丁当日常开发手段。</li>
+</ul>
+<h2 id="六、ToLua-接入流程"><a href="#六、ToLua-接入流程" class="headerlink" title="六、ToLua 接入流程"></a>六、ToLua 接入流程</h2><p>ToLua 流程与 xLua 同构：创建状态 → 绑定生成代码 → 跑脚本：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">using</span> LuaInterface;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">LuaBoot</span> : <span class="title">MonoBehaviour</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">private</span> LuaState _state;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">Start</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        _state = <span class="keyword">new</span> LuaState();</span><br><span class="line">        _state.Start();</span><br><span class="line">        LuaBinder.Bind(_state);          <span class="comment">// 绑定生成的 wrap 代码</span></span><br><span class="line">        _state.DoFile(<span class="string">&quot;game/main.lua&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">OnDestroy</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        _state.Dispose();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>新增 C# 暴露类后，走菜单 <code>Lua → Generate All</code> 重新生成 wrap；</li>
+<li>ToLua 生态老、资料多，但更新慢，新项目建议默认 xLua。</li>
+</ul>
+<h2 id="七、工程化骨架"><a href="#七、工程化骨架" class="headerlink" title="七、工程化骨架"></a>七、工程化骨架</h2><p><strong>1. 目录与分包</strong></p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Assets/Lua/</span><br><span class="line">  core/        -- 引擎绑定、公共库（常驻，不热更）</span><br><span class="line">  game/        -- 玩法模块（可热更）</span><br><span class="line">  ui/          -- UI 模块</span><br></pre></td></tr></table></figure>
+
+<p>打包时”常驻核心”和”可热更玩法”分不同 AssetBundle：核心损坏宁可整包回滚，玩法损坏单独回滚。</p>
+<p><strong>2. 增量更新</strong></p>
+<ul>
+<li>下发清单（文件名 + 版本 + md5），校验通过才替换；</li>
+<li>热更 &#x3D; <code>package.loaded[name] = nil</code> 后重新 <code>require</code>（第 7 讲）；</li>
+<li>按依赖图批量失效：改 <code>game.ui.hud</code> 时要一起失效依赖它的模块。</li>
+</ul>
+<p><strong>3. 错误上报</strong></p>
+<ul>
+<li>所有 Lua 入口（事件、协程、定时器）统一 <code>xpcall</code> 包裹，错误转结构化日志（第 8 讲）；</li>
+<li>xLua 通过 <code>LuaEnv</code> 的日志回调、ToLua 通过 <code>LuaException</code> 接到 C# 的 <code>Debug.LogError</code>；</li>
+<li>线上日志至少带：错误码 + 模块名 + 版本号 + traceback 前几行。</li>
+</ul>
+<p><strong>4. GC 与性能</strong></p>
+<ul>
+<li><strong>别每次调用 new LuaTable 传参</strong>：高频接口复用同一张参数表；</li>
+<li>C# 持有的 <code>LuaTable</code>&#x2F;<code>LuaFunction</code> 用完 <code>Dispose</code>，避免泄漏；</li>
+<li>跨语言调用批量设计（第 9 讲）：一次传数组&#x2F;表，别逐元素互调；</li>
+<li>Lua 侧耗时逻辑分帧（第 6 讲的协程调度器）或下沉 C#。</li>
+</ul>
+<h2 id="八、已知坑与对策"><a href="#八、已知坑与对策" class="headerlink" title="八、已知坑与对策"></a>八、已知坑与对策</h2><table>
+<thead>
+<tr>
+<th>坑</th>
+<th>现象</th>
+<th>对策</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>忘生成代码</td>
+<td>运行时 <code>LuaException: xlua access</code></td>
+<td>新类&#x2F;新委托后必跑 Generate Code，CI 固化</td>
+</tr>
+<tr>
+<td>iOS 无 JIT</td>
+<td>LuaJIT 变解释模式，热点变慢</td>
+<td>热点逻辑下沉 C#，脚本只做编排</td>
+</tr>
+<tr>
+<td>枚举&#x2F;泛型&#x2F;重载</td>
+<td>Lua 侧调用报”找不到方法”</td>
+<td>用 <code>[LuaCallCSharp]</code> + 生成代码覆盖所需形态</td>
+</tr>
+<tr>
+<td>Lua 持有 C# 对象</td>
+<td>内存只增不减</td>
+<td>用完置 nil，长生命周期对象用弱引用</td>
+</tr>
+<tr>
+<td>热更半成品</td>
+<td>加载失败后逻辑错乱</td>
+<td>校验 md5、失败回滚旧包、入口统一 xpcall</td>
+</tr>
+<tr>
+<td>字符串拼接热点</td>
+<td>帧耗飙升</td>
+<td>按第 9 讲优化清单处理</td>
+</tr>
+</tbody></table>
+<h2 id="自查清单"><a href="#自查清单" class="headerlink" title="自查清单"></a>自查清单</h2><ul>
+<li><input disabled="" type="checkbox"> 能说清 xLua &#x2F; ToLua 的运行时差异与选型理由</li>
+<li><input disabled="" type="checkbox"> 能写 LuaBoot：LuaEnv（或 LuaState）创建、加载器、Tick、Dispose</li>
+<li><input disabled="" type="checkbox"> 会用 <code>[LuaCallCSharp]</code> &#x2F; <code>[CSharpCallLua]</code> 并知道何时要重新生成代码</li>
+<li><input disabled="" type="checkbox"> 理解 <code>[Hotfix]</code> 的边界：改方法体可以，改签名&#x2F;加字段不行</li>
+<li><input disabled="" type="checkbox"> 有”分包 + md5 校验 + 回滚 + 统一错误上报”的工程方案</li>
+</ul>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>[^1]: <a target="_blank" rel="noopener" href="https://github.com/Tencent/xLua">Tencent&#x2F;xLua</a> — 运行时支持 Lua 5.3 与 LuaJIT 2.1，含热补丁特性<br>[^2]: <a target="_blank" rel="noopener" href="https://github.com/topameng/tolua">topameng&#x2F;tolua</a> — win&#x2F;android&#x2F;ios 用 LuaJIT 2.1，mac 用 Lua 5.1.5<br>[^3]: <a target="_blank" rel="noopener" href="https://developer.apple.com/app-store/review/guidelines/">App Store Review Guidelines</a> — 代码下载&#x2F;执行相关条款，政策会调整<br>[^4]: <a target="_blank" rel="noopener" href="https://github.com/Tencent/xLua/blob/master/Assets/XLua/Doc/hotfix.md">xLua 热补丁操作指南</a> — Hotfix 使用说明<br>[^5]: <a target="_blank" rel="noopener" href="https://github.com/Tencent/xLua/blob/master/Assets/XLua/Doc/configure.md">xLua 配置与生成代码</a> — Generate Code 与配置</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://csy7749.github.io">Csy7749</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://csy7749.github.io/2026/08/19/Lua%EF%BC%8811%EF%BC%89%EF%BC%9AUnity%20%E7%83%AD%E6%9B%B4%E5%AE%9E%E6%88%98%E2%80%94%E2%80%94xLua%E3%80%81ToLua%20%E4%B8%8E%E5%B7%A5%E7%A8%8B%E5%8C%96/">https://csy7749.github.io/2026/08/19/Lua%EF%BC%8811%EF%BC%89%EF%BC%9AUnity%20%E7%83%AD%E6%9B%B4%E5%AE%9E%E6%88%98%E2%80%94%E2%80%94xLua%E3%80%81ToLua%20%E4%B8%8E%E5%B7%A5%E7%A8%8B%E5%8C%96/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Unity/">Unity</a><a class="post-meta__tags" href="/tags/Lua/">Lua</a><a class="post-meta__tags" href="/tags/%E7%83%AD%E6%9B%B4/">热更</a></div><div class="post-share"><div class="social-share" data-image="/img/avatar.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/08/19/Lua%EF%BC%8812%EF%BC%89%EF%BC%9AZLua%E2%80%94%E2%80%94%E4%B8%BA%20IL2CPP%20%E4%BC%98%E5%8C%96%E7%9A%84%E7%8E%B0%E4%BB%A3%20Unity%20Lua%20%E6%96%B9%E6%A1%88/" title="Lua（12）：ZLua——为 IL2CPP 优化的现代 Unity Lua 方案"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">Lua（12）：ZLua——为 IL2CPP 优化的现代 Unity Lua 方案</div></div><div class="info-2"><div class="info-item-1">前 11 讲把 Lua 语言讲完了，第 11 讲聊了 xLua&#x2F;ToLua 热更。这一篇介绍 2025 年出现的现代方案 ZLua（focus-creative-games 出品，HybridCLR 团队）：它把”零配置 + C++ 桥接 + 0 GC”作为设计目标，直接瞄准 IL2CPP 场景的互操作效率[^1]。   一、ZLua 是什么ZLua 是一个”针对 Il2Cpp 极致优化”的现代 Unity Lua 脚本方案，由 focus-creative-games（HybridCLR 作者团队）维护，2025 年发布，MIT 协议[^1]。官方文档、Demo 与性能基准分别在 doc.zlua.cn、zlua-demo、zlua-benchmark[^1][^2]。 它的定位不是”xLua 换个皮”，而是重做互操作层：  零配置：不需要 per-type 的 C# Wrap 白名单，Editor 开箱即用； C++ 桥接：IL2CPP 发布时生成 C++ stub，而不是 xLua 式海量 C# Wrap； 0 GC：引用类型与 struct（含含引用字段的 st...</div></div></div></a><a class="pagination-related" href="/2026/08/19/Lua%EF%BC%8810%EF%BC%89%EF%BC%9ALua%20C%20API%20%E4%B8%8E%E5%AE%BF%E4%B8%BB%E5%B5%8C%E5%85%A5/" title="Lua（10）：Lua C API 与宿主嵌入"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">Lua（10）：Lua C API 与宿主嵌入</div></div><div class="info-2"><div class="info-item-1">前 9 篇都在 Lua 世界里打转，这一篇跨出边界：怎么用 C 把一个 Lua 解释器嵌进自己的程序。理解 C API 的”栈模型”，你才能真正看懂 xLua&#x2F;ToLua 的生成代码在干什么，也才能为引擎、工具链、服务器写自己的脚本层。   一、为什么需要自己嵌 LuaLua 的典型宿主有四种：  游戏引擎：脚本层调用引擎能力（xLua&#x2F;ToLua 就是这个模型的 C# 版）； 服务器&#x2F;网关：OpenResty、Redis 用 C 内嵌 Lua 做可编程逻辑； 编辑器&#x2F;工具链：用 Lua 做宏、做自动化； 独立 CLI：把 Lua 当配置+扩展语言嵌进自己的程序。  无论哪种，骨架都是同一个：创建解释器 → 打开库 → 跑脚本 → 释放。 二、最小宿主12345678910111213141516171819202122232425#include &lt;lua.h&gt;#include &lt;lauxlib.h&gt;#include &lt;lualib.h&gt;#include &lt;stdio.h&gt;int main(...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/08/19/Lua%EF%BC%8813%EF%BC%89%EF%BC%9AZLua%20%E5%AF%B9%E6%AF%94%E2%80%94%E2%80%94xLua%E3%80%81toLua%E3%80%81SLua%20%E4%B8%8E%E8%BF%90%E8%A1%8C%E6%97%B6%E9%80%89%E5%9E%8B/" title="Lua（13）：ZLua 对比——xLua、toLua、SLua 与运行时选型"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-19</div><div class="info-item-2">Lua（13）：ZLua 对比——xLua、toLua、SLua 与运行时选型</div></div><div class="info-2"><div class="info-item-1">上一讲介绍了 ZLua，这一讲把它放进 Unity Lua 方案的全景里对比：xLua、toLua、SLua 与 ZLua 四个方案，运行时、桥接方式、配置成本、性能、GC、Hotfix 各不相同。选型的本质不是比单点数字，而是算清”互调占比 × 性能差距 × 迁移成本 × 团队维护能力”这笔账。   一、四个 Unity Lua 方案全景   方案 维护方 Lua 运行时 桥接方式 配置成本 热补丁    xLua 腾讯开源 Lua 5.3 &#x2F; LuaJIT 2.1[^5] 生成 C# 代码 + 反射降级 LuaCallCSharp 白名单 + Generate 支持（Hotfix）   toLua 社区（topameng） LuaJIT 2.1（win&#x2F;android&#x2F;ios）、Lua 5.1.5（mac）[^6] 生成 C# wrap 导出列表 + Generate All 无（自写替换）   SLua pangweiwei 内置 Lua（C 实现） 静态代码生成绑定 静态导出 无   ZLua focus-creative-games Lua...</div></div></div></a><a class="pagination-related" href="/2026/08/19/Lua%EF%BC%8812%EF%BC%89%EF%BC%9AZLua%E2%80%94%E2%80%94%E4%B8%BA%20IL2CPP%20%E4%BC%98%E5%8C%96%E7%9A%84%E7%8E%B0%E4%BB%A3%20Unity%20Lua%20%E6%96%B9%E6%A1%88/" title="Lua（12）：ZLua——为 IL2CPP 优化的现代 Unity Lua 方案"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-19</div><div class="info-item-2">Lua（12）：ZLua——为 IL2CPP 优化的现代 Unity Lua 方案</div></div><div class="info-2"><div class="info-item-1">前 11 讲把 Lua 语言讲完了，第 11 讲聊了 xLua&#x2F;ToLua 热更。这一篇介绍 2025 年出现的现代方案 ZLua（focus-creative-games 出品，HybridCLR 团队）：它把”零配置 + C++ 桥接 + 0 GC”作为设计目标，直接瞄准 IL2CPP 场景的互操作效率[^1]。   一、ZLua 是什么ZLua 是一个”针对 Il2Cpp 极致优化”的现代 Unity Lua 脚本方案，由 focus-creative-games（HybridCLR 作者团队）维护，2025 年发布，MIT 协议[^1]。官方文档、Demo 与性能基准分别在 doc.zlua.cn、zlua-demo、zlua-benchmark[^1][^2]。 它的定位不是”xLua 换个皮”，而是重做互操作层：  零配置：不需要 per-type 的 C# Wrap 白名单，Editor 开箱即用； C++ 桥接：IL2CPP 发布时生成 C++ stub，而不是 xLua 式海量 C# Wrap； 0 GC：引用类型与 struct（含含引用字段的 st...</div></div></div></a><a class="pagination-related" href="/2026/08/14/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%882%EF%BC%89%EF%BC%9AGPU%E4%B8%8E%E6%B8%B2%E6%9F%93%E4%BC%98%E5%8C%96/" title="Unity性能优化（2）：GPU 与渲染优化"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-14</div><div class="info-item-2">Unity性能优化（2）：GPU 与渲染优化</div></div><div class="info-2"><div class="info-item-1"> 解决了 CPU，就该看 GPU 了。很多项目 CPU 主线程并不忙，帧率却上不去——瓶颈在渲染端：DrawCall 太多、Shader 太重、Overdraw 太凶。本文从渲染管线讲起，教你判断 GPU 瓶颈，再重点拆解四种合批方案（静态&#x2F;动态 Batching、SRP Batcher、GPU Instancing）的适用边界，最后覆盖 Shader、LOD、光照与后处理，配一个大世界 DrawCall 从 3000 降到 200 的实战案例。    一、渲染管线速览与 GPU 瓶颈判断1.1 一条帧的渲染路径123456789CPU 侧                           GPU 侧──────                           ──────准备渲染状态（材质/纹理/参数）     顶点着色器（变换顶点）  ↓                                ↓提交 DrawCall                    光栅化（生成片元）  ↓                                ↓（等待 ...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%EF%BC%883%EF%BC%89%EF%BC%9A%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E4%B8%8EGC/" title="Unity性能优化（3）：内存管理与 GC"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity性能优化（3）：内存管理与 GC</div></div><div class="info-2"><div class="info-item-1"> 内存问题是最”阴险”的性能杀手：代码逻辑完全正确，没有报错，也没有明显的慢函数，但帧率却每隔几秒规律性地掉一下。这种规律性卡顿十有八九是 GC 在作祟。本文从 Unity 的内存模型讲起，拆解托管内存与原生内存的边界、值类型的分配位置、GC 的工作原理，再逐个击破七类隐形分配，最后给出内存泄漏的排查方法和一个完整实战案例。    一、先建立内存地图：托管 vs 原生Unity 的内存分两个世界，混在一起看会完全迷失方向。 1.1 托管内存（Managed）这是 C# 代码直接接触的内存，由 GC（垃圾回收器） 管理。你在 C# 里 new 出来的对象，绝大多数都住在这里。 123var list = new List&lt;int&gt;();        // 托管内存：List 对象本身var text = &quot;hello&quot; + &quot;world&quot;;      // 托管内存：string 对象var enemy = new Enemy();           // 托管内存：MonoBehaviour 的 C# 壳  1.2 原生内存...</div></div></div></a><a class="pagination-related" href="/2026/08/17/Unity-UGUI%E6%9E%B6%E6%9E%84%EF%BC%882%EF%BC%89%EF%BC%9AMVVM%E6%A8%A1%E5%BC%8F/" title="Unity UGUI架构（2）：MVVM模式"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-17</div><div class="info-item-2">Unity UGUI架构（2）：MVVM模式</div></div><div class="info-2"><div class="info-item-1"> MVVM 适合解决“业务数据没有那么复杂，但界面状态和字段联动越来越多”的问题。在 Unity UGUI 中，它不是引擎自带的一套完整框架，而是一组需要项目明确实现的职责和绑定规则。本文将拆解 Model、View、ViewModel 与 Binding 的边界，并说明其收益、成本和适用场景。    本文假设读者已经了解 UGUI 事件和基础 C# 事件。重点是 MVVM 在 uGUI 中如何落地，而不是 UI Toolkit 的运行时数据绑定。 一、先澄清：UGUI 不等于自带 MVVMUnity 当前同时提供 uGUI 与 UI Toolkit，两者是不同的 UI 系统（参见 Unity UI 系统对比）。UI Toolkit 有专门的运行时数据绑定能力，而传统 UGUI 主要以 MonoBehaviour、序列化组件引用和事件回调工作（参见 uGUI 迁移说明）。 因此，在 UGUI 中使用 MVVM，通常需要项目自己选择一种绑定实现：  手写 C# 事件与绑定适配器。 使用 INotifyPropertyChanged 风格的属性通知。 使用响应式库，把属性变成可观察流...</div></div></div></a><a class="pagination-related" href="/2026/08/13/Unity%20Shader%EF%BC%884%EF%BC%89%EF%BC%9AURP%20Shader%20%E6%A8%A1%E6%9D%BF%E4%B8%8E%20Shader%20Graph%20%E5%85%A5%E9%97%A8/" title="Unity Shader（4）：URP Shader 模板与 Shader Graph 入门"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-08-13</div><div class="info-item-2">Unity Shader（4）：URP Shader 模板与 Shader Graph 入门</div></div><div class="info-2"><div class="info-item-1"> 上一讲拆的是 Built-in 的模板，这一讲切到 URP。URP 是当前新项目的默认管线，它的 Shader 写法和 Built-in 有本质区别：头文件变了、纹理采样变了、还多了为 SRP Batcher 服务的数据声明。本文先讲 URP 自带的几个 Shader 模板，再逐行解析 URP Unlit 模板，最后带你看 Shader Graph 的入门逻辑，以及”手写 HLSL vs 连线”该怎么选。    一、URP 的 Shader 模板清单URP 项目里 Create → Shader 会多出一组 URP 模板，常见的有：    模板 作用    Lit Shader 完整 PBR 光照，URP 的主力材质模板   Simple Lit Shader 轻量 PBR，省性能，移动端常用   Baked Lit Shader 仅烘焙光照，最省，适合静态场景   Unlit Shader 无光照，最纯粹的 vert&#x2F;frag 骨架   另外还有 Create → Shader Graph 下的可视化模板（见本文第四节）。 关键前提：这些 URP Shader 必须...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/avatar.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Csy7749</div><div class="author-info-description">键来！</div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">56</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">93</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">14</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/csy7749"><i class="fab fa-github"></i><span>GitHub</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">日积月累</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E7%83%AD%E6%9B%B4"><span class="toc-number">1.</span> <span class="toc-text">一、为什么要热更</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E6%96%B9%E6%A1%88%E9%80%89%E5%9E%8B%EF%BC%9AxLua-vs-ToLua"><span class="toc-number">2.</span> <span class="toc-text">二、方案选型：xLua vs ToLua</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81xLua-%E6%9C%80%E5%B0%8F%E6%8E%A5%E5%85%A5"><span class="toc-number">3.</span> <span class="toc-text">三、xLua 最小接入</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81C-%E2%86%94-Lua-%E5%8F%8C%E5%90%91%E4%BA%92%E8%B0%83"><span class="toc-number">4.</span> <span class="toc-text">四、C# ↔ Lua 双向互调</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E7%83%AD%E8%A1%A5%E4%B8%81%EF%BC%9A%E4%B8%8D%E6%94%B9-C-%E4%B9%9F%E8%83%BD%E6%94%B9%E9%80%BB%E8%BE%91"><span class="toc-number">5.</span> <span class="toc-text">五、热补丁：不改 C# 也能改逻辑</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81ToLua-%E6%8E%A5%E5%85%A5%E6%B5%81%E7%A8%8B"><span class="toc-number">6.</span> <span class="toc-text">六、ToLua 接入流程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E5%B7%A5%E7%A8%8B%E5%8C%96%E9%AA%A8%E6%9E%B6"><span class="toc-number">7.</span> <span class="toc-text">七、工程化骨架</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E5%B7%B2%E7%9F%A5%E5%9D%91%E4%B8%8E%E5%AF%B9%E7%AD%96"><span class="toc-number">8.</span> <span class="toc-text">八、已知坑与对策</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%87%AA%E6%9F%A5%E6%B8%85%E5%8D%95"><span class="toc-number">9.</span> <span class="toc-text">自查清单</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83"><span class="toc-number">10.</span> <span class="toc-text">参考</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/19/Lua%EF%BC%8813%EF%BC%89%EF%BC%9AZLua%20%E5%AF%B9%E6%AF%94%E2%80%94%E2%80%94xLua%E3%80%81toLua%E3%80%81SLua%20%E4%B8%8E%E8%BF%90%E8%A1%8C%E6%97%B6%E9%80%89%E5%9E%8B/" title="Lua（13）：ZLua 对比——xLua、toLua、SLua 与运行时选型">Lua（13）：ZLua 对比——xLua、toLua、SLua 与运行时选型</a><time datetime="2026-08-19T15:00:00.000Z" title="Created 2026-08-19 23:00:00">2026-08-19</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/19/Lua%EF%BC%8812%EF%BC%89%EF%BC%9AZLua%E2%80%94%E2%80%94%E4%B8%BA%20IL2CPP%20%E4%BC%98%E5%8C%96%E7%9A%84%E7%8E%B0%E4%BB%A3%20Unity%20Lua%20%E6%96%B9%E6%A1%88/" title="Lua（12）：ZLua——为 IL2CPP 优化的现代 Unity Lua 方案">Lua（12）：ZLua——为 IL2CPP 优化的现代 Unity Lua 方案</a><time datetime="2026-08-19T14:00:00.000Z" title="Created 2026-08-19 22:00:00">2026-08-19</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/19/Lua%EF%BC%8811%EF%BC%89%EF%BC%9AUnity%20%E7%83%AD%E6%9B%B4%E5%AE%9E%E6%88%98%E2%80%94%E2%80%94xLua%E3%80%81ToLua%20%E4%B8%8E%E5%B7%A5%E7%A8%8B%E5%8C%96/" title="Lua（11）：Unity 热更实战——xLua/ToLua">Lua（11）：Unity 热更实战——xLua/ToLua</a><time datetime="2026-08-19T11:00:00.000Z" title="Created 2026-08-19 19:00:00">2026-08-19</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/19/Lua%EF%BC%8810%EF%BC%89%EF%BC%9ALua%20C%20API%20%E4%B8%8E%E5%AE%BF%E4%B8%BB%E5%B5%8C%E5%85%A5/" title="Lua（10）：Lua C API 与宿主嵌入">Lua（10）：Lua C API 与宿主嵌入</a><time datetime="2026-08-19T10:00:00.000Z" title="Created 2026-08-19 18:00:00">2026-08-19</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/08/19/Lua%EF%BC%889%EF%BC%89%EF%BC%9A%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E4%B8%8E%20LuaJIT/" title="Lua（9）：性能优化与 LuaJIT">Lua（9）：性能优化与 LuaJIT</a><time datetime="2026-08-19T09:00:00.000Z" title="Created 2026-08-19 17:00:00">2026-08-19</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2020 - 2026 By Csy7749</span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/koharu.model.json"},"display":{"position":"left","width":150,"height":300},"mobile":{"show":false},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/"});</script></body></html>
